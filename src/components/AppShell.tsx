@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   Home, Calendar, LineChart, Bell, User as UserIcon,
-  LayoutDashboard, Users, Clock, Film, Settings, Menu, X, LogOut,
+  LayoutDashboard, Users, Clock, Film, Settings, Menu, X, LogOut, Package,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ const adminNav = [
   { to: "/clients", label: "Clients", icon: Users },
   { to: "/slots", label: "Slots", icon: Clock },
   { to: "/content", label: "Content", icon: Film },
+  { to: "/fulfillment", label: "Fulfillment", icon: Package },
   { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
