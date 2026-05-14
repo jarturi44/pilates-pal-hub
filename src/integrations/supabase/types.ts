@@ -283,29 +283,41 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          cancel_at_period_end: boolean
+          commitment_end_date: string | null
           created_at: string
+          current_period_end: string | null
           id: string
           plan_id: string
           start_date: string
           status: string
+          stripe_customer_id: string | null
           stripe_subscription_id: string | null
           user_id: string
         }
         Insert: {
+          cancel_at_period_end?: boolean
+          commitment_end_date?: string | null
           created_at?: string
+          current_period_end?: string | null
           id?: string
           plan_id: string
           start_date?: string
           status?: string
+          stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           user_id: string
         }
         Update: {
+          cancel_at_period_end?: boolean
+          commitment_end_date?: string | null
           created_at?: string
+          current_period_end?: string | null
           id?: string
           plan_id?: string
           start_date?: string
           status?: string
+          stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           user_id?: string
         }
