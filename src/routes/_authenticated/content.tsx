@@ -7,10 +7,38 @@ import { toast } from "sonner";
 import { ArrowDown, ArrowUp, Eye, EyeOff, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { CONTENT_CATEGORIES, DIFFICULTIES, DAY_NAMES, type ContentCategory, type Difficulty } from "@/lib/content-categories";
 import { cn } from "@/lib/utils";
+import { ExerciseLibraryAdmin } from "@/components/admin/ExerciseLibraryAdmin";
+import { ProgramsAdmin } from "@/components/admin/ProgramsAdmin";
 
 export const Route = createFileRoute("/_authenticated/content")({
   component: AdminContentPage,
 });
+
+type Tab = "mornings" | "exercises" | "programs";
+
+function AdminContentPage() {
+  const [tab, setTab] = useState<Tab>("mornings");
+  return (
+    <>
+      <PageHeader title="Content" subtitle="Manage everything clients see in My Program." />
+      <div className="flex gap-2 mb-6 border-b border-border">
+        {([
+          { id: "mornings", label: "10 Minute Mornings" },
+          { id: "exercises", label: "Exercise Library" },
+          { id: "programs", label: "Programs" },
+        ] as const).map((t) => (
+          <button key={t.id} onClick={() => setTab(t.id)} className={cn(
+            "px-3 py-2 text-sm border-b-2 -mb-px",
+            tab === t.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+          )}>{t.label}</button>
+        ))}
+      </div>
+      {tab === "mornings" && <MorningsContentTab />}
+      {tab === "exercises" && <ExerciseLibraryAdmin />}
+      {tab === "programs" && <ProgramsAdmin />}
+    </>
+  );
+}
 
 type Workout = {
   id: string;
