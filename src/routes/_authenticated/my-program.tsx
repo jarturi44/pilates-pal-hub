@@ -133,57 +133,79 @@ function MyProgramPage() {
     );
   }
 
+  const showExercisesTab = sub?.plan?.type && sub.plan.type !== "mornings";
+
   return (
     <>
       <PageHeader title="My Program" subtitle="A short session today is a long-term investment." />
 
-      <section className="rounded-xl border border-border bg-card p-4 mb-6">
-        <div className="flex items-baseline justify-between mb-2">
-          <span className="text-xs uppercase tracking-wide text-muted-foreground">This week</span>
-          <span className="text-sm text-foreground"><strong>{completedThisWeek}</strong> / {goal} sessions</span>
+      {showExercisesTab && (
+        <div className="flex gap-2 mb-6 border-b border-border">
+          {([
+            { id: "mornings" as const, label: "10 Minute Mornings" },
+            { id: "exercises" as const, label: "Exercise Library" },
+          ]).map((t) => (
+            <button key={t.id} onClick={() => setTab(t.id)} className={cn(
+              "px-3 py-2 text-sm border-b-2 -mb-px",
+              tab === t.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+            )}>{t.label}</button>
+          ))}
         </div>
-        <div className="h-2 rounded-full bg-muted overflow-hidden">
-          <div className="h-full bg-primary transition-all" style={{ width: `${progressPct}%` }} />
-        </div>
-      </section>
+      )}
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        {(["All", ...CONTENT_CATEGORIES] as const).map((c) => (
-          <button key={c} onClick={() => setActiveCat(c)}
-            className={cn(
-              "rounded-full border px-3 py-1.5 text-xs",
-              activeCat === c ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:text-foreground",
-            )}>{c}</button>
-        ))}
-      </div>
-
-      {isLoading ? (
-        <div className="text-sm text-muted-foreground">Loading library…</div>
-      ) : filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">No workouts yet in this category.</div>
+      {tab === "exercises" && showExercisesTab ? (
+        <ExerciseLibraryClient />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filtered.map((w) => {
-            const done = completedSet.has(w.id);
-            return (
-              <button key={w.id} onClick={() => setOpenId(w.id)}
-                className="text-left rounded-xl border border-border bg-card p-4 hover:border-primary/50 transition-colors relative">
-                {done && (
-                  <span className="absolute top-3 right-3 inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground">
-                    <Check size={14} />
-                  </span>
-                )}
-                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
-                  <span>{w.category}</span>
-                  {w.difficulty && <><span>·</span><span>{w.difficulty}</span></>}
-                  {w.duration_minutes != null && <><span>·</span><span>{w.duration_minutes} min</span></>}
-                </div>
-                <div className="font-medium text-foreground mb-2">{w.title}</div>
-                <div className="inline-flex items-center gap-1 text-xs text-primary"><Play size={12} /> Watch</div>
-              </button>
-            );
-          })}
-        </div>
+        <>
+          <section className="rounded-xl border border-border bg-card p-4 mb-6">
+            <div className="flex items-baseline justify-between mb-2">
+              <span className="text-xs uppercase tracking-wide text-muted-foreground">This week</span>
+              <span className="text-sm text-foreground"><strong>{completedThisWeek}</strong> / {goal} sessions</span>
+            </div>
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
+              <div className="h-full bg-primary transition-all" style={{ width: `${progressPct}%` }} />
+            </div>
+          </section>
+
+          <div className="flex flex-wrap gap-2 mb-4">
+            {(["All", ...CONTENT_CATEGORIES] as const).map((c) => (
+              <button key={c} onClick={() => setActiveCat(c)}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs",
+                  activeCat === c ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:text-foreground",
+                )}>{c}</button>
+            ))}
+          </div>
+
+          {isLoading ? (
+            <div className="text-sm text-muted-foreground">Loading library…</div>
+          ) : filtered.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">No workouts yet in this category.</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filtered.map((w) => {
+                const done = completedSet.has(w.id);
+                return (
+                  <button key={w.id} onClick={() => setOpenId(w.id)}
+                    className="text-left rounded-xl border border-border bg-card p-4 hover:border-primary/50 transition-colors relative">
+                    {done && (
+                      <span className="absolute top-3 right-3 inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground">
+                        <Check size={14} />
+                      </span>
+                    )}
+                    <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+                      <span>{w.category}</span>
+                      {w.difficulty && <><span>·</span><span>{w.difficulty}</span></>}
+                      {w.duration_minutes != null && <><span>·</span><span>{w.duration_minutes} min</span></>}
+                    </div>
+                    <div className="font-medium text-foreground mb-2">{w.title}</div>
+                    <div className="inline-flex items-center gap-1 text-xs text-primary"><Play size={12} /> Watch</div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
 
       {open && (
