@@ -334,17 +334,17 @@ function OnboardingPage() {
               await notify({
                 userId: user.id,
                 type: "onboarding_complete",
-                title: "Welcome aboard!",
+                title: "Look at you!",
                 message: isLiveSessionPlan
-                  ? "You're all set. We'll be in touch shortly to confirm your recurring slot."
-                  : "You're all set — your library is ready whenever you are.",
+                  ? "You're officially part of the crew. I'll be reaching out soon to set you up in your recurring slot."
+                  : "You're officially part of the crew. Poke around the app and get comfortable — I got you!",
                 link: "/home",
                 email: user.email
                   ? {
                       to: user.email,
                       templateName: "onboarding-complete",
                       idempotencyKey: `onboarding-complete-${user.id}`,
-                      templateData: { name: user.user_metadata?.name },
+                      templateData: { name: user.user_metadata?.name, isLiveSession: isLiveSessionPlan },
                     }
                   : undefined,
               });
