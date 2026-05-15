@@ -33,7 +33,9 @@ import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/em
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as ApiPublicHooksSendSessionRemindersRouteImport } from './routes/api/public/hooks/send-session-reminders'
 import { Route as ApiPublicHooksSendMorningsRemindersRouteImport } from './routes/api/public/hooks/send-mornings-reminders'
+import { Route as ApiPublicHooksBillingJobsRouteImport } from './routes/api/public/hooks/billing-jobs'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
@@ -159,10 +161,22 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSendSessionRemindersRoute =
+  ApiPublicHooksSendSessionRemindersRouteImport.update({
+    id: '/api/public/hooks/send-session-reminders',
+    path: '/api/public/hooks/send-session-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksSendMorningsRemindersRoute =
   ApiPublicHooksSendMorningsRemindersRouteImport.update({
     id: '/api/public/hooks/send-mornings-reminders',
     path: '/api/public/hooks/send-mornings-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksBillingJobsRoute =
+  ApiPublicHooksBillingJobsRouteImport.update({
+    id: '/api/public/hooks/billing-jobs',
+    path: '/api/public/hooks/billing-jobs',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -187,7 +201,9 @@ export interface FileRoutesByFullPath {
   '/slots': typeof AuthenticatedSlotsRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/billing-jobs': typeof ApiPublicHooksBillingJobsRoute
   '/api/public/hooks/send-mornings-reminders': typeof ApiPublicHooksSendMorningsRemindersRoute
+  '/api/public/hooks/send-session-reminders': typeof ApiPublicHooksSendSessionRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -213,7 +229,9 @@ export interface FileRoutesByTo {
   '/slots': typeof AuthenticatedSlotsRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/billing-jobs': typeof ApiPublicHooksBillingJobsRoute
   '/api/public/hooks/send-mornings-reminders': typeof ApiPublicHooksSendMorningsRemindersRoute
+  '/api/public/hooks/send-session-reminders': typeof ApiPublicHooksSendSessionRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -241,7 +259,9 @@ export interface FileRoutesById {
   '/_authenticated/slots': typeof AuthenticatedSlotsRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/billing-jobs': typeof ApiPublicHooksBillingJobsRoute
   '/api/public/hooks/send-mornings-reminders': typeof ApiPublicHooksSendMorningsRemindersRoute
+  '/api/public/hooks/send-session-reminders': typeof ApiPublicHooksSendSessionRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -269,7 +289,9 @@ export interface FileRouteTypes {
     | '/slots'
     | '/email/unsubscribe'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/billing-jobs'
     | '/api/public/hooks/send-mornings-reminders'
+    | '/api/public/hooks/send-session-reminders'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -295,7 +317,9 @@ export interface FileRouteTypes {
     | '/slots'
     | '/email/unsubscribe'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/billing-jobs'
     | '/api/public/hooks/send-mornings-reminders'
+    | '/api/public/hooks/send-session-reminders'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -322,7 +346,9 @@ export interface FileRouteTypes {
     | '/_authenticated/slots'
     | '/email/unsubscribe'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/billing-jobs'
     | '/api/public/hooks/send-mornings-reminders'
+    | '/api/public/hooks/send-session-reminders'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -336,7 +362,9 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicHooksBillingJobsRoute: typeof ApiPublicHooksBillingJobsRoute
   ApiPublicHooksSendMorningsRemindersRoute: typeof ApiPublicHooksSendMorningsRemindersRoute
+  ApiPublicHooksSendSessionRemindersRoute: typeof ApiPublicHooksSendSessionRemindersRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
@@ -512,11 +540,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/send-session-reminders': {
+      id: '/api/public/hooks/send-session-reminders'
+      path: '/api/public/hooks/send-session-reminders'
+      fullPath: '/api/public/hooks/send-session-reminders'
+      preLoaderRoute: typeof ApiPublicHooksSendSessionRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/send-mornings-reminders': {
       id: '/api/public/hooks/send-mornings-reminders'
       path: '/api/public/hooks/send-mornings-reminders'
       fullPath: '/api/public/hooks/send-mornings-reminders'
       preLoaderRoute: typeof ApiPublicHooksSendMorningsRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/billing-jobs': {
+      id: '/api/public/hooks/billing-jobs'
+      path: '/api/public/hooks/billing-jobs'
+      fullPath: '/api/public/hooks/billing-jobs'
+      preLoaderRoute: typeof ApiPublicHooksBillingJobsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -568,8 +610,11 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicHooksBillingJobsRoute: ApiPublicHooksBillingJobsRoute,
   ApiPublicHooksSendMorningsRemindersRoute:
     ApiPublicHooksSendMorningsRemindersRoute,
+  ApiPublicHooksSendSessionRemindersRoute:
+    ApiPublicHooksSendSessionRemindersRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
@@ -577,3 +622,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
