@@ -249,23 +249,15 @@ function ClientDetailDrawer({ clientId, onClose }: { clientId: string; onClose: 
               </section>
             )}
 
-            <section className="rounded-xl border border-border bg-card p-4">
-              <h3 className="font-display text-lg text-foreground mb-3">Engagement</h3>
-              <div className="grid grid-cols-3 gap-3 mb-4">
-                <Stat label="All-time" value={engagement.total} />
-                <Stat label="Last 4 weeks" value={engagement.last4w} />
-                <Stat label="Last active" value={engagement.lastActive ? new Date(engagement.lastActive).toLocaleDateString() : "—"} />
-              </div>
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Last 8 weeks</div>
-              <div className="flex items-end gap-1 h-20">
-                {engagement.buckets.map((b, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                    <div className="w-full rounded-sm bg-primary/80" style={{ height: `${(b.count / engagement.max) * 100}%`, minHeight: b.count > 0 ? 4 : 2, opacity: b.count > 0 ? 1 : 0.15 }} title={`${b.count} sessions`} />
-                    <div className="text-[9px] text-muted-foreground">{b.label}</div>
-                  </div>
-                ))}
-              </div>
+            <section>
+              <h3 className="font-display text-lg text-foreground mb-3">Progress</h3>
+              <ProgressDashboard userId={clientId} />
             </section>
+
+            <AttendanceSection
+              records={data.attendance}
+              slots={data.slots}
+            />
 
             <section className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-center gap-2 mb-2">
