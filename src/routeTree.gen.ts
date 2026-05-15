@@ -31,6 +31,7 @@ import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/em
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as ApiPublicHooksSendMorningsRemindersRouteImport } from './routes/api/public/hooks/send-mornings-reminders'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
@@ -146,6 +147,12 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSendMorningsRemindersRoute =
+  ApiPublicHooksSendMorningsRemindersRouteImport.update({
+    id: '/api/public/hooks/send-mornings-reminders',
+    path: '/api/public/hooks/send-mornings-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/slots': typeof AuthenticatedSlotsRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/send-mornings-reminders': typeof ApiPublicHooksSendMorningsRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -189,6 +197,7 @@ export interface FileRoutesByTo {
   '/slots': typeof AuthenticatedSlotsRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/send-mornings-reminders': typeof ApiPublicHooksSendMorningsRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -214,6 +223,7 @@ export interface FileRoutesById {
   '/_authenticated/slots': typeof AuthenticatedSlotsRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/send-mornings-reminders': typeof ApiPublicHooksSendMorningsRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -239,6 +249,7 @@ export interface FileRouteTypes {
     | '/slots'
     | '/email/unsubscribe'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/send-mornings-reminders'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '/slots'
     | '/email/unsubscribe'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/send-mornings-reminders'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -286,6 +298,7 @@ export interface FileRouteTypes {
     | '/_authenticated/slots'
     | '/email/unsubscribe'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/send-mornings-reminders'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -299,6 +312,7 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicHooksSendMorningsRemindersRoute: typeof ApiPublicHooksSendMorningsRemindersRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
@@ -460,6 +474,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/send-mornings-reminders': {
+      id: '/api/public/hooks/send-mornings-reminders'
+      path: '/api/public/hooks/send-mornings-reminders'
+      fullPath: '/api/public/hooks/send-mornings-reminders'
+      preLoaderRoute: typeof ApiPublicHooksSendMorningsRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -505,6 +526,8 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicHooksSendMorningsRemindersRoute:
+    ApiPublicHooksSendMorningsRemindersRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
