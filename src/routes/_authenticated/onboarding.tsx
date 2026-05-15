@@ -328,6 +328,29 @@ function OnboardingPage() {
               toast.error(error.message);
               return;
             }
+            // Welcome notification (in-app + email)
+            try {
+              const { notify } = await import("@/lib/notify");
+              await notify({
+                userId: user.id,
+                type: "onboarding_complete",
+                title: "Welcome aboard!",
+                message: isLiveSessionPlan
+                  ? "You're all set. We'll be in touch shortly to confirm your recurring slot."
+                  : "You're all set — your library is ready whenever you are.",
+                link: "/home",
+                email: user.email
+                  ? {
+                      to: user.email,
+                      templateName: "onboarding-complete",
+                      idempotencyKey: `onboarding-complete-${user.id}`,
+                      templateData: { name: user.user_metadata?.name },
+                    }
+                  : undefined,
+              });
+            } catch (e) {
+              console.error("onboarding notify failed", e);
+            }
             qc.invalidateQueries({ queryKey: ["onboarding-gate"] });
             goTo("done");
           }}
