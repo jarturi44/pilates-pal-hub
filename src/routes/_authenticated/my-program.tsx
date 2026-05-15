@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Check, Loader2, Play, X } from "lucide-react";
 import { CONTENT_CATEGORIES, toEmbedUrl, type ContentCategory } from "@/lib/content-categories";
 import { cn } from "@/lib/utils";
+import { ExerciseLibraryClient } from "@/components/client/ExerciseLibraryClient";
 
 export const Route = createFileRoute("/_authenticated/my-program")({
   component: MyProgramPage,
