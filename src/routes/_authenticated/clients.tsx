@@ -261,6 +261,9 @@ function ClientDetailDrawer({ clientId, onClose }: { clientId: string; onClose: 
               </div>
             </section>
 
+            <section className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <FileText size={14} className="text-muted-foreground" />
                 <h3 className="font-display text-lg text-foreground">Intake form</h3>
               </div>
               {!data.intake ? (
