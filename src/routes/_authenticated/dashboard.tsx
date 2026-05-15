@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PagePrimitives";
-import { AlertCircle, AlertOctagon, Users, CalendarCheck, PackageCheck, Megaphone, Flag } from "lucide-react";
+import { AlertCircle, Users, CalendarCheck, PackageCheck, DollarSign, UserPlus, AlertTriangle, ClipboardList, Activity } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -10,167 +10,151 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function DashboardPage() {
   const { data: stats } = useQuery({
-    queryKey: ["admin-dashboard-stats"],
+    queryKey: ["admin-dashboard-stats-v2"],
     queryFn: async () => {
-      const [activeSubs, needsSlot, pendingShip] = await Promise.all([
-        supabase.from("subscriptions").select("id", { count: "exact", head: true })
-          .in("status", ["active", "trialing", "past_due"]),
-        supabase.from("users").select("id", { count: "exact", head: true })
-          .eq("needs_slot_assignment", true),
-        supabase.from("equipment_fulfillment").select("id", { count: "exact", head: true })
-          .eq("status", "pending"),
+      const monthStart = new Date();
+      monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+
+      const [activeSubs, byPlan, newThisMonth, pastDue, pendingShip, needsSlot, intakes, waivers, allClients] = await Promise.all([
+        supabase.from("subscriptions").select("id", { count: "exact", head: true }).in("status", ["active", "trialing"]),
+        supabase.from("subscriptions").select("plan_id, plan:plans(display_name, price_per_month)").in("status", ["active", "trialing"]),
+        supabase.from("users").select("id", { count: "exact", head: true }).eq("role", "client").gte("created_at", monthStart.toISOString()),
+        supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "past_due"),
+        supabase.from("equipment_fulfillment").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("users").select("id", { count: "exact", head: true }).eq("needs_slot_assignment", true),
+        supabase.from("intake_forms").select("user_id"),
+        supabase.from("waivers").select("user_id"),
+        supabase.from("users").select("id, onboarding_complete").eq("role", "client"),
       ]);
+
+      const planCounts = new Map<string, { name: string; count: number; price: number }>();
+      let mrr = 0;
+      (byPlan.data ?? []).forEach((s: any) => {
+        const name = s.plan?.display_name ?? "Unknown";
+        const price = Number(s.plan?.price_per_month ?? 0);
+        mrr += price;
+        const cur = planCounts.get(name) ?? { name, count: 0, price };
+        cur.count++;
+        planCounts.set(name, cur);
+      });
+
+      const intakeIds = new Set((intakes.data ?? []).map((r: any) => r.user_id));
+      const waiverIds = new Set((waivers.data ?? []).map((r: any) => r.user_id));
+      const onboardingIncomplete = (allClients.data ?? []).filter((u: any) =>
+        !u.onboarding_complete || !intakeIds.has(u.id) || !waiverIds.has(u.id)
+      ).length;
+
       return {
         activeSubs: activeSubs.count ?? 0,
-        needsSlot: needsSlot.count ?? 0,
+        mrr,
+        newThisMonth: newThisMonth.count ?? 0,
+        pastDue: pastDue.count ?? 0,
         pendingShip: pendingShip.count ?? 0,
+        needsSlot: needsSlot.count ?? 0,
+        onboardingIncomplete,
+        planBreakdown: Array.from(planCounts.values()).sort((a, b) => b.count - a.count),
       };
     },
   });
 
-  const { data: flagged } = useQuery({
-    queryKey: ["admin-flagged-items"],
+  const { data: activity = [] } = useQuery({
+    queryKey: ["admin-recent-activity"],
     queryFn: async () => {
-      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const [pastDue, broadcasts] = await Promise.all([
-        supabase
-          .from("subscriptions")
-          .select("id, user_id, past_due_since, access_suspended")
-          .eq("status", "past_due")
-          .order("past_due_since", { ascending: true }),
-        supabase
-          .from("broadcasts")
-          .select("id, subject, audience_label, recipient_count, created_at")
-          .gte("created_at", sevenDaysAgo)
-          .order("created_at", { ascending: false }),
-      ]);
-      const userIds = (pastDue.data ?? []).map((s) => s.user_id);
-      const { data: users } = userIds.length
-        ? await supabase.from("users").select("id, name, email").in("id", userIds)
-        : { data: [] as { id: string; name: string | null; email: string }[] };
-      const userMap = new Map((users ?? []).map((u) => [u.id, u]));
-      const now = Date.now();
-      const items = (pastDue.data ?? []).map((s) => {
-        const u = userMap.get(s.user_id);
-        const daysOverdue = s.past_due_since
-          ? Math.floor((now - new Date(s.past_due_since).getTime()) / (24 * 60 * 60 * 1000))
-          : 0;
-        const inGrace = !s.access_suspended;
-        const daysRemaining = inGrace ? Math.max(0, 7 - daysOverdue) : 0;
-        return {
-          id: s.id,
-          name: u?.name || u?.email || "Unknown client",
-          daysOverdue,
-          daysRemaining,
-          suspended: s.access_suspended,
-        };
-      });
-      return { pastDue: items, broadcasts: broadcasts.data ?? [] };
+      const { data } = await supabase.from("activity_log").select("*").order("created_at", { ascending: false }).limit(10);
+      return data ?? [];
     },
+    refetchInterval: 30000,
   });
 
   return (
     <>
-      <PageHeader title="Dashboard" subtitle="Studio overview." />
+      <PageHeader title="Dashboard" subtitle="Studio command center." />
 
-      {stats && stats.needsSlot > 0 && (
-        <Link
-          to="/clients"
-          className="block mb-6 rounded-xl border border-primary/40 bg-primary/5 p-4 hover:bg-primary/10 transition-colors"
-        >
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+        <Stat icon={<Users size={16} />} label="Active subscribers" value={stats?.activeSubs ?? 0} />
+        <Stat icon={<DollarSign size={16} />} label="MRR" value={`$${(stats?.mrr ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
+        <Stat icon={<UserPlus size={16} />} label="New this month" value={stats?.newThisMonth ?? 0} />
+        <LinkStat icon={<AlertTriangle size={16} />} label="Past due" value={stats?.pastDue ?? 0} to="/clients" />
+        <LinkStat icon={<PackageCheck size={16} />} label="Pending fulfillment" value={stats?.pendingShip ?? 0} to="/fulfillment" />
+        <LinkStat icon={<CalendarCheck size={16} />} label="Pending slot assignments" value={stats?.needsSlot ?? 0} to="/slots" />
+        <LinkStat icon={<ClipboardList size={16} />} label="Onboarding incomplete" value={stats?.onboardingIncomplete ?? 0} to="/clients" />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2 mb-6">
+        <section className="rounded-xl border border-border bg-card p-5">
+          <h3 className="font-display text-lg text-foreground mb-3">Plan breakdown</h3>
+          {!stats?.planBreakdown.length ? (
+            <p className="text-sm text-muted-foreground">No active subscriptions.</p>
+          ) : (
+            <ul className="space-y-2">
+              {stats.planBreakdown.map((p) => (
+                <li key={p.name} className="flex items-center justify-between text-sm">
+                  <span className="text-foreground">{p.name}</span>
+                  <span className="text-muted-foreground tabular-nums">
+                    {p.count} × ${Number(p.price).toLocaleString()} = <span className="text-foreground font-medium">${(p.count * Number(p.price)).toLocaleString()}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="rounded-xl border border-border bg-card p-5">
+          <h3 className="font-display text-lg text-foreground mb-3 inline-flex items-center gap-2"><Activity size={16} /> Recent activity</h3>
+          {activity.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No recent activity.</p>
+          ) : (
+            <ul className="space-y-2.5">
+              {activity.map((a: any) => (
+                <li key={a.id} className="flex items-start justify-between gap-3 text-sm">
+                  <div className="min-w-0">
+                    <div className="text-foreground truncate">{a.message}</div>
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground mt-0.5">{a.type}</div>
+                  </div>
+                  <div className="text-xs text-muted-foreground whitespace-nowrap">{relTime(a.created_at)}</div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      {(stats?.needsSlot ?? 0) > 0 && (
+        <Link to="/clients" className="block rounded-xl border border-primary/40 bg-primary/5 p-4 hover:bg-primary/10 transition-colors">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-md bg-primary/15 text-primary inline-flex items-center justify-center">
-              <AlertCircle size={18} />
-            </div>
-            <div className="flex-1">
-              <div className="font-medium text-foreground">
-                {stats.needsSlot} new client{stats.needsSlot > 1 ? "s" : ""} need{stats.needsSlot > 1 ? "" : "s"} a slot assignment
-              </div>
-              <div className="text-xs text-muted-foreground">Review onboarded clients and assign their recurring sessions.</div>
-            </div>
+            <AlertCircle size={18} className="text-primary" />
+            <div className="text-sm text-foreground">{stats!.needsSlot} new client{stats!.needsSlot > 1 ? "s" : ""} need a slot assignment.</div>
           </div>
         </Link>
       )}
-
-      <div className="grid gap-4 sm:grid-cols-3 mb-8">
-        <Stat icon={<Users size={16} />} label="Active subscribers" value={stats?.activeSubs ?? 0} />
-        <Stat icon={<CalendarCheck size={16} />} label="Need slot assignment" value={stats?.needsSlot ?? 0} />
-        <Stat icon={<PackageCheck size={16} />} label="Pending fulfillments" value={stats?.pendingShip ?? 0} />
-      </div>
-
-      <section className="mb-8">
-        <div className="flex items-center gap-2 mb-3">
-          <Flag size={14} className="text-muted-foreground" />
-          <h2 className="font-display text-lg text-foreground">Flagged items</h2>
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div className="rounded-xl border border-border bg-card p-5">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground mb-3">
-              <AlertOctagon size={14} /> Billing issues
-            </div>
-            {flagged?.pastDue.length ? (
-              <ul className="divide-y divide-border">
-                {flagged.pastDue.map((p) => (
-                  <li key={p.id} className="py-2.5 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium text-foreground truncate">{p.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {p.suspended
-                          ? `Access suspended · ${p.daysOverdue}d overdue`
-                          : `In grace · ${p.daysRemaining}d remaining (${p.daysOverdue}d overdue)`}
-                      </div>
-                    </div>
-                    <span
-                      className={
-                        "rounded-full text-[10px] font-semibold px-2 py-0.5 uppercase tracking-wide " +
-                        (p.suspended ? "bg-destructive/10 text-destructive" : "bg-amber-500/15 text-amber-600")
-                      }
-                    >
-                      {p.suspended ? "Suspended" : "Grace"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="text-sm text-muted-foreground">No billing issues.</div>
-            )}
-          </div>
-
-          <div className="rounded-xl border border-border bg-card p-5">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground mb-3">
-              <Megaphone size={14} /> Recent broadcasts (7d)
-            </div>
-            {flagged?.broadcasts.length ? (
-              <ul className="divide-y divide-border">
-                {flagged.broadcasts.map((b) => (
-                  <li key={b.id} className="py-2.5">
-                    <div className="text-sm font-medium text-foreground truncate">{b.subject}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {b.audience_label || "All clients"} · {b.recipient_count} recipient{b.recipient_count === 1 ? "" : "s"} ·{" "}
-                      {new Date(b.created_at).toLocaleDateString()}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="text-sm text-muted-foreground">No broadcasts in the last 7 days.</div>
-            )}
-          </div>
-        </div>
-      </section>
     </>
   );
 }
 
-function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wide">
-        {icon}
-        {label}
-      </div>
-      <div className="font-display text-4xl text-foreground mt-2">{value}</div>
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground inline-flex items-center gap-1.5">{icon}{label}</div>
+      <div className="font-display text-2xl text-foreground mt-1">{value}</div>
     </div>
   );
+}
+function LinkStat(props: { icon: React.ReactNode; label: string; value: number; to: string }) {
+  return (
+    <Link to={props.to} className="rounded-xl border border-border bg-card p-4 hover:border-primary/50 transition-colors">
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground inline-flex items-center gap-1.5">{props.icon}{props.label}</div>
+      <div className="font-display text-2xl text-foreground mt-1">{props.value}</div>
+    </Link>
+  );
+}
+
+function relTime(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return `${d}d ago`;
 }
