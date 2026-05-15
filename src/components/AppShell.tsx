@@ -110,7 +110,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                 )}
               >
                 <Icon size={18} />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {item.to === "/notifications" && unread > 0 && (
+                  <span className="rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-1.5 py-0.5 min-w-[18px] text-center">
+                    {unread > 99 ? "99+" : unread}
+                  </span>
+                )}
               </Link>
             );
           })}

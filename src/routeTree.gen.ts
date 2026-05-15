@@ -27,6 +27,7 @@ import { Route as AuthenticatedFulfillmentRouteImport } from './routes/_authenti
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedContentRouteImport } from './routes/_authenticated/content'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
+import { Route as AuthenticatedBroadcastsRouteImport } from './routes/_authenticated/broadcasts'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -125,6 +126,11 @@ const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
   path: '/clients',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedBroadcastsRoute = AuthenticatedBroadcastsRouteImport.update({
+  id: '/broadcasts',
+  path: '/broadcasts',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAttendanceRoute = AuthenticatedAttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
+  '/broadcasts': typeof AuthenticatedBroadcastsRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/content': typeof AuthenticatedContentRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
+  '/broadcasts': typeof AuthenticatedBroadcastsRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/content': typeof AuthenticatedContentRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
+  '/_authenticated/broadcasts': typeof AuthenticatedBroadcastsRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRoute
   '/_authenticated/content': typeof AuthenticatedContentRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/unsubscribe'
     | '/attendance'
+    | '/broadcasts'
     | '/clients'
     | '/content'
     | '/dashboard'
@@ -270,6 +280,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/unsubscribe'
     | '/attendance'
+    | '/broadcasts'
     | '/clients'
     | '/content'
     | '/dashboard'
@@ -296,6 +307,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/unsubscribe'
     | '/_authenticated/attendance'
+    | '/_authenticated/broadcasts'
     | '/_authenticated/clients'
     | '/_authenticated/content'
     | '/_authenticated/dashboard'
@@ -458,6 +470,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/broadcasts': {
+      id: '/_authenticated/broadcasts'
+      path: '/broadcasts'
+      fullPath: '/broadcasts'
+      preLoaderRoute: typeof AuthenticatedBroadcastsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/attendance': {
       id: '/_authenticated/attendance'
       path: '/attendance'
@@ -505,6 +524,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAttendanceRoute: typeof AuthenticatedAttendanceRoute
+  AuthenticatedBroadcastsRoute: typeof AuthenticatedBroadcastsRoute
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
   AuthenticatedContentRoute: typeof AuthenticatedContentRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -521,6 +541,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAttendanceRoute: AuthenticatedAttendanceRoute,
+  AuthenticatedBroadcastsRoute: AuthenticatedBroadcastsRoute,
   AuthenticatedClientsRoute: AuthenticatedClientsRoute,
   AuthenticatedContentRoute: AuthenticatedContentRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
@@ -556,3 +577,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
