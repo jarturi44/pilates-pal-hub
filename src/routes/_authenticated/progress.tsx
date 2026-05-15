@@ -1,11 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader, ComingSoon } from "@/components/PagePrimitives";
+import { PageHeader } from "@/components/PagePrimitives";
+import { ProgressDashboard } from "@/components/ProgressDashboard";
+import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/_authenticated/progress")({
-  component: () => (
-    <>
-      <PageHeader title="Progress" subtitle="Attendance and completed sessions." />
-      <ComingSoon label="Attendance history and milestones will appear here." />
-    </>
-  ),
+  component: ProgressPage,
 });
+
+function ProgressPage() {
+  const { user } = useAuth();
+  return (
+    <>
+      <PageHeader title="Progress" subtitle="Your consistency, streaks, and milestones." />
+      {user?.id ? <ProgressDashboard userId={user.id} /> : null}
+    </>
+  );
+}
