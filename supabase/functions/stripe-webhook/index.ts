@@ -122,13 +122,28 @@ Deno.serve(async (req) => {
         const subId = inv.subscription as string | null;
         if (!subId) break;
         const sub = await stripe.subscriptions.retrieve(subId);
+        const { data: prev } = await supabase
+          .from("subscriptions").select("user_id, status, access_suspended")
+          .eq("stripe_subscription_id", subId).maybeSingle();
         await supabase.from("subscriptions")
           .update({
             status: "active",
             current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
             cancel_at_period_end: sub.cancel_at_period_end,
+            past_due_since: null,
+            access_suspended: false,
           })
           .eq("stripe_subscription_id", subId);
+        if (prev?.user_id && (prev.status === "past_due" || prev.access_suspended)) {
+          await notifyAndEmail({
+            userId: prev.user_id,
+            type: "payment_recovered",
+            title: "Payment received — you're all set",
+            message: "Thanks! Your payment went through and your access is restored.",
+            templateName: "payment-recovered",
+            idempotencyKey: `recovered-${subId}-${inv.id}`,
+          });
+        }
         break;
       }
 
@@ -136,9 +151,22 @@ Deno.serve(async (req) => {
         const inv = event.data.object as Stripe.Invoice;
         const subId = inv.subscription as string | null;
         if (!subId) break;
-        await supabase.from("subscriptions")
-          .update({ status: "past_due" })
-          .eq("stripe_subscription_id", subId);
+        const { data: prev } = await supabase
+          .from("subscriptions").select("user_id, past_due_since")
+          .eq("stripe_subscription_id", subId).maybeSingle();
+        const updates: Record<string, any> = { status: "past_due" };
+        if (!prev?.past_due_since) updates.past_due_since = new Date().toISOString();
+        await supabase.from("subscriptions").update(updates).eq("stripe_subscription_id", subId);
+        if (prev?.user_id) {
+          await notifyAndEmail({
+            userId: prev.user_id,
+            type: "payment_failed",
+            title: "Payment failed — please update your card",
+            message: "We couldn't process your most recent payment. You have 7 days to update your payment method before access is paused.",
+            templateName: "payment-failed",
+            idempotencyKey: `failed-${subId}-${inv.id}`,
+          });
+        }
         break;
       }
 
@@ -156,9 +184,22 @@ Deno.serve(async (req) => {
 
       case "customer.subscription.deleted": {
         const sub = event.data.object as Stripe.Subscription;
+        const { data: prev } = await supabase
+          .from("subscriptions").select("user_id")
+          .eq("stripe_subscription_id", sub.id).maybeSingle();
         await supabase.from("subscriptions")
           .update({ status: "canceled", cancel_at_period_end: false })
           .eq("stripe_subscription_id", sub.id);
+        if (prev?.user_id) {
+          await notifyAndEmail({
+            userId: prev.user_id,
+            type: "subscription_canceled",
+            title: "Your subscription is canceled",
+            message: "Your subscription has been canceled. You're welcome back anytime.",
+            templateName: "subscription-canceled",
+            idempotencyKey: `canceled-${sub.id}`,
+          });
+        }
         break;
       }
     }
