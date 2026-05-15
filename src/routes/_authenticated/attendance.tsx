@@ -99,12 +99,17 @@ function SlotCard({ slot, sessionDate }: { slot: Slot; sessionDate: string }) {
   const { data: assignments } = useQuery({
     queryKey: ["slot-clients", slot.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: cs, error } = await supabase
         .from("client_slots")
-        .select("user_id, user:users(name, email)")
+        .select("user_id")
         .eq("slot_id", slot.id);
       if (error) throw error;
-      return (data ?? []) as unknown as ClientAssignment[];
+      const ids = (cs ?? []).map((r) => r.user_id);
+      if (ids.length === 0) return [] as ClientAssignment[];
+      const { data: users } = await supabase
+        .from("users").select("id, name, email").in("id", ids);
+      const byId = new Map((users ?? []).map((u) => [u.id, u]));
+      return ids.map((id) => ({ user_id: id, user: byId.get(id) ? { name: byId.get(id)!.name, email: byId.get(id)!.email } : null })) as ClientAssignment[];
     },
   });
 
