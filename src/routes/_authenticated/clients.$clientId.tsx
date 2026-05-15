@@ -247,6 +247,10 @@ function ClientProfilePage() {
           )}
         </Section>
 
+        <Section title="Programs">
+          <ClientProgramsSection userId={clientId} />
+        </Section>
+
         <Section title="Content engagement">
           <Row k="Total completions" v={data.completions.length.toString()} />
           <Row k="Last active" v={data.completions[0] ? new Date(data.completions[0].completed_at).toLocaleString() : "—"} />
