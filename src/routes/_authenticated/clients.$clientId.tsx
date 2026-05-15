@@ -92,20 +92,20 @@ function ClientProfilePage() {
   }
 
   async function changePlan(newPlanId: string) {
-    if (!data.sub) return;
+    if (!data?.sub) return;
     const { error } = await supabase.from("subscriptions").update({ plan_id: newPlanId }).eq("id", data.sub.id);
     if (error) return toast.error(error.message);
-    await supabase.from("activity_log").insert({ type: "plan_change", message: `Plan updated for ${u.name || u.email}`, user_id: u.id });
+    await supabase.from("activity_log").insert({ type: "plan_change", message: `Plan updated for ${u?.name || u?.email}`, user_id: u?.id });
     toast.success("Plan updated");
     qc.invalidateQueries({ queryKey: ["client-profile", clientId] });
   }
 
   async function cancelSubscription() {
-    if (!data.sub) return;
+    if (!data?.sub) return;
     if (!confirm("Cancel this subscription at period end?")) return;
     const { error } = await supabase.from("subscriptions").update({ cancel_at_period_end: true }).eq("id", data.sub.id);
     if (error) return toast.error(error.message);
-    await supabase.from("activity_log").insert({ type: "subscription_cancel_scheduled", message: `Subscription cancellation scheduled for ${u.name || u.email}`, user_id: u.id });
+    await supabase.from("activity_log").insert({ type: "subscription_cancel_scheduled", message: `Subscription cancellation scheduled for ${u?.name || u?.email}`, user_id: u?.id });
     toast.success("Cancellation scheduled");
     qc.invalidateQueries({ queryKey: ["client-profile", clientId] });
   }
