@@ -8,15 +8,17 @@ export function ProgressDashboard({ userId }: { userId: string }) {
   const { data, isLoading } = useQuery({
     queryKey: ["progress-data", userId],
     queryFn: async () => {
-      const [att, comp, usr, intake] = await Promise.all([
+      const [att, comp, prog, usr, intake] = await Promise.all([
         supabase.from("attendance").select("session_date, status").eq("user_id", userId).eq("status", "present"),
         supabase.from("content_completions").select("completed_at").eq("user_id", userId),
+        supabase.from("program_completions").select("completed_at").eq("user_id", userId),
         supabase.from("users").select("created_at").eq("id", userId).maybeSingle(),
         supabase.from("intake_forms").select("days_per_week").eq("user_id", userId).order("submitted_at", { ascending: false }).limit(1).maybeSingle(),
       ]);
       const events: ProgressEvent[] = [
         ...((att.data ?? []) as { session_date: string }[]).map((r) => ({ date: new Date(r.session_date + "T12:00:00"), kind: "live" as const })),
         ...((comp.data ?? []) as { completed_at: string }[]).map((r) => ({ date: new Date(r.completed_at), kind: "mornings" as const })),
+        ...((prog.data ?? []) as { completed_at: string }[]).map((r) => ({ date: new Date(r.completed_at), kind: "mornings" as const })),
       ];
       return {
         events,
