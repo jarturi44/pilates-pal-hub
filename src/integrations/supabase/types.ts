@@ -87,7 +87,10 @@ export type Database = {
           category: string | null
           created_at: string
           description: string | null
+          difficulty: string | null
+          duration_minutes: number | null
           id: string
+          sort_order: number
           title: string
           video_url: string | null
         }
@@ -96,7 +99,10 @@ export type Database = {
           category?: string | null
           created_at?: string
           description?: string | null
+          difficulty?: string | null
+          duration_minutes?: number | null
           id?: string
+          sort_order?: number
           title: string
           video_url?: string | null
         }
@@ -105,7 +111,10 @@ export type Database = {
           category?: string | null
           created_at?: string
           description?: string | null
+          difficulty?: string | null
+          duration_minutes?: number | null
           id?: string
+          sort_order?: number
           title?: string
           video_url?: string | null
         }
@@ -350,6 +359,45 @@ export type Database = {
           sessions_per_week?: number | null
           stripe_price_id?: string | null
           type?: Database["public"]["Enums"]["plan_type"]
+        }
+        Relationships: []
+      }
+      reminder_send_log: {
+        Row: {
+          created_at: string
+          id: string
+          send_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          send_date: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          send_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reminder_settings: {
+        Row: {
+          id: number
+          reminder_days: number[]
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          reminder_days?: number[]
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          reminder_days?: number[]
+          updated_at?: string
         }
         Relationships: []
       }
