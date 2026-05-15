@@ -8,6 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
+import { Wordmark } from "@/components/Wordmark";
 
 const clientNav = [
   { to: "/home", label: "Home", icon: Home },
@@ -72,7 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-background flex">
       {/* Mobile top bar */}
       <header className="md:hidden fixed inset-x-0 top-0 z-40 h-14 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-4">
-        <Link to="/" className="font-display text-xl text-sidebar-foreground">Studio</Link>
+        <Link to="/" className="text-sidebar-foreground"><Wordmark size="md" /></Link>
         <button
           onClick={() => setOpen((v) => !v)}
           className="p-2 rounded-md hover:bg-sidebar-accent text-sidebar-foreground"
@@ -91,7 +92,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       >
         <div className="hidden md:flex items-center px-6 h-16 border-b border-sidebar-border">
-          <span className="font-display text-2xl text-sidebar-foreground">Studio</span>
+          <Wordmark size="md" className="text-sidebar-foreground" />
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {items.map((item) => {

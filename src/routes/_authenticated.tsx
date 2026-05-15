@@ -40,11 +40,7 @@ function AuthLayout() {
   });
 
   if (loading || (role === "client" && gateLoading)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-muted-foreground">Loading…</p>
-      </div>
-    );
+    return <LoadingScreen />;
   }
   if (!session) return <Navigate to="/login" />;
 
