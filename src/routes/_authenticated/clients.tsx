@@ -165,25 +165,6 @@ function ClientDetailDrawer({ clientId, onClose }: { clientId: string; onClose: 
     },
   });
 
-  const engagement = useMemo(() => {
-    const c = data?.completions ?? [];
-    const now = new Date();
-    const fourWeeksAgo = new Date(now); fourWeeksAgo.setDate(now.getDate() - 28);
-    const last4w = c.filter((x) => new Date(x.completed_at) >= fourWeeksAgo).length;
-    const lastActive = c[0]?.completed_at ?? null;
-    // 8 weekly buckets
-    const buckets: { label: string; count: number }[] = [];
-    for (let i = 7; i >= 0; i--) {
-      const start = new Date(now); start.setHours(0, 0, 0, 0);
-      const day = start.getDay(); const diff = (day + 6) % 7;
-      start.setDate(start.getDate() - diff - i * 7);
-      const end = new Date(start); end.setDate(start.getDate() + 7);
-      const count = c.filter((x) => { const t = new Date(x.completed_at); return t >= start && t < end; }).length;
-      buckets.push({ label: `${start.getMonth() + 1}/${start.getDate()}`, count });
-    }
-    const max = Math.max(1, ...buckets.map((b) => b.count));
-    return { total: c.length, last4w, lastActive, buckets, max };
-  }, [data?.completions]);
 
   function exportWaiverPdf() {
     if (!data?.waiver || !data.user) return toast.error("No waiver on file");
