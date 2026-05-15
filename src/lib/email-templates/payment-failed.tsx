@@ -6,20 +6,20 @@ import { EmailHeader } from "./_header";
 interface Props { name?: string; portalUrl?: string; }
 
 const Email = ({ name, portalUrl }: Props) => (
-  <Html lang="en"><Head /><Preview>We couldn't process your latest payment</Preview>
+  <Html lang="en"><Head /><Preview>Hey — quick heads up</Preview>
     <Body style={main}><Container style={container}>
       <EmailHeader /><Text style={header}>{SITE_NAME}</Text>
-      <Heading style={h1}>{name ? `${name}, we hit a small snag` : "We hit a small snag"}</Heading>
-      <Text style={text}>Your latest payment didn't go through. No worries — most often this is a card update on file.</Text>
-      <Text style={text}>To keep your access uninterrupted, please update your payment method within the next few days.</Text>
-      {portalUrl && <Button href={portalUrl} style={button}>Update payment method</Button>}
-      <Text style={footer}>— The {SITE_NAME} team</Text>
+      <Heading style={h1}>{name ? `Hey ${name} — quick heads up` : "Hey — quick heads up"}</Heading>
+      <Text style={text}>Just a heads up that your payment didn't go through. No stress, it happens!</Text>
+      <Text style={text}>Just update your payment info and we'll get you sorted. I don't want anything getting in the way of your practice.</Text>
+      {portalUrl && <Button href={portalUrl} style={button}>Update payment method →</Button>}
+      <Text style={footer}>— Jon</Text>
     </Container></Body></Html>
 );
 
 export const template = {
   component: Email,
-  subject: "Action needed: update your payment method",
+  subject: "Hey — quick heads up",
   displayName: "Payment failed",
   previewData: { name: "Sam", portalUrl: "https://billing.stripe.com/p/session/example" },
 } satisfies TemplateEntry;
