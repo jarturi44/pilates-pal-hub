@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { AppShell } from "@/components/AppShell";
 import { AlertOctagon } from "lucide-react";
+import { LoadingScreen } from "@/components/Wordmark";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthLayout,

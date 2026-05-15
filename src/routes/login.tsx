@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Wordmark } from "@/components/Wordmark";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
