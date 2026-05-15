@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { AlertCircle, Check, Download, FileText, Loader2, X } from "lucide-react";
 import jsPDF from "jspdf";
 import { cn } from "@/lib/utils";
+import { ProgressDashboard } from "@/components/ProgressDashboard";
 
 export const Route = createFileRoute("/_authenticated/clients")({
   component: ClientsPage,
@@ -141,7 +142,7 @@ function ClientDetailDrawer({ clientId, onClose }: { clientId: string; onClose: 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-client-detail", clientId],
     queryFn: async () => {
-      const [user, intake, waiver, sub, completions] = await Promise.all([
+      const [user, intake, waiver, sub, completions, attendance, slots] = await Promise.all([
         supabase.from("users").select("*").eq("id", clientId).maybeSingle(),
         supabase.from("intake_forms").select("*").eq("user_id", clientId)
           .order("submitted_at", { ascending: false }).limit(1).maybeSingle(),
@@ -151,33 +152,19 @@ function ClientDetailDrawer({ clientId, onClose }: { clientId: string; onClose: 
           .order("created_at", { ascending: false }).limit(1).maybeSingle(),
         supabase.from("content_completions").select("completed_at").eq("user_id", clientId)
           .order("completed_at", { ascending: false }),
+        supabase.from("attendance").select("id, slot_id, session_date, status, attended, notes")
+          .eq("user_id", clientId).order("session_date", { ascending: false }),
+        supabase.from("slots").select("id, day_of_week, time, session_type"),
       ]);
       return {
         user: user.data, intake: intake.data, waiver: waiver.data, sub: sub.data,
         completions: (completions.data ?? []) as { completed_at: string }[],
+        attendance: (attendance.data ?? []) as { id: string; slot_id: string; session_date: string; status: string; attended: boolean; notes: string | null }[],
+        slots: (slots.data ?? []) as { id: string; day_of_week: number; time: string; session_type: string }[],
       };
     },
   });
 
-  const engagement = useMemo(() => {
-    const c = data?.completions ?? [];
-    const now = new Date();
-    const fourWeeksAgo = new Date(now); fourWeeksAgo.setDate(now.getDate() - 28);
-    const last4w = c.filter((x) => new Date(x.completed_at) >= fourWeeksAgo).length;
-    const lastActive = c[0]?.completed_at ?? null;
-    // 8 weekly buckets
-    const buckets: { label: string; count: number }[] = [];
-    for (let i = 7; i >= 0; i--) {
-      const start = new Date(now); start.setHours(0, 0, 0, 0);
-      const day = start.getDay(); const diff = (day + 6) % 7;
-      start.setDate(start.getDate() - diff - i * 7);
-      const end = new Date(start); end.setDate(start.getDate() + 7);
-      const count = c.filter((x) => { const t = new Date(x.completed_at); return t >= start && t < end; }).length;
-      buckets.push({ label: `${start.getMonth() + 1}/${start.getDate()}`, count });
-    }
-    const max = Math.max(1, ...buckets.map((b) => b.count));
-    return { total: c.length, last4w, lastActive, buckets, max };
-  }, [data?.completions]);
 
   function exportWaiverPdf() {
     if (!data?.waiver || !data.user) return toast.error("No waiver on file");
@@ -243,23 +230,15 @@ function ClientDetailDrawer({ clientId, onClose }: { clientId: string; onClose: 
               </section>
             )}
 
-            <section className="rounded-xl border border-border bg-card p-4">
-              <h3 className="font-display text-lg text-foreground mb-3">Engagement</h3>
-              <div className="grid grid-cols-3 gap-3 mb-4">
-                <Stat label="All-time" value={engagement.total} />
-                <Stat label="Last 4 weeks" value={engagement.last4w} />
-                <Stat label="Last active" value={engagement.lastActive ? new Date(engagement.lastActive).toLocaleDateString() : "—"} />
-              </div>
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Last 8 weeks</div>
-              <div className="flex items-end gap-1 h-20">
-                {engagement.buckets.map((b, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                    <div className="w-full rounded-sm bg-primary/80" style={{ height: `${(b.count / engagement.max) * 100}%`, minHeight: b.count > 0 ? 4 : 2, opacity: b.count > 0 ? 1 : 0.15 }} title={`${b.count} sessions`} />
-                    <div className="text-[9px] text-muted-foreground">{b.label}</div>
-                  </div>
-                ))}
-              </div>
+            <section>
+              <h3 className="font-display text-lg text-foreground mb-3">Progress</h3>
+              <ProgressDashboard userId={clientId} />
             </section>
+
+            <AttendanceSection
+              records={data.attendance}
+              slots={data.slots}
+            />
 
             <section className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -331,5 +310,111 @@ function Stat({ label, value }: { label: string; value: string | number }) {
       <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="font-display text-xl text-foreground mt-0.5">{value}</div>
     </div>
+  );
+}
+
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function AttendanceSection({ records, slots }: {
+  records: { id: string; slot_id: string; session_date: string; status: string; attended: boolean; notes: string | null }[];
+  slots: { id: string; day_of_week: number; time: string; session_type: string }[];
+}) {
+  const slotById = useMemo(() => {
+    const m = new Map<string, { day_of_week: number; time: string; session_type: string }>();
+    slots.forEach((s) => m.set(s.id, s));
+    return m;
+  }, [slots]);
+
+  const stats = useMemo(() => {
+    const now = new Date();
+    const last30 = new Date(now); last30.setDate(now.getDate() - 30);
+    const total = records.length;
+    const attendedTotal = records.filter((r) => r.status === "present").length;
+    const last30Records = records.filter((r) => new Date(r.session_date + "T12:00:00") >= last30);
+    const ratio = (arr: typeof records) =>
+      arr.length === 0 ? 0 : Math.round((arr.filter((r) => r.status === "present").length / arr.length) * 100);
+    const rate30 = ratio(last30Records);
+    const rateAll = ratio(records);
+
+    // streak: consecutive weeks with at least one attended
+    let streak = 0;
+    for (let i = 0; ; i++) {
+      const ws = new Date(now); ws.setHours(0, 0, 0, 0);
+      const day = ws.getDay(); const diff = (day + 6) % 7;
+      ws.setDate(ws.getDate() - diff - i * 7);
+      const we = new Date(ws); we.setDate(ws.getDate() + 7);
+      const has = records.some((r) => {
+        const d = new Date(r.session_date + "T12:00:00");
+        return r.status === "present" && d >= ws && d < we;
+      });
+      if (has) streak++; else break;
+      if (i > 520) break;
+    }
+    return { total, attendedTotal, rate30, rateAll, streak };
+  }, [records]);
+
+  const notes = useMemo(
+    () => records.filter((r) => r.notes && r.notes.trim().length > 0),
+    [records],
+  );
+
+  return (
+    <section className="rounded-xl border border-border bg-card p-4">
+      <h3 className="font-display text-lg text-foreground mb-3">Live attendance</h3>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        <Stat label="Rate (30d)" value={`${stats.rate30}%`} />
+        <Stat label="Rate (all)" value={`${stats.rateAll}%`} />
+        <Stat label="Attended" value={stats.attendedTotal} />
+        <Stat label="Streak (wk)" value={stats.streak} />
+      </div>
+
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">History</div>
+      {records.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No attendance recorded yet.</p>
+      ) : (
+        <div className="rounded-md border border-border max-h-64 overflow-y-auto divide-y divide-border">
+          {records.map((r) => {
+            const s = slotById.get(r.slot_id);
+            const slotLabel = s
+              ? `${DAYS[s.day_of_week]} ${s.time.slice(0, 5)} · ${s.session_type === "private" ? "Private" : "Semi-Private"}`
+              : "Slot";
+            const badge = r.status === "present"
+              ? "bg-primary/10 text-primary"
+              : r.status === "late_canceled"
+              ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+              : "bg-destructive/10 text-destructive";
+            const label = r.status === "late_canceled" ? "Late cancel" : r.status === "present" ? "Present" : "Absent";
+            return (
+              <div key={r.id} className="px-3 py-2 flex items-center justify-between gap-2 text-xs">
+                <div className="min-w-0">
+                  <div className="text-foreground">{new Date(r.session_date + "T12:00:00").toLocaleDateString()}</div>
+                  <div className="text-muted-foreground truncate">{slotLabel}</div>
+                </div>
+                <span className={cn("rounded-full px-2 py-0.5 font-medium uppercase tracking-wide", badge)}>{label}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="mt-4">
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Private session notes</div>
+        {notes.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No notes yet.</p>
+        ) : (
+          <ul className="space-y-2">
+            {notes.map((n) => (
+              <li key={n.id} className="rounded-md border border-border bg-background p-3 text-sm">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+                  {new Date(n.session_date + "T12:00:00").toLocaleDateString()}
+                </div>
+                <div className="text-foreground whitespace-pre-line">{n.notes}</div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
   );
 }
