@@ -113,7 +113,17 @@ Deno.serve(async (req) => {
           commitment_end_date: commitmentEnd.toISOString(),
           current_period_end: periodEnd.toISOString(),
           cancel_at_period_end: sub.cancel_at_period_end,
+          past_due_since: null,
+          access_suspended: false,
         }, { onConflict: "stripe_subscription_id" });
+        await notifyAndEmail({
+          userId,
+          type: "subscription_confirmed",
+          title: "Subscription confirmed",
+          message: "Welcome to Pilates with Jon. Your subscription is active.",
+          templateName: "subscription-confirmed",
+          idempotencyKey: `subconfirm-${subscriptionId}`,
+        });
         break;
       }
 
