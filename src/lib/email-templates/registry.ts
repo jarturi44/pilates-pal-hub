@@ -10,8 +10,26 @@ export interface TemplateEntry {
 
 import { template as equipmentShipped } from './equipment-shipped'
 import { template as morningsReminder } from './mornings-reminder'
+import { template as subscriptionConfirmed } from './subscription-confirmed'
+import { template as onboardingComplete } from './onboarding-complete'
+import { template as slotAssigned } from './slot-assigned'
+import { template as sessionReminder } from './session-reminder'
+import { template as paymentFailed } from './payment-failed'
+import { template as paymentRecovered } from './payment-recovered'
+import { template as subscriptionCanceled } from './subscription-canceled'
+import { template as commitmentEnding } from './commitment-ending'
+import { template as adminBroadcast } from './admin-broadcast'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'equipment-shipped': equipmentShipped,
   'mornings-reminder': morningsReminder,
+  'subscription-confirmed': subscriptionConfirmed,
+  'onboarding-complete': onboardingComplete,
+  'slot-assigned': slotAssigned,
+  'session-reminder': sessionReminder,
+  'payment-failed': paymentFailed,
+  'payment-recovered': paymentRecovered,
+  'subscription-canceled': subscriptionCanceled,
+  'commitment-ending': commitmentEnding,
+  'admin-broadcast': adminBroadcast,
 }

@@ -25,6 +25,56 @@ async function getPlanIdByPrice(priceId: string): Promise<string | null> {
   return data?.id ?? null;
 }
 
+async function getUserEmail(userId: string): Promise<{ email: string | null; name: string | null }> {
+  const { data } = await supabase.from("users").select("email, name").eq("id", userId).maybeSingle();
+  return { email: data?.email ?? null, name: data?.name ?? null };
+}
+
+async function notifyAndEmail(args: {
+  userId: string; type: string; title: string; message: string;
+  templateName: string; templateData?: Record<string, any>; idempotencyKey: string;
+}) {
+  await supabase.from("notifications").insert({
+    user_id: args.userId, type: args.type, title: args.title, message: args.message,
+  });
+  const { email, name } = await getUserEmail(args.userId);
+  if (!email) return;
+  // Enqueue email through the same pgmq pipeline used by the app.
+  // We render a minimal subject/body pointer via the transactional send route would need an auth token,
+  // so we directly enqueue here using the registered template name as the label.
+  // The dispatcher will need a pre-rendered HTML — instead we just record a notification and skip email here
+  // unless a template render path is available. To keep parity, we'll trigger the public send via service role.
+  try {
+    const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/`; // not used
+    // Best effort: insert into email_send_log + enqueue using the same RPC the app uses.
+    // We can't easily render React Email in Deno here, so we send a plain-text fallback.
+    const messageId = crypto.randomUUID();
+    await supabase.from("email_send_log").insert({
+      message_id: messageId, template_name: args.templateName,
+      recipient_email: email, status: "pending",
+    });
+    const text = args.message + (args.templateData?.portalUrl ? `\n\nUpdate your payment method: ${args.templateData.portalUrl}` : "");
+    const html = `<p>${args.message.replace(/\n/g, "<br>")}</p>${args.templateData?.portalUrl ? `<p><a href="${args.templateData.portalUrl}">Update payment method</a></p>` : ""}`;
+    await supabase.rpc("enqueue_email", {
+      queue_name: "transactional_emails",
+      payload: {
+        message_id: messageId,
+        to: email,
+        from: "Pilates with Jon <noreply@notify.pilateswithjon.com>",
+        sender_domain: "notify.pilateswithjon.com",
+        subject: args.title,
+        html, text,
+        purpose: "transactional",
+        label: args.templateName,
+        idempotency_key: args.idempotencyKey,
+        queued_at: new Date().toISOString(),
+      },
+    });
+  } catch (e) {
+    console.error("email enqueue failed", e);
+  }
+}
+
 Deno.serve(async (req) => {
   const sig = req.headers.get("stripe-signature");
   if (!sig) return new Response("Missing signature", { status: 400 });

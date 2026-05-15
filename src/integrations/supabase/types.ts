@@ -55,6 +55,42 @@ export type Database = {
           },
         ]
       }
+      broadcasts: {
+        Row: {
+          audience_label: string | null
+          audience_type: string
+          audience_value: string | null
+          body: string
+          created_at: string
+          id: string
+          recipient_count: number
+          sent_by: string
+          subject: string
+        }
+        Insert: {
+          audience_label?: string | null
+          audience_type: string
+          audience_value?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          recipient_count?: number
+          sent_by: string
+          subject: string
+        }
+        Update: {
+          audience_label?: string | null
+          audience_type?: string
+          audience_value?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          recipient_count?: number
+          sent_by?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       client_slots: {
         Row: {
           created_at: string
@@ -305,28 +341,55 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_dedupe: {
+        Row: {
+          created_at: string
+          dedupe_key: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
           id: string
+          link: string | null
           message: string
           read: boolean
+          title: string | null
           type: string
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          link?: string | null
           message: string
           read?: boolean
+          title?: string | null
           type: string
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          link?: string | null
           message?: string
           read?: boolean
+          title?: string | null
           type?: string
           user_id?: string
         }
@@ -433,11 +496,13 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          access_suspended: boolean
           cancel_at_period_end: boolean
           commitment_end_date: string | null
           created_at: string
           current_period_end: string | null
           id: string
+          past_due_since: string | null
           plan_id: string
           start_date: string
           status: string
@@ -446,11 +511,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          access_suspended?: boolean
           cancel_at_period_end?: boolean
           commitment_end_date?: string | null
           created_at?: string
           current_period_end?: string | null
           id?: string
+          past_due_since?: string | null
           plan_id: string
           start_date?: string
           status?: string
@@ -459,11 +526,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          access_suspended?: boolean
           cancel_at_period_end?: boolean
           commitment_end_date?: string | null
           created_at?: string
           current_period_end?: string | null
           id?: string
+          past_due_since?: string | null
           plan_id?: string
           start_date?: string
           status?: string

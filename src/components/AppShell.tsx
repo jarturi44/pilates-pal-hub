@@ -1,9 +1,11 @@
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   Home, Calendar, LineChart, Bell, User as UserIcon,
-  LayoutDashboard, Users, Clock, Film, Settings, Menu, X, LogOut, Package, ClipboardCheck,
+  LayoutDashboard, Users, Clock, Film, Settings, Menu, X, LogOut, Package, ClipboardCheck, Megaphone,
 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +24,7 @@ const adminNav = [
   { to: "/attendance", label: "Attendance", icon: ClipboardCheck },
   { to: "/content", label: "Content", icon: Film },
   { to: "/fulfillment", label: "Fulfillment", icon: Package },
+  { to: "/broadcasts", label: "Messages", icon: Megaphone },
   { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
@@ -31,8 +34,34 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const qc = useQueryClient();
 
   const items = role === "admin" ? adminNav : clientNav;
+
+  // Unread count for the Notifications nav item.
+  const { data: unread = 0 } = useQuery({
+    queryKey: ["notif-unread", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user!.id)
+        .eq("read", false);
+      return count ?? 0;
+    },
+    refetchInterval: 60000,
+  });
+
+  // Realtime: keep badge in sync.
+  useEffect(() => {
+    if (!user?.id) return;
+    const ch = supabase.channel(`notif-badge-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        () => qc.invalidateQueries({ queryKey: ["notif-unread", user.id] }))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user?.id, qc]);
 
   async function handleSignOut() {
     await signOut();
@@ -81,7 +110,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                 )}
               >
                 <Icon size={18} />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {item.to === "/notifications" && unread > 0 && (
+                  <span className="rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-1.5 py-0.5 min-w-[18px] text-center">
+                    {unread > 99 ? "99+" : unread}
+                  </span>
+                )}
               </Link>
             );
           })}
