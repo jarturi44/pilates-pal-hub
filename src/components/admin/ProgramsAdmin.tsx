@@ -156,8 +156,8 @@ function ProgramEditor({ programId, onClose, onSaved }: { programId: string | nu
     queryKey: ["program-edit", programId],
     queryFn: async () => {
       const [{ data: p }, { data: rows }] = await Promise.all([
-        supabase.from("programs").select("*").eq("id", programId).maybeSingle(),
-        supabase.from("program_exercises").select("*").eq("program_id", programId).order("position"),
+        supabase.from("programs").select("*").eq("id", programId!).maybeSingle(),
+        supabase.from("program_exercises").select("*").eq("program_id", programId!).order("position"),
       ]);
       if (p) {
         setName(p.name); setDescription(p.description ?? ""); setFrequency(p.frequency ?? ""); setActive(p.active);
