@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/PagePrimitives";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Loader2, Package } from "lucide-react";
+import { sendTransactionalEmail } from "@/lib/email/send";
 
 export const Route = createFileRoute("/_authenticated/fulfillment")({
   component: FulfillmentPage,
