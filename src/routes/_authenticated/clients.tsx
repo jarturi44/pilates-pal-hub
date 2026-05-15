@@ -324,3 +324,12 @@ function Row({ k, v, multiline }: { k: string; v: string | null | undefined; mul
     </div>
   );
 }
+
+function Stat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-md border border-border bg-background p-3">
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="font-display text-xl text-foreground mt-0.5">{value}</div>
+    </div>
+  );
+}
