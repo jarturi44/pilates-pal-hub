@@ -141,7 +141,7 @@ function ClientDetailDrawer({ clientId, onClose }: { clientId: string; onClose: 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-client-detail", clientId],
     queryFn: async () => {
-      const [user, intake, waiver, sub] = await Promise.all([
+      const [user, intake, waiver, sub, completions] = await Promise.all([
         supabase.from("users").select("*").eq("id", clientId).maybeSingle(),
         supabase.from("intake_forms").select("*").eq("user_id", clientId)
           .order("submitted_at", { ascending: false }).limit(1).maybeSingle(),
@@ -149,10 +149,35 @@ function ClientDetailDrawer({ clientId, onClose }: { clientId: string; onClose: 
           .order("signed_at", { ascending: false }).limit(1).maybeSingle(),
         supabase.from("subscriptions").select("*, plan:plans(*)").eq("user_id", clientId)
           .order("created_at", { ascending: false }).limit(1).maybeSingle(),
+        supabase.from("content_completions").select("completed_at").eq("user_id", clientId)
+          .order("completed_at", { ascending: false }),
       ]);
-      return { user: user.data, intake: intake.data, waiver: waiver.data, sub: sub.data };
+      return {
+        user: user.data, intake: intake.data, waiver: waiver.data, sub: sub.data,
+        completions: (completions.data ?? []) as { completed_at: string }[],
+      };
     },
   });
+
+  const engagement = useMemo(() => {
+    const c = data?.completions ?? [];
+    const now = new Date();
+    const fourWeeksAgo = new Date(now); fourWeeksAgo.setDate(now.getDate() - 28);
+    const last4w = c.filter((x) => new Date(x.completed_at) >= fourWeeksAgo).length;
+    const lastActive = c[0]?.completed_at ?? null;
+    // 8 weekly buckets
+    const buckets: { label: string; count: number }[] = [];
+    for (let i = 7; i >= 0; i--) {
+      const start = new Date(now); start.setHours(0, 0, 0, 0);
+      const day = start.getDay(); const diff = (day + 6) % 7;
+      start.setDate(start.getDate() - diff - i * 7);
+      const end = new Date(start); end.setDate(start.getDate() + 7);
+      const count = c.filter((x) => { const t = new Date(x.completed_at); return t >= start && t < end; }).length;
+      buckets.push({ label: `${start.getMonth() + 1}/${start.getDate()}`, count });
+    }
+    const max = Math.max(1, ...buckets.map((b) => b.count));
+    return { total: c.length, last4w, lastActive, buckets, max };
+  }, [data?.completions]);
 
   function exportWaiverPdf() {
     if (!data?.waiver || !data.user) return toast.error("No waiver on file");
