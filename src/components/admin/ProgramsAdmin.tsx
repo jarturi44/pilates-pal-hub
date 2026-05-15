@@ -195,14 +195,15 @@ function ProgramEditor({ programId, onClose, onSaved }: { programId: string | nu
     if (!name.trim()) return toast.error("Name required");
     setSaving(true);
     const payload = { name: name.trim(), description: description.trim() || null, frequency: frequency.trim() || null, active };
-    let pid = programId;
+    let pid: string;
     if (isNew) {
       const { data: created, error } = await supabase.from("programs").insert(payload).select().single();
       if (error || !created) { setSaving(false); return toast.error(error?.message ?? "Failed"); }
       pid = created.id;
     } else {
-      const { error } = await supabase.from("programs").update(payload).eq("id", programId);
+      const { error } = await supabase.from("programs").update(payload).eq("id", programId!);
       if (error) { setSaving(false); return toast.error(error.message); }
+      pid = programId!;
     }
     // Replace exercise list
     await supabase.from("program_exercises").delete().eq("program_id", pid);
