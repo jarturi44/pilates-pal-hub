@@ -43,13 +43,15 @@ function MyProgramPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [activeCat, setActiveCat] = useState<ContentCategory | "All">("All");
 
+  const [tab, setTab] = useState<"mornings" | "exercises">("mornings");
+
   const { data: sub } = useQuery({
     enabled: !!userId,
     queryKey: ["my-sub", userId],
     queryFn: async () => {
-      const { data } = await supabase.from("subscriptions").select("status")
+      const { data } = await supabase.from("subscriptions").select("status, plan:plans(type)")
         .eq("user_id", userId!).order("created_at", { ascending: false }).limit(1).maybeSingle();
-      return data as { status: string } | null;
+      return data as { status: string; plan: { type: string } | null } | null;
     },
   });
 
