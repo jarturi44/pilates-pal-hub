@@ -208,7 +208,7 @@ function RevenueTab() {
       const [active, canceled] = await Promise.all([
         supabase.from("subscriptions").select("plan_id, plan:plans(display_name, price_per_month), start_date, current_period_end")
           .in("status", ["active", "trialing"]),
-        supabase.from("subscriptions").select("start_date, current_period_end, status").eq("status", "canceled")
+        supabase.from("subscriptions").select("plan_id, plan:plans(display_name, price_per_month), start_date, current_period_end, status").eq("status", "canceled")
           .gte("current_period_end", ninetyDaysAgo),
       ]);
       return { active: active.data ?? [], canceled: canceled.data ?? [] };
