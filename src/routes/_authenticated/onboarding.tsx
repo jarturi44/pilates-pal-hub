@@ -1,17 +1,27 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, PackageCheck, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Search = { step?: "plan" | "shipping" | "commitment" | "checkout" | "success"; session_id?: string };
+type Step =
+  | "plan"
+  | "shipping"
+  | "commitment"
+  | "checkout"
+  | "welcome"
+  | "intake"
+  | "waiver"
+  | "done";
+
+type Search = { step?: Step; session_id?: string };
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   validateSearch: (s: Record<string, unknown>): Search => ({
-    step: (s.step as Search["step"]) ?? "plan",
+    step: (s.step as Step) ?? "plan",
     session_id: s.session_id as string | undefined,
   }),
   component: OnboardingPage,
@@ -34,12 +44,32 @@ const tierMeta: Record<Plan["type"], { label: string; description: string }> = {
   combo: { label: "Combo", description: "Mix of private and semi-private. Includes the Mornings library." },
 };
 
+const WAIVER_TEXT = `LIABILITY WAIVER & RELEASE OF CLAIMS — Pilates with Jon
+
+In consideration of being permitted to participate in any Pilates classes, sessions, programs, video content, or related activities (collectively, the "Services") provided by Pilates with Jon ("the Studio"), I, the undersigned participant, acknowledge and agree to the following terms:
+
+1. ASSUMPTION OF RISK. I understand that participation in Pilates and related fitness activities involves inherent risks, including but not limited to muscle strains, sprains, joint injuries, falls, fractures, cardiovascular events, and aggravation of pre-existing conditions. I voluntarily assume all such risks, both known and unknown, even if arising from the negligence of the Studio or others.
+
+2. PHYSICAL CONDITION. I represent that I am in good physical health and have no medical condition that would prevent my safe participation. I have consulted my physician if I have any doubt about my ability to participate. I will immediately notify my instructor of any injury, pain, dizziness, or discomfort during any session.
+
+3. EQUIPMENT. I understand that I may be provided with equipment (foam roller, Pilates ring, resistance bands, stretch strap, door anchors). I agree to use this equipment only as instructed and acknowledge that improper use can result in serious injury or property damage.
+
+4. RELEASE OF LIABILITY. I, on behalf of myself, my heirs, executors, and assigns, hereby release, waive, and discharge the Studio, its owners, instructors, employees, and agents from any and all claims, demands, or causes of action arising out of or related to my participation in the Services.
+
+5. MEDIA RELEASE. I grant the Studio permission to use my likeness in photographs or video for promotional purposes unless I notify the Studio in writing otherwise.
+
+6. ACKNOWLEDGEMENT. I have read this entire waiver, understand its contents, and sign it freely and voluntarily. I understand that this is a legally binding agreement.
+
+By typing my full legal name below and checking the boxes, I confirm that I have read, understood, and agreed to all the terms above.`;
+
 function OnboardingPage() {
   const { user } = useAuth();
+  const qc = useQueryClient();
   const navigate = useNavigate();
   const search = useSearch({ from: "/_authenticated/onboarding" });
   const step = search.step ?? "plan";
 
+  // Pre-checkout state
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [address, setAddress] = useState({ line1: "", line2: "", city: "", region: "", postal: "", country: "" });
   const [acknowledged, setAcknowledged] = useState(false);
@@ -55,6 +85,23 @@ function OnboardingPage() {
     },
   });
 
+  // Active subscription (used in post-checkout steps)
+  const { data: activeSub } = useQuery({
+    queryKey: ["onboarding-active-sub", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("*, plan:plans(*)")
+        .eq("user_id", user!.id)
+        .in("status", ["active", "trialing", "past_due"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
   const grouped = useMemo(() => {
     const g: Record<Plan["type"], Plan[]> = { mornings: [], semi_private: [], private: [], combo: [] };
     (plans ?? []).forEach((p) => g[p.type].push(p));
@@ -63,17 +110,23 @@ function OnboardingPage() {
 
   const selectedPlan = plans?.find((p) => p.id === selectedPlanId) ?? null;
   const needsShipping = selectedPlan && selectedPlan.type !== "mornings";
+  const activePlan = (activeSub?.plan as Plan | undefined) ?? null;
+  const isLiveSessionPlan = activePlan && activePlan.type !== "mornings";
 
-  // After Stripe redirects back with session_id, finalize.
+  // After Stripe redirects back with session_id, route to welcome.
+  // The Stripe webhook creates the subscription server-side.
+  const successHandled = useRef(false);
   useEffect(() => {
-    if (step !== "success" || !user) return;
-    // Webhook does the heavy lifting. Just route the user forward.
-    toast.success("Payment received. Let's finish setting up your account.");
-    const t = setTimeout(() => navigate({ to: "/home" }), 1200);
-    return () => clearTimeout(t);
-  }, [step, user, navigate]);
+    if (step !== "success" && !search.session_id) return;
+    if (successHandled.current) return;
+    if (search.session_id || (step as string) === "success") {
+      successHandled.current = true;
+      toast.success("Payment received. Let's finish setting up your account.");
+      navigate({ to: "/_authenticated/onboarding", search: { step: "welcome" }, replace: true });
+    }
+  }, [step, search.session_id, navigate]);
 
-  function goTo(next: Search["step"]) {
+  function goTo(next: Step) {
     navigate({ to: "/_authenticated/onboarding", search: { step: next }, replace: true });
   }
 
@@ -94,7 +147,6 @@ function OnboardingPage() {
     if (!selectedPlanId || !user) return;
     setSubmitting(true);
     try {
-      // Save shipping address up-front (status pending). Upsert avoids dupes.
       if (needsShipping) {
         const full = [address.line1, address.line2, `${address.city}, ${address.region} ${address.postal}`, address.country]
           .filter(Boolean).join("\n");
@@ -122,6 +174,7 @@ function OnboardingPage() {
   return (
     <div className="max-w-3xl mx-auto">
       <Stepper step={step} />
+
       {step === "plan" && (
         <div className="space-y-8">
           <header>
@@ -246,26 +299,408 @@ function OnboardingPage() {
         </div>
       )}
 
-      {step === "success" && (
-        <div className="text-center py-16">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
-            <Check size={24} />
-          </div>
-          <h1 className="font-display text-3xl text-foreground">You're all set</h1>
-          <p className="mt-2 text-muted-foreground">Redirecting you to your home…</p>
-        </div>
+      {step === "welcome" && (
+        <WelcomeStep
+          plan={activePlan}
+          onContinue={() => goTo("intake")}
+        />
+      )}
+
+      {step === "intake" && (
+        <IntakeStep
+          onDone={() => goTo("waiver")}
+        />
+      )}
+
+      {step === "waiver" && (
+        <WaiverStep
+          onSigned={async () => {
+            if (!user) return;
+            // Mark onboarding complete + flag for slot assignment when on a live plan.
+            const { error } = await supabase
+              .from("users")
+              .update({
+                onboarding_complete: true,
+                needs_slot_assignment: !!isLiveSessionPlan,
+              })
+              .eq("id", user.id);
+            if (error) {
+              toast.error(error.message);
+              return;
+            }
+            qc.invalidateQueries({ queryKey: ["onboarding-gate"] });
+            goTo("done");
+          }}
+        />
+      )}
+
+      {step === "done" && (
+        <DoneStep
+          plan={activePlan}
+          onExplore={() => navigate({ to: "/home" })}
+        />
       )}
     </div>
   );
 }
 
-function Stepper({ step }: { step: Search["step"] }) {
-  const steps: { id: Search["step"]; label: string }[] = [
-    { id: "plan", label: "Plan" },
-    { id: "shipping", label: "Shipping" },
-    { id: "commitment", label: "Commitment" },
-    { id: "checkout", label: "Checkout" },
-  ];
+function WelcomeStep({ plan, onContinue }: { plan: Plan | null; onContinue: () => void }) {
+  const showsEquipment = plan && plan.type !== "mornings";
+  return (
+    <div className="space-y-8">
+      <header className="text-center">
+        <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary mb-4">
+          <Sparkles size={22} />
+        </div>
+        <h1 className="font-display text-4xl text-foreground">Welcome to the studio</h1>
+        <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
+          We're so glad you're here. A couple of quick steps and you'll be ready to start moving.
+        </p>
+      </header>
+
+      {showsEquipment && (
+        <section className="rounded-xl border border-border bg-card p-6">
+          <div className="flex items-start gap-4">
+            <div className="h-10 w-10 rounded-md bg-primary/10 text-primary inline-flex items-center justify-center shrink-0">
+              <PackageCheck size={20} />
+            </div>
+            <div>
+              <h2 className="font-display text-xl text-foreground">Your equipment is on the way</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Your starter kit will ship to the address you provided. It includes:
+              </p>
+              <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-y-1.5 gap-x-6 text-sm text-foreground">
+                {["Foam roller", "Pilates ring", "Resistance bands", "Stretch strap", "Two door anchors"].map((item) => (
+                  <li key={item} className="flex items-center gap-2"><Check size={14} className="text-primary" />{item}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="rounded-xl border border-border bg-card p-6">
+        <h2 className="font-display text-xl text-foreground">Next: your intake form</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Tell us a little about your goals and history so we can tailor your experience. Takes about 2 minutes.
+        </p>
+      </section>
+
+      <div className="flex justify-end">
+        <button
+          onClick={onContinue}
+          className="rounded-md bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:opacity-90"
+        >Start intake form</button>
+      </div>
+    </div>
+  );
+}
+
+const FITNESS_LEVELS = [
+  { id: "beginner", label: "Beginner" },
+  { id: "some", label: "Some experience" },
+  { id: "intermediate", label: "Intermediate" },
+  { id: "advanced", label: "Advanced" },
+] as const;
+
+const PRIMARY_GOALS = [
+  { id: "stronger", label: "Get stronger" },
+  { id: "flexibility", label: "Improve flexibility" },
+  { id: "recover", label: "Recover from injury" },
+  { id: "wellness", label: "General wellness" },
+  { id: "other", label: "Other" },
+] as const;
+
+function IntakeStep({ onDone }: { onDone: () => void }) {
+  const { user } = useAuth();
+  const [fitness, setFitness] = useState<string>("");
+  const [goal, setGoal] = useState<string>("");
+  const [injuries, setInjuries] = useState("");
+  const [days, setDays] = useState<number>(3);
+  const [referral, setReferral] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function submit() {
+    if (!user) return;
+    if (!fitness || !goal) return toast.error("Please answer the required questions");
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("intake_forms").insert({
+        user_id: user.id,
+        fitness_level: fitness,
+        primary_goal: goal,
+        injuries: injuries || null,
+        days_per_week: days,
+        referral_source: referral || null,
+        // legacy mirror fields
+        goals: goal,
+        health_history: injuries || null,
+      });
+      if (error) throw error;
+      onDone();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1 className="font-display text-4xl text-foreground">Tell us about you</h1>
+        <p className="mt-2 text-muted-foreground">A few quick questions so we can shape your program.</p>
+      </header>
+
+      <section className="rounded-xl border border-border bg-card p-6 space-y-6">
+        <div>
+          <label className="text-sm font-medium text-foreground">Current fitness level *</label>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {FITNESS_LEVELS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setFitness(f.id)}
+                className={cn(
+                  "rounded-md border px-3 py-2 text-sm text-left transition-colors",
+                  fitness === f.id ? "border-primary bg-primary/5 text-foreground" : "border-border hover:border-primary/50 text-foreground",
+                )}
+              >{f.label}</button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-foreground">Primary goal *</label>
+          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {PRIMARY_GOALS.map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => setGoal(g.id)}
+                className={cn(
+                  "rounded-md border px-3 py-2 text-sm text-left transition-colors",
+                  goal === g.id ? "border-primary bg-primary/5 text-foreground" : "border-border hover:border-primary/50 text-foreground",
+                )}
+              >{g.label}</button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-foreground">Any injuries or physical limitations?</label>
+          <textarea
+            value={injuries}
+            onChange={(e) => setInjuries(e.target.value)}
+            rows={3}
+            placeholder="Optional. Anything we should know about — recent surgeries, chronic pain, things to avoid."
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-foreground">Days per week you plan to work out</label>
+          <div className="mt-2 flex items-center gap-3">
+            <input
+              type="range" min={1} max={7} value={days}
+              onChange={(e) => setDays(parseInt(e.target.value))}
+              className="flex-1 accent-primary"
+            />
+            <div className="font-display text-2xl text-foreground w-10 text-right">{days}</div>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-foreground">How did you hear about us?</label>
+          <input
+            value={referral}
+            onChange={(e) => setReferral(e.target.value)}
+            placeholder="Optional"
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+      </section>
+
+      <div className="flex justify-end">
+        <button
+          onClick={submit}
+          disabled={saving}
+          className="rounded-md bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-2"
+        >
+          {saving && <Loader2 size={16} className="animate-spin" />}
+          Continue
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function WaiverStep({ onSigned }: { onSigned: () => void }) {
+  const { user } = useAuth();
+  const [signature, setSignature] = useState("");
+  const [agreedTerms, setAgreedTerms] = useState(false);
+  const [agreedCommitment, setAgreedCommitment] = useState(false);
+  const [scrolledToEnd, setScrolledToEnd] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  function handleScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 8) setScrolledToEnd(true);
+  }
+
+  async function submit() {
+    if (!user) return;
+    if (!scrolledToEnd) return toast.error("Please scroll through the full waiver");
+    if (!signature.trim()) return toast.error("Please type your full name to sign");
+    if (!agreedTerms || !agreedCommitment) return toast.error("Please agree to both statements");
+    setSubmitting(true);
+    try {
+      // Best-effort IP capture (client-side; non-PII fallback if blocked).
+      let ip: string | null = null;
+      try {
+        const res = await fetch("https://api.ipify.org?format=json");
+        const j = await res.json();
+        ip = j.ip ?? null;
+      } catch { /* ignore */ }
+
+      const snapshot = `${WAIVER_TEXT}\n\n--- Signed by: ${signature.trim()} ---`;
+      const { error } = await supabase.from("waivers").insert({
+        user_id: user.id,
+        content_snapshot: snapshot,
+        ip_address: ip,
+      });
+      if (error) throw error;
+      await onSigned();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1 className="font-display text-4xl text-foreground">Liability waiver</h1>
+        <p className="mt-2 text-muted-foreground">Please read the full waiver, then sign below.</p>
+      </header>
+
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="rounded-xl border border-border bg-card p-5 max-h-[340px] overflow-y-auto text-sm leading-relaxed text-foreground whitespace-pre-line"
+      >
+        {WAIVER_TEXT}
+      </div>
+      {!scrolledToEnd && (
+        <p className="text-xs text-muted-foreground -mt-2">Scroll to the end of the waiver to continue.</p>
+      )}
+
+      <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+        <div>
+          <label className="text-sm font-medium text-foreground">Type your full legal name as your signature *</label>
+          <input
+            value={signature}
+            onChange={(e) => setSignature(e.target.value)}
+            placeholder="Full name"
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 font-display text-lg italic focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox" checked={agreedTerms} onChange={(e) => setAgreedTerms(e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-input"
+          />
+          <span className="text-sm text-foreground">I have read and agree to the terms of the liability waiver above.</span>
+        </label>
+
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox" checked={agreedCommitment} onChange={(e) => setAgreedCommitment(e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-input"
+          />
+          <span className="text-sm text-foreground">I understand and agree to the 3-month minimum commitment.</span>
+        </label>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          onClick={submit}
+          disabled={submitting || !scrolledToEnd}
+          className="rounded-md bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-2"
+        >
+          {submitting && <Loader2 size={16} className="animate-spin" />}
+          Sign and continue
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DoneStep({ plan, onExplore }: { plan: Plan | null; onExplore: () => void }) {
+  const isLive = plan && plan.type !== "mornings";
+  return (
+    <div className="text-center py-10 space-y-6">
+      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 text-primary">
+        <Check size={28} />
+      </div>
+      <div>
+        <h1 className="font-display text-4xl text-foreground">You're all set</h1>
+        <p className="mt-2 text-muted-foreground">Welcome to the studio.</p>
+      </div>
+
+      {plan && (
+        <section className="rounded-xl border border-border bg-card p-6 text-left max-w-xl mx-auto">
+          <div className="flex items-baseline justify-between">
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Your plan</div>
+              <div className="font-display text-2xl text-foreground mt-1">{plan.display_name}</div>
+            </div>
+            <div className="font-display text-xl text-foreground">${plan.price_per_month}<span className="text-sm text-muted-foreground">/mo</span></div>
+          </div>
+          <ul className="mt-4 space-y-1.5 text-sm text-foreground">
+            <li className="flex items-center gap-2"><Check size={14} className="text-primary" />Includes 10 Minute Mornings video library</li>
+            {isLive && (
+              <>
+                <li className="flex items-center gap-2"><Check size={14} className="text-primary" />Equipment kit shipped to your address</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-primary" />Live {plan.type === "private" ? "private" : plan.type === "semi_private" ? "semi-private" : "private + semi-private"} sessions</li>
+              </>
+            )}
+          </ul>
+          {isLive && (
+            <p className="mt-4 text-sm rounded-md bg-muted/50 p-3 text-foreground">
+              Your recurring session slot will be assigned by our team shortly. You'll get a notification as soon as it's set.
+            </p>
+          )}
+        </section>
+      )}
+
+      <button
+        onClick={onExplore}
+        className="rounded-md bg-primary text-primary-foreground px-6 py-2.5 text-sm font-medium hover:opacity-90"
+      >Explore the app</button>
+    </div>
+  );
+}
+
+function Stepper({ step }: { step: Step }) {
+  const isPostCheckout = step === "welcome" || step === "intake" || step === "waiver" || step === "done";
+  const steps = isPostCheckout
+    ? ([
+        { id: "welcome", label: "Welcome" },
+        { id: "intake", label: "Intake" },
+        { id: "waiver", label: "Waiver" },
+        { id: "done", label: "Done" },
+      ] as const)
+    : ([
+        { id: "plan", label: "Plan" },
+        { id: "shipping", label: "Shipping" },
+        { id: "commitment", label: "Commitment" },
+        { id: "checkout", label: "Checkout" },
+      ] as const);
   const idx = steps.findIndex((s) => s.id === step);
   return (
     <div className="flex items-center gap-2 mb-10">
