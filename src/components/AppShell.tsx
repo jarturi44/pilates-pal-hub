@@ -1,9 +1,11 @@
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   Home, Calendar, LineChart, Bell, User as UserIcon,
-  LayoutDashboard, Users, Clock, Film, Settings, Menu, X, LogOut, Package, ClipboardCheck,
+  LayoutDashboard, Users, Clock, Film, Settings, Menu, X, LogOut, Package, ClipboardCheck, Megaphone,
 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 
