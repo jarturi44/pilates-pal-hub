@@ -1,23 +1,37 @@
 import { cn } from "@/lib/utils";
+import logoUrl from "@/assets/logo.png";
 
 export const STUDIO_NAME = "Pilates with Jon";
+export const LOGO_URL = logoUrl;
 
-export function Wordmark({ className, size = "md" }: { className?: string; size?: "sm" | "md" | "lg" | "xl" }) {
-  const sizes = {
-    sm: "text-base",
-    md: "text-lg",
-    lg: "text-2xl",
-    xl: "text-3xl",
-  } as const;
+const sizeMap = {
+  sm: "h-7 w-7",
+  md: "h-9 w-9",
+  lg: "h-12 w-12",
+  xl: "h-16 w-16",
+} as const;
+
+export function Wordmark({
+  className,
+  size = "md",
+  showText = false,
+}: {
+  className?: string;
+  size?: keyof typeof sizeMap;
+  showText?: boolean;
+}) {
   return (
-    <span className={cn("inline-flex items-center gap-2 font-display tracking-tight", sizes[size], className)}>
-      <span
-        aria-hidden
-        className="inline-block h-6 w-6 rounded-md bg-primary text-primary-foreground text-[11px] font-bold leading-6 text-center"
-      >
-        PJ
-      </span>
-      <span className="font-semibold">Pilates with Jon</span>
+    <span className={cn("inline-flex items-center gap-3", className)}>
+      <img
+        src={logoUrl}
+        alt="Pilates with Jon"
+        className={cn(sizeMap[size], "rounded-md object-contain")}
+      />
+      {showText && (
+        <span className="font-display font-semibold tracking-tight text-base">
+          Pilates with Jon
+        </span>
+      )}
     </span>
   );
 }
@@ -25,7 +39,7 @@ export function Wordmark({ className, size = "md" }: { className?: string; size?
 export function LoadingScreen({ label = "Loading…" }: { label?: string }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
-      <Wordmark size="lg" />
+      <Wordmark size="xl" />
       <p className="text-sm text-muted-foreground">{label}</p>
     </div>
   );
