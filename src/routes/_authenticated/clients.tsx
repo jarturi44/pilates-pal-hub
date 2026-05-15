@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { AlertCircle, Check, Download, FileText, Loader2, X } from "lucide-react";
 import jsPDF from "jspdf";
 import { cn } from "@/lib/utils";
+import { ProgressDashboard } from "@/components/ProgressDashboard";
 
 export const Route = createFileRoute("/_authenticated/clients")({
   component: ClientsPage,
@@ -141,7 +142,7 @@ function ClientDetailDrawer({ clientId, onClose }: { clientId: string; onClose: 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-client-detail", clientId],
     queryFn: async () => {
-      const [user, intake, waiver, sub, completions] = await Promise.all([
+      const [user, intake, waiver, sub, completions, attendance, slots] = await Promise.all([
         supabase.from("users").select("*").eq("id", clientId).maybeSingle(),
         supabase.from("intake_forms").select("*").eq("user_id", clientId)
           .order("submitted_at", { ascending: false }).limit(1).maybeSingle(),
@@ -151,10 +152,15 @@ function ClientDetailDrawer({ clientId, onClose }: { clientId: string; onClose: 
           .order("created_at", { ascending: false }).limit(1).maybeSingle(),
         supabase.from("content_completions").select("completed_at").eq("user_id", clientId)
           .order("completed_at", { ascending: false }),
+        supabase.from("attendance").select("id, slot_id, session_date, status, attended, notes")
+          .eq("user_id", clientId).order("session_date", { ascending: false }),
+        supabase.from("slots").select("id, day_of_week, time, session_type"),
       ]);
       return {
         user: user.data, intake: intake.data, waiver: waiver.data, sub: sub.data,
         completions: (completions.data ?? []) as { completed_at: string }[],
+        attendance: (attendance.data ?? []) as { id: string; slot_id: string; session_date: string; status: string; attended: boolean; notes: string | null }[],
+        slots: (slots.data ?? []) as { id: string; day_of_week: number; time: string; session_type: string }[],
       };
     },
   });
