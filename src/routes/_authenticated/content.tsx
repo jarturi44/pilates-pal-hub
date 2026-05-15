@@ -52,7 +52,7 @@ type Workout = {
   sort_order: number;
 };
 
-function AdminContentPage() {
+function MorningsContentTab() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Workout | null>(null);
   const [creating, setCreating] = useState(false);
