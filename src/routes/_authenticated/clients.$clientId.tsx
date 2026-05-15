@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PagePrimitives";
 import { ProgressDashboard } from "@/components/ProgressDashboard";
+import { ClientProgramsSection } from "@/components/admin/ClientProgramsSection";
 import { toast } from "sonner";
 import { ArrowLeft, Download, FileText, Check, Loader2, X, Send, ClipboardCheck, CalendarPlus, RefreshCw, XCircle } from "lucide-react";
 import jsPDF from "jspdf";
