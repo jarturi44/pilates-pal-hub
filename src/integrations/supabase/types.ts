@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          metadata: Json | null
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       attendance: {
         Row: {
           attended: boolean
@@ -469,6 +496,7 @@ export type Database = {
       }
       slots: {
         Row: {
+          active: boolean
           capacity: number
           created_at: string
           day_of_week: number
@@ -477,6 +505,7 @@ export type Database = {
           time: string
         }
         Insert: {
+          active?: boolean
           capacity?: number
           created_at?: string
           day_of_week: number
@@ -485,12 +514,43 @@ export type Database = {
           time: string
         }
         Update: {
+          active?: boolean
           capacity?: number
           created_at?: string
           day_of_week?: number
           id?: string
           session_type?: Database["public"]["Enums"]["session_type"]
           time?: string
+        }
+        Relationships: []
+      }
+      studio_settings: {
+        Row: {
+          admin_email: string | null
+          commitment_months: number
+          current_waiver_version_id: string | null
+          grace_period_days: number
+          id: number
+          studio_name: string
+          updated_at: string
+        }
+        Insert: {
+          admin_email?: string | null
+          commitment_months?: number
+          current_waiver_version_id?: string | null
+          grace_period_days?: number
+          id?: number
+          studio_name?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_email?: string | null
+          commitment_months?: number
+          current_waiver_version_id?: string | null
+          grace_period_days?: number
+          id?: number
+          studio_name?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -622,6 +682,30 @@ export type Database = {
           needs_slot_assignment?: boolean
           onboarding_complete?: boolean
           role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
+      waiver_versions: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          version: number
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          version: number
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          version?: number
         }
         Relationships: []
       }

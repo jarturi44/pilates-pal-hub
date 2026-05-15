@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { Loader2, Package } from "lucide-react";
 import { sendTransactionalEmail } from "@/lib/email/send";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/fulfillment")({
   component: FulfillmentPage,
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/_authenticated/fulfillment")({
 type Row = {
   id: string;
   created_at: string;
+  shipped_at: string | null;
   shipping_address: string | null;
   status: "pending" | "shipped";
   user_id: string;
@@ -24,31 +26,28 @@ type Row = {
 
 function FulfillmentPage() {
   const qc = useQueryClient();
+  const [tab, setTab] = useState<"pending" | "shipped">("pending");
   const [working, setWorking] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["fulfillment-pending"],
+    queryKey: ["fulfillment", tab],
     queryFn: async (): Promise<Row[]> => {
       const { data: ef, error } = await supabase
         .from("equipment_fulfillment")
-        .select("id, created_at, shipping_address, status, user_id")
-        .eq("status", "pending")
-        .order("created_at", { ascending: true });
+        .select("id, created_at, shipped_at, shipping_address, status, user_id")
+        .eq("status", tab)
+        .order(tab === "pending" ? "created_at" : "shipped_at", { ascending: tab === "pending" });
       if (error) throw error;
       if (!ef?.length) return [];
 
       const userIds = ef.map((r) => r.user_id);
       const [{ data: users }, { data: subs }] = await Promise.all([
         supabase.from("users").select("id, name, email").in("id", userIds),
-        supabase.from("subscriptions")
-          .select("user_id, plan:plans(display_name)")
-          .in("user_id", userIds)
-          .order("created_at", { ascending: false }),
+        supabase.from("subscriptions").select("user_id, plan:plans(display_name)").in("user_id", userIds).order("created_at", { ascending: false }),
       ]);
       const userMap = new Map(users?.map((u) => [u.id, u]) ?? []);
       const planMap = new Map<string, string | null>();
       (subs ?? []).forEach((s: any) => { if (!planMap.has(s.user_id)) planMap.set(s.user_id, s.plan?.display_name ?? null); });
-
       return ef.map((r) => ({
         ...r,
         status: r.status as "pending" | "shipped",
@@ -62,22 +61,12 @@ function FulfillmentPage() {
   async function markShipped(row: Row) {
     setWorking(row.id);
     const now = new Date().toISOString();
-    const { error } = await supabase
-      .from("equipment_fulfillment")
-      .update({ status: "shipped", shipped_at: now })
-      .eq("id", row.id);
-    if (error) {
-      toast.error(error.message);
-      setWorking(null);
-      return;
-    }
-    // In-app notification
+    const { error } = await supabase.from("equipment_fulfillment").update({ status: "shipped", shipped_at: now }).eq("id", row.id);
+    if (error) { toast.error(error.message); setWorking(null); return; }
     await supabase.from("notifications").insert({
-      user_id: row.user_id,
-      type: "fulfillment",
-      message: "Your equipment is on the way! We've shipped your kit and you'll receive it soon.",
+      user_id: row.user_id, type: "fulfillment", title: "Your kit is on the way",
+      message: "We've shipped your equipment. You'll receive it soon!",
     });
-    // Transactional email
     try {
       await sendTransactionalEmail({
         templateName: "equipment-shipped",
@@ -85,23 +74,35 @@ function FulfillmentPage() {
         idempotencyKey: `equipment-shipped-${row.id}`,
         templateData: { name: row.user_name ?? undefined },
       });
-    } catch (e) {
-      console.error("Failed to send shipped email", e);
-    }
+    } catch (e) { console.error(e); }
+    await supabase.from("activity_log").insert({
+      type: "fulfillment_shipped", message: `Shipped equipment to ${row.user_name || row.user_email}`, user_id: row.user_id,
+    });
     toast.success("Marked as shipped");
-    qc.invalidateQueries({ queryKey: ["fulfillment-pending"] });
+    qc.invalidateQueries({ queryKey: ["fulfillment"] });
     setWorking(null);
   }
 
   return (
     <>
-      <PageHeader title="Fulfillment" subtitle="Pending equipment shipments for new subscribers." />
+      <PageHeader title="Fulfillment" subtitle="Equipment shipments." />
+
+      <div className="flex gap-2 border-b border-border mb-4">
+        {(["pending", "shipped"] as const).map((t) => (
+          <button key={t} onClick={() => setTab(t)}
+            className={cn("px-3 py-2 text-sm capitalize border-b-2 -mb-px",
+              tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
+            {t}
+          </button>
+        ))}
+      </div>
+
       {isLoading ? (
         <div className="flex items-center gap-2 text-muted-foreground"><Loader2 size={16} className="animate-spin" /> Loading…</div>
       ) : !data?.length ? (
         <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
           <Package className="mx-auto text-muted-foreground mb-2" size={28} />
-          <p className="text-sm text-muted-foreground">No pending shipments. 🎉</p>
+          <p className="text-sm text-muted-foreground">No {tab} shipments.</p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border bg-card">
@@ -111,32 +112,41 @@ function FulfillmentPage() {
                 <th className="px-4 py-3">Client</th>
                 <th className="px-4 py-3">Plan</th>
                 <th className="px-4 py-3">Shipping address</th>
-                <th className="px-4 py-3">Signed up</th>
-                <th className="px-4 py-3 text-right">Action</th>
+                <th className="px-4 py-3">{tab === "pending" ? "Signed up" : "Shipped"}</th>
+                {tab === "pending" && <th className="px-4 py-3">Days</th>}
+                {tab === "pending" && <th className="px-4 py-3 text-right">Action</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {data.map((row) => (
-                <tr key={row.id}>
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-foreground">{row.user_name || "—"}</div>
-                    <div className="text-xs text-muted-foreground">{row.user_email}</div>
-                  </td>
-                  <td className="px-4 py-3 text-foreground">{row.plan_name ?? "—"}</td>
-                  <td className="px-4 py-3 whitespace-pre-line text-muted-foreground max-w-xs">{row.shipping_address ?? "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{new Date(row.created_at).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => markShipped(row)}
-                      disabled={working === row.id}
-                      className="rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs font-medium hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5"
-                    >
-                      {working === row.id ? <Loader2 size={12} className="animate-spin" /> : null}
-                      Mark shipped
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {data.map((row) => {
+                const days = Math.floor((Date.now() - new Date(row.created_at).getTime()) / 86400000);
+                return (
+                  <tr key={row.id}>
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-foreground">{row.user_name || "—"}</div>
+                      <div className="text-xs text-muted-foreground">{row.user_email}</div>
+                    </td>
+                    <td className="px-4 py-3 text-foreground">{row.plan_name ?? "—"}</td>
+                    <td className="px-4 py-3 whitespace-pre-line text-muted-foreground max-w-xs">{row.shipping_address ?? "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {tab === "pending" ? new Date(row.created_at).toLocaleDateString() : (row.shipped_at ? new Date(row.shipped_at).toLocaleDateString() : "—")}
+                    </td>
+                    {tab === "pending" && (
+                      <td className="px-4 py-3">
+                        <span className={cn("text-xs", days >= 7 ? "text-amber-600 font-medium" : "text-muted-foreground")}>{days}d</span>
+                      </td>
+                    )}
+                    {tab === "pending" && (
+                      <td className="px-4 py-3 text-right">
+                        <button onClick={() => markShipped(row)} disabled={working === row.id}
+                          className="rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs font-medium hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5">
+                          {working === row.id ? <Loader2 size={12} className="animate-spin" /> : null} Mark shipped
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
