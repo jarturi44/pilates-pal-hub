@@ -256,26 +256,38 @@ export type Database = {
       }
       intake_forms: {
         Row: {
+          days_per_week: number | null
+          fitness_level: string | null
           goals: string | null
           health_history: string | null
           id: string
           injuries: string | null
+          primary_goal: string | null
+          referral_source: string | null
           submitted_at: string
           user_id: string
         }
         Insert: {
+          days_per_week?: number | null
+          fitness_level?: string | null
           goals?: string | null
           health_history?: string | null
           id?: string
           injuries?: string | null
+          primary_goal?: string | null
+          referral_source?: string | null
           submitted_at?: string
           user_id: string
         }
         Update: {
+          days_per_week?: number | null
+          fitness_level?: string | null
           goals?: string | null
           health_history?: string | null
           id?: string
           injuries?: string | null
+          primary_goal?: string | null
+          referral_source?: string | null
           submitted_at?: string
           user_id?: string
         }
@@ -469,6 +481,7 @@ export type Database = {
           email: string
           id: string
           name: string | null
+          needs_slot_assignment: boolean
           onboarding_complete: boolean
           role: Database["public"]["Enums"]["app_role"]
         }
@@ -477,6 +490,7 @@ export type Database = {
           email: string
           id: string
           name?: string | null
+          needs_slot_assignment?: boolean
           onboarding_complete?: boolean
           role?: Database["public"]["Enums"]["app_role"]
         }
@@ -485,6 +499,7 @@ export type Database = {
           email?: string
           id?: string
           name?: string | null
+          needs_slot_assignment?: boolean
           onboarding_complete?: boolean
           role?: Database["public"]["Enums"]["app_role"]
         }
