@@ -1,46 +1,24 @@
-import {
-  Body, Container, Head, Heading, Html, Preview, Text,
-} from '@react-email/components'
-import type { TemplateEntry } from './registry'
+import { Body, Container, Head, Heading, Html, Preview, Text } from "@react-email/components";
+import type { TemplateEntry } from "./registry";
+import { SITE_NAME, main, container, header, h1, text, footer } from "./_styles";
+import { EmailHeader } from "./_header";
 
-const SITE_NAME = 'Pilates with Jon'
+interface Props { name?: string; }
 
-interface EquipmentShippedProps {
-  name?: string
-}
-
-const EquipmentShippedEmail = ({ name }: EquipmentShippedProps) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Your {SITE_NAME} equipment is on the way</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Heading style={h1}>
-          {name ? `${name}, your equipment is on the way!` : 'Your equipment is on the way!'}
-        </Heading>
-        <Text style={text}>
-          Great news — we've shipped your {SITE_NAME} starter kit. You'll receive
-          tracking and delivery details from the courier shortly.
-        </Text>
-        <Text style={text}>
-          Once it arrives, you're all set to start training. Reach out any time
-          if you need help getting set up.
-        </Text>
-        <Text style={footer}>— The {SITE_NAME} team</Text>
-      </Container>
-    </Body>
-  </Html>
-)
+const Email = ({ name }: Props) => (
+  <Html lang="en"><Head /><Preview>Your gear is on the way!</Preview>
+    <Body style={main}><Container style={container}>
+      <EmailHeader /><Text style={header}>{SITE_NAME}</Text>
+      <Heading style={h1}>{name ? `${name}, your gear is on the way!` : "Your gear is on the way!"}</Heading>
+      <Text style={text}>Your foam roller, Pilates ring, resistance bands, stretch strap, and door anchors are headed to you.</Text>
+      <Text style={text}>Get excited — we're going to put all of it to good use.</Text>
+      <Text style={footer}>See you soon! — Jon</Text>
+    </Container></Body></Html>
+);
 
 export const template = {
-  component: EquipmentShippedEmail,
-  subject: 'Your equipment is on the way',
-  displayName: 'Equipment shipped',
-  previewData: { name: 'Sam' },
-} satisfies TemplateEntry
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Inter, Arial, sans-serif' }
-const container = { padding: '32px 28px', maxWidth: '560px' }
-const h1 = { fontSize: '24px', fontWeight: 600, color: '#0f172a', margin: '0 0 20px', fontFamily: 'Cormorant Garamond, Georgia, serif' }
-const text = { fontSize: '15px', color: '#334155', lineHeight: '1.6', margin: '0 0 18px' }
-const footer = { fontSize: '13px', color: '#94a3b8', margin: '32px 0 0' }
+  component: Email,
+  subject: "Your gear is on the way!",
+  displayName: "Equipment shipped",
+  previewData: { name: "Sam" },
+} satisfies TemplateEntry;

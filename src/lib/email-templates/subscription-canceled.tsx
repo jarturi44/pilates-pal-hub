@@ -6,19 +6,19 @@ import { EmailHeader } from "./_header";
 interface Props { name?: string; accessEnd?: string; }
 
 const Email = ({ name, accessEnd }: Props) => (
-  <Html lang="en"><Head /><Preview>Your subscription has been canceled</Preview>
+  <Html lang="en"><Head /><Preview>It's been a pleasure</Preview>
     <Body style={main}><Container style={container}>
       <EmailHeader /><Text style={header}>{SITE_NAME}</Text>
-      <Heading style={h1}>{name ? `${name}, your subscription has been canceled` : "Your subscription has been canceled"}</Heading>
-      <Text style={text}>We're sorry to see you go. Your access will continue {accessEnd ? `until ${accessEnd}` : "until the end of your current billing period"}.</Text>
-      <Text style={text}>If this was a mistake, just reply to this email and we'll get you sorted.</Text>
-      <Text style={footer}>— The {SITE_NAME} team</Text>
+      <Heading style={h1}>It's been a pleasure</Heading>
+      <Text style={text}>{name ? `${name}, it's been such a pleasure having you.` : "It's been such a pleasure having you."} Your subscription has been canceled and your access will continue {accessEnd ? `through ${accessEnd}` : "through the end of your current billing period"}.</Text>
+      <Text style={text}>Whenever you're ready to come back, I'll be here.</Text>
+      <Text style={footer}>Take care of yourself! — Jon</Text>
     </Container></Body></Html>
 );
 
 export const template = {
   component: Email,
-  subject: "Your subscription has been canceled",
+  subject: "It's been a pleasure",
   displayName: "Subscription canceled",
   previewData: { name: "Sam", accessEnd: "August 15, 2026" },
 } satisfies TemplateEntry;
