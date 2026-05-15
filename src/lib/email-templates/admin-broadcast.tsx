@@ -1,13 +1,14 @@
 import { Body, Container, Head, Heading, Html, Preview, Text } from "@react-email/components";
 import type { TemplateEntry } from "./registry";
 import { SITE_NAME, main, container, header, h1, text, footer } from "./_styles";
+import { EmailHeader } from "./_header";
 
 interface Props { name?: string; subject?: string; body?: string; }
 
 const Email = ({ name, subject, body }: Props) => (
   <Html lang="en"><Head /><Preview>{subject ?? `A note from ${SITE_NAME}`}</Preview>
     <Body style={main}><Container style={container}>
-      <Text style={header}>{SITE_NAME}</Text>
+      <EmailHeader /><Text style={header}>{SITE_NAME}</Text>
       <Heading style={h1}>{subject ?? "A note from the studio"}</Heading>
       {name && <Text style={text}>Hi {name},</Text>}
       {(body ?? "").split("\n\n").map((para, i) => (

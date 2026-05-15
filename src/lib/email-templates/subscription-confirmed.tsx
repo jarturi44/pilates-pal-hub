@@ -1,13 +1,14 @@
 import { Body, Container, Head, Heading, Html, Preview, Text } from "@react-email/components";
 import type { TemplateEntry } from "./registry";
 import { SITE_NAME, main, container, header, h1, text, footer, card } from "./_styles";
+import { EmailHeader } from "./_header";
 
 interface Props { name?: string; planName?: string; price?: number; commitmentEnd?: string; }
 
 const Email = ({ name, planName, price, commitmentEnd }: Props) => (
   <Html lang="en"><Head /><Preview>Welcome to {SITE_NAME} — your subscription is confirmed</Preview>
     <Body style={main}><Container style={container}>
-      <Text style={header}>{SITE_NAME}</Text>
+      <EmailHeader /><Text style={header}>{SITE_NAME}</Text>
       <Heading style={h1}>{name ? `Welcome, ${name}!` : "Welcome!"}</Heading>
       <Text style={text}>Your subscription is confirmed. We're so glad you're here.</Text>
       <div style={card}>

@@ -1,13 +1,14 @@
 import { Body, Container, Head, Heading, Html, Preview, Text } from "@react-email/components";
 import type { TemplateEntry } from "./registry";
 import { SITE_NAME, main, container, header, h1, text, footer, card } from "./_styles";
+import { EmailHeader } from "./_header";
 
 interface Props { name?: string; day?: string; time?: string; sessionType?: string; }
 
 const Email = ({ name, day, time, sessionType }: Props) => (
   <Html lang="en"><Head /><Preview>Your recurring session slot is set</Preview>
     <Body style={main}><Container style={container}>
-      <Text style={header}>{SITE_NAME}</Text>
+      <EmailHeader /><Text style={header}>{SITE_NAME}</Text>
       <Heading style={h1}>{name ? `${name}, your slot is set` : "Your slot is set"}</Heading>
       <Text style={text}>You've been assigned a recurring session slot. We're looking forward to training with you.</Text>
       <div style={card}>

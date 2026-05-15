@@ -1,5 +1,6 @@
 export const SITE_NAME = "Pilates with Jon";
 export const APP_BASE_URL = "https://pilateswithjon.com";
+export const LOGO_URL = "https://rpqrbbecfwsuedwjglpp.supabase.co/storage/v1/object/public/branding/logo.png";
 
 // Brand palette
 const NAVY = "#1a3a6b";
