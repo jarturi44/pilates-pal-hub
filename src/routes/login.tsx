@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Wordmark } from "@/components/Wordmark";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -29,9 +30,9 @@ function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="font-display text-4xl text-foreground">Studio</h1>
-          <p className="text-sm text-muted-foreground mt-1">Sign in to your account</p>
+        <div className="flex flex-col items-center text-center mb-8">
+          <Wordmark size="xl" />
+          <p className="text-sm text-muted-foreground mt-3">Welcome back — sign in to continue your practice.</p>
         </div>
         <form onSubmit={onSubmit} className="space-y-4 bg-card border border-border rounded-xl p-6">
           <div>

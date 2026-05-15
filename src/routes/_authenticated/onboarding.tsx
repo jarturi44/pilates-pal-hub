@@ -375,9 +375,9 @@ function WelcomeStep({ plan, onContinue }: { plan: Plan | null; onContinue: () =
         <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary mb-4">
           <Sparkles size={22} />
         </div>
-        <h1 className="font-display text-4xl text-foreground">Welcome to the studio</h1>
+        <h1 className="font-display text-4xl text-foreground">Welcome to Pilates with Jon</h1>
         <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
-          We're so glad you're here. A couple of quick steps and you'll be ready to start moving.
+          We're so glad you're here. A couple of quick steps and you'll be ready to start moving with us.
         </p>
       </header>
 
