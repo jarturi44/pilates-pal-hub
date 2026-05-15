@@ -71,12 +71,23 @@ function FulfillmentPage() {
       setWorking(null);
       return;
     }
-    // In-app notification (email integration to be added once email domain is set up)
+    // In-app notification
     await supabase.from("notifications").insert({
       user_id: row.user_id,
       type: "fulfillment",
       message: "Your equipment is on the way! We've shipped your kit and you'll receive it soon.",
     });
+    // Transactional email
+    try {
+      await sendTransactionalEmail({
+        templateName: "equipment-shipped",
+        recipientEmail: row.user_email,
+        idempotencyKey: `equipment-shipped-${row.id}`,
+        templateData: { name: row.user_name ?? undefined },
+      });
+    } catch (e) {
+      console.error("Failed to send shipped email", e);
+    }
     toast.success("Marked as shipped");
     qc.invalidateQueries({ queryKey: ["fulfillment-pending"] });
     setWorking(null);
