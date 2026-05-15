@@ -132,8 +132,6 @@ function MorningsContentTab() {
 
   return (
     <>
-      <PageHeader title="Content" subtitle="Curate the 10 Minute Mornings library." />
-
       <section className="rounded-xl border border-border bg-card p-4 mb-6">
         <h2 className="font-display text-lg text-foreground mb-1">Reminder days</h2>
         <p className="text-xs text-muted-foreground mb-3">Active subscribers receive a 10 Minute Mornings nudge on the days you select.</p>
