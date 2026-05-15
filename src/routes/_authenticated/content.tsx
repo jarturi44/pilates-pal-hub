@@ -7,10 +7,38 @@ import { toast } from "sonner";
 import { ArrowDown, ArrowUp, Eye, EyeOff, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { CONTENT_CATEGORIES, DIFFICULTIES, DAY_NAMES, type ContentCategory, type Difficulty } from "@/lib/content-categories";
 import { cn } from "@/lib/utils";
+import { ExerciseLibraryAdmin } from "@/components/admin/ExerciseLibraryAdmin";
+import { ProgramsAdmin } from "@/components/admin/ProgramsAdmin";
 
 export const Route = createFileRoute("/_authenticated/content")({
   component: AdminContentPage,
 });
+
+type Tab = "mornings" | "exercises" | "programs";
+
+function AdminContentPage() {
+  const [tab, setTab] = useState<Tab>("mornings");
+  return (
+    <>
+      <PageHeader title="Content" subtitle="Manage everything clients see in My Program." />
+      <div className="flex gap-2 mb-6 border-b border-border">
+        {([
+          { id: "mornings", label: "10 Minute Mornings" },
+          { id: "exercises", label: "Exercise Library" },
+          { id: "programs", label: "Programs" },
+        ] as const).map((t) => (
+          <button key={t.id} onClick={() => setTab(t.id)} className={cn(
+            "px-3 py-2 text-sm border-b-2 -mb-px",
+            tab === t.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+          )}>{t.label}</button>
+        ))}
+      </div>
+      {tab === "mornings" && <MorningsContentTab />}
+      {tab === "exercises" && <ExerciseLibraryAdmin />}
+      {tab === "programs" && <ProgramsAdmin />}
+    </>
+  );
+}
 
 type Workout = {
   id: string;
@@ -24,7 +52,7 @@ type Workout = {
   sort_order: number;
 };
 
-function AdminContentPage() {
+function MorningsContentTab() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Workout | null>(null);
   const [creating, setCreating] = useState(false);
@@ -104,8 +132,6 @@ function AdminContentPage() {
 
   return (
     <>
-      <PageHeader title="Content" subtitle="Curate the 10 Minute Mornings library." />
-
       <section className="rounded-xl border border-border bg-card p-4 mb-6">
         <h2 className="font-display text-lg text-foreground mb-1">Reminder days</h2>
         <p className="text-xs text-muted-foreground mb-3">Active subscribers receive a 10 Minute Mornings nudge on the days you select.</p>
