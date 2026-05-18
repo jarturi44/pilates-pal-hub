@@ -44,7 +44,7 @@ function MyProgramPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [activeCat, setActiveCat] = useState<ContentCategory | "All">("All");
 
-  const [tab, setTab] = useState<"mornings" | "exercises">("mornings");
+  const [tab, setTab] = useState<"mornings" | "exercises" | "warmup">("mornings");
 
   const { data: sub } = useQuery({
     enabled: !!userId,
