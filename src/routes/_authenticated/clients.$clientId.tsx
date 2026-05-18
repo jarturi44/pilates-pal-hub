@@ -258,6 +258,21 @@ function ClientProfilePage() {
           <Row k="Last active" v={data.completions[0] ? new Date(data.completions[0].completed_at).toLocaleString() : "—"} />
         </Section>
 
+        <Section title="Warm-up engagement">
+          {(() => {
+            const fourWeeksAgo = new Date(); fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+            const recent = data.warmups.filter((w: any) => new Date(w.completed_at) >= fourWeeksAgo).length;
+            return (
+              <>
+                <Row k="Total warm-ups completed" v={data.warmups.length.toString()} />
+                <Row k="Last warm-up" v={data.warmups[0] ? new Date(data.warmups[0].completed_at).toLocaleString() : "—"} />
+                <Row k="Last 4 weeks" v={recent.toString()} />
+              </>
+            );
+          })()}
+        </Section>
+
+
         <Section title="Notifications log">
           {data.notifs.length === 0 ? <p className="text-sm text-muted-foreground">None.</p> : (
             <ul className="space-y-1.5 max-h-64 overflow-y-auto">
