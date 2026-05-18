@@ -871,6 +871,7 @@ export type Database = {
       }
       users: {
         Row: {
+          camera_ack_at: string | null
           created_at: string
           email: string
           id: string
@@ -880,6 +881,7 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
         }
         Insert: {
+          camera_ack_at?: string | null
           created_at?: string
           email: string
           id: string
@@ -889,6 +891,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
         }
         Update: {
+          camera_ack_at?: string | null
           created_at?: string
           email?: string
           id?: string
