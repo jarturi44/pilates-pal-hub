@@ -4,10 +4,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
-import { Check, Loader2, PackageCheck, Sparkles } from "lucide-react";
+import { Camera, Check, Loader2, PackageCheck, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Step =
+  | "camera"
   | "plan"
   | "shipping"
   | "commitment"
@@ -21,7 +22,7 @@ type Search = { step?: Step; session_id?: string };
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   validateSearch: (s: Record<string, unknown>): Search => ({
-    step: (s.step as Step) ?? "plan",
+    step: (s.step as Step) ?? "camera",
     session_id: s.session_id as string | undefined,
   }),
   component: OnboardingPage,
