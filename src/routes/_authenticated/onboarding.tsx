@@ -190,9 +190,65 @@ function OnboardingPage() {
     }
   }
 
+  if (step === "camera") {
+    return (
+      <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center">
+        <div className="max-w-2xl w-full space-y-8">
+          <header className="text-center">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary mb-4">
+              <Camera size={26} />
+            </div>
+            <h1 className="font-display text-4xl text-foreground">Before you get started</h1>
+          </header>
+
+          <div className="rounded-xl border border-border bg-card p-6 md:p-8 space-y-4 text-foreground leading-relaxed">
+            <p>Hey, before we dive in — there's one thing I want to make sure we're set up for success on.</p>
+            <p>
+              Since we'll be working together online, I'll need to be able to see your whole body during our sessions.
+              This is how I give you corrections, modify exercises for your body, assess where you're at, and track your
+              progress over time.
+            </p>
+            <div>
+              <p className="font-medium mb-2">Here's what you'll need:</p>
+              <ul className="space-y-2 pl-1">
+                <li className="flex items-start gap-2"><Check size={16} className="mt-1 text-primary shrink-0" /><span>A camera that can show your full body from head to toe</span></li>
+                <li className="flex items-start gap-2"><Check size={16} className="mt-1 text-primary shrink-0" /><span>Enough space to lay down a mat and move freely</span></li>
+                <li className="flex items-start gap-2"><Check size={16} className="mt-1 text-primary shrink-0" /><span>Decent lighting so I can actually see you</span></li>
+                <li className="flex items-start gap-2"><Check size={16} className="mt-1 text-primary shrink-0" /><span>A stable camera position (propped up phone, laptop, or webcam all work great)</span></li>
+              </ul>
+            </div>
+            <p>If you've got that covered, you're all set, here we go! 💪</p>
+          </div>
+
+          <label className="flex items-start gap-3 cursor-pointer rounded-xl border border-border bg-card p-4">
+            <input
+              type="checkbox"
+              checked={cameraConfirmed}
+              onChange={(e) => setCameraConfirmed(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-input"
+            />
+            <span className="text-sm text-foreground">I confirm I have a camera setup where my full body is visible.</span>
+          </label>
+
+          <div className="flex justify-end">
+            <button
+              onClick={handleConfirmCamera}
+              disabled={!cameraConfirmed || submitting}
+              className="rounded-md bg-primary text-primary-foreground px-6 py-2.5 text-sm font-medium hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-2"
+            >
+              {submitting && <Loader2 size={16} className="animate-spin" />}
+              Continue
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto">
       <Stepper step={step} />
+
 
       {step === "plan" && (
         <div className="space-y-8">
