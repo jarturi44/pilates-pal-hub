@@ -40,9 +40,9 @@ type Plan = {
 
 const tierMeta: Record<Plan["type"], { label: string; description: string }> = {
   mornings: { label: "10 Minute Mornings", description: "Digital video library. Start every day with a short guided session." },
-  semi_private: { label: "Semi-Private", description: "Small group, live sessions. Includes the Mornings library." },
-  private: { label: "Private", description: "One-on-one live sessions. Includes the Mornings library." },
-  combo: { label: "Combo", description: "Mix of private and semi-private. Includes the Mornings library." },
+  semi_private: { label: "Semi-Private", description: "Small group, live sessions. Includes Warm Up Video Library." },
+  private: { label: "Private", description: "One-on-one live sessions. Includes Warm Up Video Library." },
+  combo: { label: "Combo", description: "Mix of private and semi-private. Includes Warm Up Video Library." },
 };
 
 const WAIVER_TEXT = `LIABILITY WAIVER & RELEASE OF CLAIMS — Pilates with Jon
