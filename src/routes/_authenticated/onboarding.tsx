@@ -68,12 +68,13 @@ function OnboardingPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const search = useSearch({ from: "/_authenticated/onboarding" });
-  const step = search.step ?? "plan";
+  const step = search.step ?? "camera";
 
   // Pre-checkout state
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [address, setAddress] = useState({ line1: "", line2: "", city: "", region: "", postal: "", country: "" });
   const [acknowledged, setAcknowledged] = useState(false);
+  const [cameraConfirmed, setCameraConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const { data: plans } = useQuery({
