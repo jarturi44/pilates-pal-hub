@@ -27,7 +27,7 @@ function ClientProfilePage() {
   const { data, isLoading } = useQuery({
     queryKey: ["client-profile", clientId],
     queryFn: async () => {
-      const [user, intake, waiver, sub, plans, completions, attendance, allSlots, mySlots, fulfill, notifs] = await Promise.all([
+      const [user, intake, waiver, sub, plans, completions, attendance, allSlots, mySlots, fulfill, notifs, warmups] = await Promise.all([
         supabase.from("users").select("*").eq("id", clientId).maybeSingle(),
         supabase.from("intake_forms").select("*").eq("user_id", clientId).order("submitted_at", { ascending: false }).limit(1).maybeSingle(),
         supabase.from("waivers").select("*").eq("user_id", clientId).order("signed_at", { ascending: false }).limit(1).maybeSingle(),
@@ -39,6 +39,7 @@ function ClientProfilePage() {
         supabase.from("client_slots").select("id, slot_id").eq("user_id", clientId),
         supabase.from("equipment_fulfillment").select("*").eq("user_id", clientId).maybeSingle(),
         supabase.from("notifications").select("id, type, title, message, created_at, read").eq("user_id", clientId).order("created_at", { ascending: false }).limit(50),
+        supabase.from("warmup_completions").select("completed_at").eq("user_id", clientId).order("completed_at", { ascending: false }),
       ]);
       return {
         user: user.data, intake: intake.data, waiver: waiver.data, sub: sub.data,
@@ -48,6 +49,7 @@ function ClientProfilePage() {
         allSlots: allSlots.data ?? [],
         mySlots: mySlots.data ?? [],
         fulfill: fulfill.data, notifs: notifs.data ?? [],
+        warmups: warmups.data ?? [],
       };
     },
   });
