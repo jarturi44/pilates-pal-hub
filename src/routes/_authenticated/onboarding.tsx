@@ -132,6 +132,23 @@ function OnboardingPage() {
     navigate({ to: "/_authenticated/onboarding", search: { step: next }, replace: true });
   }
 
+  async function handleConfirmCamera() {
+    if (!cameraConfirmed || !user) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("users")
+        .update({ camera_ack_at: new Date().toISOString() })
+        .eq("id", user.id);
+      if (error) throw error;
+      goTo("plan");
+    } catch (err) {
+      toast.error((err as Error).message || "Couldn't save your confirmation");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   async function handleProceedFromPlan() {
     if (!selectedPlanId) return toast.error("Please choose a plan");
     goTo(needsShipping ? "shipping" : "commitment");
