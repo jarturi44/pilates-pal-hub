@@ -9,12 +9,13 @@ import { CONTENT_CATEGORIES, DIFFICULTIES, DAY_NAMES, type ContentCategory, type
 import { cn } from "@/lib/utils";
 import { ExerciseLibraryAdmin } from "@/components/admin/ExerciseLibraryAdmin";
 import { ProgramsAdmin } from "@/components/admin/ProgramsAdmin";
+import { WarmupLibraryAdmin } from "@/components/admin/WarmupLibraryAdmin";
 
 export const Route = createFileRoute("/_authenticated/content")({
   component: AdminContentPage,
 });
 
-type Tab = "mornings" | "exercises" | "programs";
+type Tab = "mornings" | "exercises" | "warmups" | "programs";
 
 function AdminContentPage() {
   const [tab, setTab] = useState<Tab>("mornings");
@@ -25,6 +26,7 @@ function AdminContentPage() {
         {([
           { id: "mornings", label: "10 Minute Mornings" },
           { id: "exercises", label: "Exercise Library" },
+          { id: "warmups", label: "Warm-Up Videos" },
           { id: "programs", label: "Programs" },
         ] as const).map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)} className={cn(
@@ -35,6 +37,7 @@ function AdminContentPage() {
       </div>
       {tab === "mornings" && <MorningsContentTab />}
       {tab === "exercises" && <ExerciseLibraryAdmin />}
+      {tab === "warmups" && <WarmupLibraryAdmin />}
       {tab === "programs" && <ProgramsAdmin />}
     </>
   );

@@ -950,6 +950,63 @@ export type Database = {
         }
         Relationships: []
       }
+      warmup_completions: {
+        Row: {
+          completed_at: string
+          content_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          content_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          content_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      warmup_content: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          difficulty: string | null
+          duration_minutes: number | null
+          id: string
+          sort_order: number
+          title: string
+          video_url: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          duration_minutes?: number | null
+          id?: string
+          sort_order?: number
+          title: string
+          video_url?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          duration_minutes?: number | null
+          id?: string
+          sort_order?: number
+          title?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -9,6 +9,7 @@ import { Check, Loader2, Play, X } from "lucide-react";
 import { CONTENT_CATEGORIES, toEmbedUrl, type ContentCategory } from "@/lib/content-categories";
 import { cn } from "@/lib/utils";
 import { ExerciseLibraryClient } from "@/components/client/ExerciseLibraryClient";
+import { WarmupLibraryClient } from "@/components/client/WarmupLibraryClient";
 
 export const Route = createFileRoute("/_authenticated/my-program")({
   component: MyProgramPage,
@@ -43,7 +44,7 @@ function MyProgramPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [activeCat, setActiveCat] = useState<ContentCategory | "All">("All");
 
-  const [tab, setTab] = useState<"mornings" | "exercises">("mornings");
+  const [tab, setTab] = useState<"mornings" | "exercises" | "warmup">("mornings");
 
   const { data: sub } = useQuery({
     enabled: !!userId,
@@ -134,17 +135,19 @@ function MyProgramPage() {
   }
 
   const showExercisesTab = sub?.plan?.type && sub.plan.type !== "mornings";
+  const showWarmupTab = showExercisesTab; // Same eligibility: Semi-Private, Private, Combo
 
   return (
     <>
       <PageHeader title="My Program" subtitle="A short session today is a long-term investment." />
 
-      {showExercisesTab && (
+      {(showExercisesTab || showWarmupTab) && (
         <div className="flex gap-2 mb-6 border-b border-border">
           {([
-            { id: "mornings" as const, label: "10 Minute Mornings" },
-            { id: "exercises" as const, label: "Exercise Library" },
-          ]).map((t) => (
+            { id: "mornings" as const, label: "10 Minute Mornings", show: true },
+            { id: "exercises" as const, label: "Exercise Library", show: showExercisesTab },
+            { id: "warmup" as const, label: "Warm-Up", show: showWarmupTab },
+          ]).filter((t) => t.show).map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)} className={cn(
               "px-3 py-2 text-sm border-b-2 -mb-px",
               tab === t.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
@@ -153,7 +156,9 @@ function MyProgramPage() {
         </div>
       )}
 
-      {tab === "exercises" && showExercisesTab ? (
+      {tab === "warmup" && showWarmupTab ? (
+        <WarmupLibraryClient />
+      ) : tab === "exercises" && showExercisesTab ? (
         <ExerciseLibraryClient />
       ) : (
         <>
