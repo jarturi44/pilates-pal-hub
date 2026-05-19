@@ -45,24 +45,52 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data: plan } = await supabase
-      .from("plans").select("stripe_price_id").eq("id", plan_id).maybeSingle();
-    if (!plan?.stripe_price_id) {
+    const { data: plan, error: planError } = await supabase
+      .from("plans")
+      .select("display_name, price_per_month, stripe_price_id")
+      .eq("id", plan_id)
+      .maybeSingle();
+    if (planError) throw planError;
+    if (!plan) {
       return new Response(JSON.stringify({ error: "Invalid plan" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const origin = return_url || req.headers.get("origin") || "";
-    const session = await stripe.checkout.sessions.create({
+    const baseSessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: "subscription",
       customer_email: user.email!,
-      line_items: [{ price: plan.stripe_price_id, quantity: 1 }],
       success_url: `${origin}/onboarding?step=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/onboarding?step=plan`,
       metadata: { user_id: user.id, plan_id },
       subscription_data: { metadata: { user_id: user.id, plan_id } },
-    });
+    };
+
+    const fallbackLineItem: Stripe.Checkout.SessionCreateParams.LineItem = {
+      quantity: 1,
+      price_data: {
+        currency: "usd",
+        unit_amount: Math.round(Number(plan.price_per_month) * 100),
+        recurring: { interval: "month" },
+        product_data: { name: plan.display_name ?? "Pilates with Jon membership" },
+      },
+    };
+
+    let session: Stripe.Checkout.Session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        ...baseSessionParams,
+        line_items: plan.stripe_price_id ? [{ price: plan.stripe_price_id, quantity: 1 }] : [fallbackLineItem],
+      });
+    } catch (error) {
+      const message = (error as Error).message ?? "";
+      if (!message.includes("No such price") && !message.includes("similar object exists")) throw error;
+      session = await stripe.checkout.sessions.create({
+        ...baseSessionParams,
+        line_items: [fallbackLineItem],
+      });
+    }
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
