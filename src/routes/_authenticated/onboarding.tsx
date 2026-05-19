@@ -212,7 +212,18 @@ function OnboardingPage() {
         throw new Error(message);
       }
       if (!data?.url) throw new Error("No checkout URL returned");
-      window.location.href = data.url;
+      // Use top-level navigation so it works inside the Lovable preview iframe.
+      try {
+        if (window.top && window.top !== window.self) {
+          window.top.location.href = data.url;
+        } else {
+          window.location.href = data.url;
+        }
+      } catch {
+        // Cross-origin frame — fall back to opening in a new tab.
+        window.open(data.url, "_blank", "noopener,noreferrer");
+        setSubmitting(false);
+      }
     } catch (err) {
       console.error(err);
       toast.error((err as Error).message || "Couldn't start checkout");
