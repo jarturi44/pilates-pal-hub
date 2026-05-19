@@ -77,20 +77,15 @@ Deno.serve(async (req) => {
       },
     };
 
-    let session: Stripe.Checkout.Session;
-    try {
-      session = await stripe.checkout.sessions.create({
-        ...baseSessionParams,
-        line_items: plan.stripe_price_id ? [{ price: plan.stripe_price_id, quantity: 1 }] : [fallbackLineItem],
-      });
-    } catch (error) {
-      const message = (error as Error).message ?? "";
-      if (!message.includes("No such price") && !message.includes("similar object exists")) throw error;
-      session = await stripe.checkout.sessions.create({
-        ...baseSessionParams,
-        line_items: [fallbackLineItem],
-      });
-    }
+    const isTestMode = stripeSecretKey.startsWith("sk_test_");
+    const lineItems = isTestMode || !plan.stripe_price_id
+      ? [fallbackLineItem]
+      : [{ price: plan.stripe_price_id, quantity: 1 }];
+
+    const session = await stripe.checkout.sessions.create({
+      ...baseSessionParams,
+      line_items: lineItems,
+    });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
