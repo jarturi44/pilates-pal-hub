@@ -103,7 +103,7 @@ function OnboardingPage() {
     queryKey: ["onboarding-active-sub", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("subscriptions")
         .select("*, plan:plans(*)")
         .eq("user_id", user!.id)
@@ -111,6 +111,7 @@ function OnboardingPage() {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+      if (error) throw error;
       return data;
     },
   });
@@ -201,7 +202,15 @@ function OnboardingPage() {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: { plan_id: selectedPlanId, return_url: window.location.origin },
       });
-      if (error) throw error;
+      if (error) {
+        let message = error.message;
+        const context = "context" in error ? error.context : null;
+        if (context instanceof Response) {
+          const payload = await context.clone().json().catch(() => null);
+          message = payload?.error ?? message;
+        }
+        throw new Error(message);
+      }
       if (!data?.url) throw new Error("No checkout URL returned");
       window.location.href = data.url;
     } catch (err) {
