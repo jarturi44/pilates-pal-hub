@@ -76,7 +76,17 @@ function OnboardingPage() {
   const [acknowledged, setAcknowledged] = useState(false);
   const [cameraConfirmed, setCameraConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const selectedPlanId = search.plan_id ?? null;
+  const [fallbackPlanId, setFallbackPlanId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return window.sessionStorage.getItem("onboarding:selected-plan-id");
+  });
+  const selectedPlanId = search.plan_id ?? fallbackPlanId;
+
+  useEffect(() => {
+    if (!search.plan_id || search.plan_id === fallbackPlanId) return;
+    setFallbackPlanId(search.plan_id);
+    window.sessionStorage.setItem("onboarding:selected-plan-id", search.plan_id);
+  }, [fallbackPlanId, search.plan_id]);
 
   const { data: plans } = useQuery({
     queryKey: ["plans"],
@@ -93,7 +103,7 @@ function OnboardingPage() {
     queryKey: ["onboarding-active-sub", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("subscriptions")
         .select("*, plan:plans(*)")
         .eq("user_id", user!.id)
@@ -101,6 +111,7 @@ function OnboardingPage() {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+      if (error) throw error;
       return data;
     },
   });
@@ -138,6 +149,8 @@ function OnboardingPage() {
   }
 
   function selectPlan(planId: string) {
+    setFallbackPlanId(planId);
+    window.sessionStorage.setItem("onboarding:selected-plan-id", planId);
     navigate({ to: "/_authenticated/onboarding", search: { step: "plan", plan_id: planId }, replace: true });
   }
 
@@ -189,7 +202,15 @@ function OnboardingPage() {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: { plan_id: selectedPlanId, return_url: window.location.origin },
       });
-      if (error) throw error;
+      if (error) {
+        let message = error.message;
+        const context = (error as { context?: unknown }).context;
+        if (context instanceof Response) {
+          const payload = await context.clone().json().catch(() => null);
+          message = payload?.error ?? message;
+        }
+        throw new Error(message);
+      }
       if (!data?.url) throw new Error("No checkout URL returned");
       window.location.href = data.url;
     } catch (err) {
