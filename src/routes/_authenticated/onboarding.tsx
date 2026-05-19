@@ -76,7 +76,17 @@ function OnboardingPage() {
   const [acknowledged, setAcknowledged] = useState(false);
   const [cameraConfirmed, setCameraConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const selectedPlanId = search.plan_id ?? null;
+  const [fallbackPlanId, setFallbackPlanId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return window.sessionStorage.getItem("onboarding:selected-plan-id");
+  });
+  const selectedPlanId = search.plan_id ?? fallbackPlanId;
+
+  useEffect(() => {
+    if (!search.plan_id || search.plan_id === fallbackPlanId) return;
+    setFallbackPlanId(search.plan_id);
+    window.sessionStorage.setItem("onboarding:selected-plan-id", search.plan_id);
+  }, [fallbackPlanId, search.plan_id]);
 
   const { data: plans } = useQuery({
     queryKey: ["plans"],
@@ -138,6 +148,8 @@ function OnboardingPage() {
   }
 
   function selectPlan(planId: string) {
+    setFallbackPlanId(planId);
+    window.sessionStorage.setItem("onboarding:selected-plan-id", planId);
     navigate({ to: "/_authenticated/onboarding", search: { step: "plan", plan_id: planId }, replace: true });
   }
 
