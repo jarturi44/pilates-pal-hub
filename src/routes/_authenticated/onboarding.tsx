@@ -273,7 +273,7 @@ function OnboardingPage() {
                 {grouped[tier].map((plan) => (
                   <button
                     key={plan.id}
-                    onClick={() => setSelectedPlanId(plan.id)}
+                    onClick={() => selectPlan(plan.id)}
                     className={cn(
                       "text-left rounded-xl border p-4 transition-all bg-card",
                       selectedPlanId === plan.id
