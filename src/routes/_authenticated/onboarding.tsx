@@ -18,12 +18,13 @@ type Step =
   | "waiver"
   | "done";
 
-type Search = { step?: Step; session_id?: string };
+type Search = { step?: Step; session_id?: string; plan_id?: string };
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     step: (s.step as Step) ?? "camera",
     session_id: s.session_id as string | undefined,
+    plan_id: s.plan_id as string | undefined,
   }),
   component: OnboardingPage,
 });
@@ -71,11 +72,11 @@ function OnboardingPage() {
   const step = search.step ?? "camera";
 
   // Pre-checkout state
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [address, setAddress] = useState({ line1: "", line2: "", city: "", region: "", postal: "", country: "" });
   const [acknowledged, setAcknowledged] = useState(false);
   const [cameraConfirmed, setCameraConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const selectedPlanId = search.plan_id ?? null;
 
   const { data: plans } = useQuery({
     queryKey: ["plans"],
@@ -129,7 +130,15 @@ function OnboardingPage() {
   }, [step, search.session_id, navigate]);
 
   function goTo(next: Step) {
-    navigate({ to: "/_authenticated/onboarding", search: { step: next }, replace: true });
+    navigate({
+      to: "/_authenticated/onboarding",
+      search: selectedPlanId ? { step: next, plan_id: selectedPlanId } : { step: next },
+      replace: true,
+    });
+  }
+
+  function selectPlan(planId: string) {
+    navigate({ to: "/_authenticated/onboarding", search: { step: "plan", plan_id: planId }, replace: true });
   }
 
   async function handleConfirmCamera() {
@@ -264,7 +273,7 @@ function OnboardingPage() {
                 {grouped[tier].map((plan) => (
                   <button
                     key={plan.id}
-                    onClick={() => setSelectedPlanId(plan.id)}
+                    onClick={() => selectPlan(plan.id)}
                     className={cn(
                       "text-left rounded-xl border p-4 transition-all bg-card",
                       selectedPlanId === plan.id
