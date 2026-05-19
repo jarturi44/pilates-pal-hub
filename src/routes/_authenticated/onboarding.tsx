@@ -204,7 +204,7 @@ function OnboardingPage() {
       });
       if (error) {
         let message = error.message;
-        const context = "context" in error ? error.context : null;
+        const context = (error as { context?: unknown }).context;
         if (context instanceof Response) {
           const payload = await context.clone().json().catch(() => null);
           message = payload?.error ?? message;
