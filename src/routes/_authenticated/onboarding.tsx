@@ -136,13 +136,13 @@ function OnboardingPage() {
     if (search.session_id || (step as string) === "success") {
       successHandled.current = true;
       toast.success("Payment received. Let's finish setting up your account.");
-      navigate({ to: "/_authenticated/onboarding", search: { step: "welcome" }, replace: true });
+      navigate({ to: "/onboarding", search: { step: "welcome" }, replace: true });
     }
   }, [step, search.session_id, navigate]);
 
   function goTo(next: Step) {
     navigate({
-      to: "/_authenticated/onboarding",
+      to: "/onboarding",
       search: selectedPlanId ? { step: next, plan_id: selectedPlanId } : { step: next },
       replace: true,
     });
@@ -151,7 +151,7 @@ function OnboardingPage() {
   function selectPlan(planId: string) {
     setFallbackPlanId(planId);
     window.sessionStorage.setItem("onboarding:selected-plan-id", planId);
-    navigate({ to: "/_authenticated/onboarding", search: { step: "plan", plan_id: planId }, replace: true });
+    navigate({ to: "/onboarding", search: { step: "plan", plan_id: planId }, replace: true });
   }
 
   async function handleConfirmCamera() {
