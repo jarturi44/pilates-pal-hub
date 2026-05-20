@@ -480,28 +480,36 @@ const PRIMARY_GOALS = [
 
 function IntakeStep({ onDone }: { onDone: () => void }) {
   const { user } = useAuth();
-  const [fitness, setFitness] = useState<string>("");
-  const [goal, setGoal] = useState<string>("");
+  const [fitness, setFitness] = useState<string[]>([]);
+  const [goal, setGoal] = useState<string[]>([]);
   const [injuries, setInjuries] = useState("");
   const [days, setDays] = useState<number>(3);
   const [referral, setReferral] = useState("");
   const [saving, setSaving] = useState(false);
 
+  function toggle(list: string[], id: string, setter: (v: string[]) => void) {
+    setter(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
+  }
+
   async function submit() {
     if (!user) return;
-    if (!fitness || !goal) return toast.error("Please answer the required questions");
+    if (fitness.length === 0 || goal.length === 0 || !injuries.trim()) {
+      return toast.error("Please answer the required questions");
+    }
     setSaving(true);
     try {
+      const fitnessStr = fitness.join(", ");
+      const goalStr = goal.join(", ");
       const { error } = await supabase.from("intake_forms").insert({
         user_id: user.id,
-        fitness_level: fitness,
-        primary_goal: goal,
-        injuries: injuries || null,
+        fitness_level: fitnessStr,
+        primary_goal: goalStr,
+        injuries: injuries,
         days_per_week: days,
         referral_source: referral || null,
         // legacy mirror fields
-        goals: goal,
-        health_history: injuries || null,
+        goals: goalStr,
+        health_history: injuries,
       });
       if (error) throw error;
       onDone();
@@ -521,16 +529,16 @@ function IntakeStep({ onDone }: { onDone: () => void }) {
 
       <section className="rounded-xl border border-border bg-card p-6 space-y-6">
         <div>
-          <label className="text-sm font-medium text-foreground">Current fitness level *</label>
+          <label className="text-sm font-medium text-foreground">Current fitness level * <span className="text-muted-foreground font-normal">(select all that apply)</span></label>
           <div className="mt-2 grid grid-cols-2 gap-2">
             {FITNESS_LEVELS.map((f) => (
               <button
                 key={f.id}
                 type="button"
-                onClick={() => setFitness(f.id)}
+                onClick={() => toggle(fitness, f.id, setFitness)}
                 className={cn(
                   "rounded-md border px-3 py-2 text-sm text-left transition-colors",
-                  fitness === f.id ? "border-primary bg-primary/5 text-foreground" : "border-border hover:border-primary/50 text-foreground",
+                  fitness.includes(f.id) ? "border-primary bg-primary/5 text-foreground" : "border-border hover:border-primary/50 text-foreground",
                 )}
               >{f.label}</button>
             ))}
@@ -538,16 +546,16 @@ function IntakeStep({ onDone }: { onDone: () => void }) {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-foreground">Primary goal *</label>
+          <label className="text-sm font-medium text-foreground">Primary goal * <span className="text-muted-foreground font-normal">(select all that apply)</span></label>
           <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
             {PRIMARY_GOALS.map((g) => (
               <button
                 key={g.id}
                 type="button"
-                onClick={() => setGoal(g.id)}
+                onClick={() => toggle(goal, g.id, setGoal)}
                 className={cn(
                   "rounded-md border px-3 py-2 text-sm text-left transition-colors",
-                  goal === g.id ? "border-primary bg-primary/5 text-foreground" : "border-border hover:border-primary/50 text-foreground",
+                  goal.includes(g.id) ? "border-primary bg-primary/5 text-foreground" : "border-border hover:border-primary/50 text-foreground",
                 )}
               >{g.label}</button>
             ))}
@@ -555,12 +563,13 @@ function IntakeStep({ onDone }: { onDone: () => void }) {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-foreground">Any injuries or physical limitations?</label>
+          <label className="text-sm font-medium text-foreground">Any injuries or physical limitations? *</label>
           <textarea
             value={injuries}
             onChange={(e) => setInjuries(e.target.value)}
             rows={3}
-            placeholder="Optional. Anything we should know about — recent surgeries, chronic pain, things to avoid."
+            required
+            placeholder="Anything we should know about — recent surgeries, chronic pain, things to avoid. Write 'none' if not applicable."
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
           />
         </div>
