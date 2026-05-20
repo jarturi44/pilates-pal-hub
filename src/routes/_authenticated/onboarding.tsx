@@ -329,7 +329,7 @@ function OnboardingPage() {
               <div className="font-display text-2xl">${selectedPlan.price_per_month}<span className="text-sm text-muted-foreground">/mo</span></div>
             </div>
             <div className="text-sm text-foreground bg-muted/50 rounded-md p-4 leading-relaxed">
-              All plans require a <strong>3-month minimum commitment</strong>. Your subscription will renew monthly, and you cannot cancel from within the app before the 3-month commitment period ends. After that, you can cancel anytime and your access will continue until the end of your current billing period.
+              All plans require a <strong>3-month minimum commitment</strong>. Your subscription will renew monthly, and you cannot cancel from within the app before the 3-month commitment period ends. After that, you can cancel anytime and your access will continue until the end of your current billing period. <strong>Cancellation must be submitted in writing 3 weeks before desired date of cancellation.</strong>
             </div>
             <label className="flex items-start gap-3 cursor-pointer">
               <input
