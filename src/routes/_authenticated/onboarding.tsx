@@ -604,27 +604,14 @@ function IntakeStep({ onDone }: { onDone: () => void }) {
 
 function WaiverStep({ onSigned }: { onSigned: () => void }) {
   const { user } = useAuth();
-  const [signature, setSignature] = useState("");
-  const [agreedTerms, setAgreedTerms] = useState(false);
-  const [agreedCommitment, setAgreedCommitment] = useState(false);
-  const [scrolledToEnd, setScrolledToEnd] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  function handleScroll() {
-    const el = scrollRef.current;
-    if (!el) return;
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 8) setScrolledToEnd(true);
-  }
 
   async function submit() {
     if (!user) return;
-    if (!scrolledToEnd) return toast.error("Please scroll through the full waiver");
-    if (!signature.trim()) return toast.error("Please type your full name to sign");
-    if (!agreedTerms || !agreedCommitment) return toast.error("Please agree to both statements");
+    if (!confirmed) return toast.error("Please confirm you've submitted the waiver form");
     setSubmitting(true);
     try {
-      // Best-effort IP capture (client-side; non-PII fallback if blocked).
       let ip: string | null = null;
       try {
         const res = await fetch("https://api.ipify.org?format=json");
@@ -632,10 +619,9 @@ function WaiverStep({ onSigned }: { onSigned: () => void }) {
         ip = j.ip ?? null;
       } catch { /* ignore */ }
 
-      const snapshot = `${WAIVER_TEXT}\n\n--- Signed by: ${signature.trim()} ---`;
       const { error } = await supabase.from("waivers").insert({
         user_id: user.id,
-        content_snapshot: snapshot,
+        content_snapshot: "Signed via Google Form: https://docs.google.com/forms/d/e/1FAIpQLSehzGlygRHXHP3aan7baRPN2bwrRtHDHvNb5Oq56uBKqUOh7w/viewform",
         ip_address: ip,
       });
       if (error) throw error;
@@ -651,56 +637,38 @@ function WaiverStep({ onSigned }: { onSigned: () => void }) {
     <div className="space-y-6">
       <header>
         <h1 className="font-display text-4xl text-foreground">Liability waiver</h1>
-        <p className="mt-2 text-muted-foreground">Please read the full waiver, then sign below.</p>
+        <p className="mt-2 text-muted-foreground">Please complete and submit the waiver form below.</p>
       </header>
 
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="rounded-xl border border-border bg-card p-5 max-h-[340px] overflow-y-auto text-sm leading-relaxed text-foreground whitespace-pre-line"
-      >
-        {WAIVER_TEXT}
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <iframe
+          src="https://docs.google.com/forms/d/e/1FAIpQLSehzGlygRHXHP3aan7baRPN2bwrRtHDHvNb5Oq56uBKqUOh7w/viewform?embedded=true"
+          className="w-full block"
+          style={{ height: "2617px", border: 0 }}
+          title="Liability waiver"
+        >
+          Loading…
+        </iframe>
       </div>
-      {!scrolledToEnd && (
-        <p className="text-xs text-muted-foreground -mt-2">Scroll to the end of the waiver to continue.</p>
-      )}
 
-      <div className="rounded-xl border border-border bg-card p-6 space-y-5">
-        <div>
-          <label className="text-sm font-medium text-foreground">Type your full legal name as your signature *</label>
-          <input
-            value={signature}
-            onChange={(e) => setSignature(e.target.value)}
-            placeholder="Full name"
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 font-display text-lg italic focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-        </div>
-
+      <div className="rounded-xl border border-border bg-card p-6">
         <label className="flex items-start gap-3 cursor-pointer">
           <input
-            type="checkbox" checked={agreedTerms} onChange={(e) => setAgreedTerms(e.target.checked)}
+            type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)}
             className="mt-1 h-4 w-4 rounded border-input"
           />
-          <span className="text-sm text-foreground">I have read and agree to the terms of the liability waiver above.</span>
-        </label>
-
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input
-            type="checkbox" checked={agreedCommitment} onChange={(e) => setAgreedCommitment(e.target.checked)}
-            className="mt-1 h-4 w-4 rounded border-input"
-          />
-          <span className="text-sm text-foreground">I understand and agree to the 3-month minimum commitment.</span>
+          <span className="text-sm text-foreground">I have completed and submitted the waiver form above.</span>
         </label>
       </div>
 
       <div className="flex justify-end">
         <button
           onClick={submit}
-          disabled={submitting || !scrolledToEnd}
+          disabled={submitting || !confirmed}
           className="rounded-md bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-2"
         >
           {submitting && <Loader2 size={16} className="animate-spin" />}
-          Sign and continue
+          Continue
         </button>
       </div>
     </div>
