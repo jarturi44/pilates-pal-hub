@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WaiverRouteImport } from './routes/waiver'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
@@ -38,6 +39,11 @@ import { Route as ApiPublicHooksSendSessionRemindersRouteImport } from './routes
 import { Route as ApiPublicHooksSendMorningsRemindersRouteImport } from './routes/api/public/hooks/send-mornings-reminders'
 import { Route as ApiPublicHooksBillingJobsRouteImport } from './routes/api/public/hooks/billing-jobs'
 
+const WaiverRoute = WaiverRouteImport.update({
+  id: '/waiver',
+  path: '/waiver',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
   path: '/unsubscribe',
@@ -192,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/waiver': typeof WaiverRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/broadcasts': typeof AuthenticatedBroadcastsRoute
   '/clients': typeof AuthenticatedClientsRouteWithChildren
@@ -221,6 +228,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/waiver': typeof WaiverRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/broadcasts': typeof AuthenticatedBroadcastsRoute
   '/clients': typeof AuthenticatedClientsRouteWithChildren
@@ -252,6 +260,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/waiver': typeof WaiverRoute
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
   '/_authenticated/broadcasts': typeof AuthenticatedBroadcastsRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRouteWithChildren
@@ -283,6 +292,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/unsubscribe'
+    | '/waiver'
     | '/attendance'
     | '/broadcasts'
     | '/clients'
@@ -312,6 +322,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/unsubscribe'
+    | '/waiver'
     | '/attendance'
     | '/broadcasts'
     | '/clients'
@@ -342,6 +353,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/unsubscribe'
+    | '/waiver'
     | '/_authenticated/attendance'
     | '/_authenticated/broadcasts'
     | '/_authenticated/clients'
@@ -373,6 +385,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
+  WaiverRoute: typeof WaiverRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksBillingJobsRoute: typeof ApiPublicHooksBillingJobsRoute
@@ -385,6 +398,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/waiver': {
+      id: '/waiver'
+      path: '/waiver'
+      fullPath: '/waiver'
+      preLoaderRoute: typeof WaiverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/unsubscribe': {
       id: '/unsubscribe'
       path: '/unsubscribe'
@@ -639,6 +659,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
   UnsubscribeRoute: UnsubscribeRoute,
+  WaiverRoute: WaiverRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksBillingJobsRoute: ApiPublicHooksBillingJobsRoute,
