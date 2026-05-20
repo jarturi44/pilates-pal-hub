@@ -13,6 +13,7 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthLayout() {
   const { loading, session, role, user } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const location = useRouterState({ select: (s) => s.location });
 
   const { data: gate, isLoading: gateLoading } = useQuery({
     queryKey: ["onboarding-gate", user?.id],
@@ -43,7 +44,10 @@ function AuthLayout() {
   if (loading || (role === "client" && gateLoading)) {
     return <LoadingScreen />;
   }
-  if (!session) return <Navigate to="/login" />;
+  if (!session) {
+    const redirect = `${location.pathname}${location.searchStr || ""}`;
+    return <Navigate to="/login" search={{ redirect }} />;
+  }
 
   const isOnOnboarding = pathname.startsWith("/onboarding");
   if (role === "client" && gate && !isOnOnboarding) {

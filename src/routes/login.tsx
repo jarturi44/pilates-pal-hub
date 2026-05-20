@@ -1,15 +1,19 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Wordmark } from "@/components/Wordmark";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (s: Record<string, unknown>): { redirect?: string } => ({
+    redirect: typeof s.redirect === "string" ? s.redirect : undefined,
+  }),
   component: LoginPage,
 });
 
 function LoginPage() {
   const navigate = useNavigate();
+  const search = useSearch({ from: "/login" });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,6 +28,10 @@ function LoginPage() {
       return;
     }
     toast.success("Welcome back");
+    if (search.redirect?.startsWith("/") && !search.redirect.startsWith("//")) {
+      window.location.href = search.redirect;
+      return;
+    }
     navigate({ to: "/" });
   }
 
