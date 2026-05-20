@@ -170,7 +170,7 @@ function OnboardingPage() {
   function selectPlan(planId: string) {
     setFallbackPlanId(planId);
     window.sessionStorage.setItem("onboarding:selected-plan-id", planId);
-    navigate({ to: "/onboarding", search: { step: "plan", plan_id: planId }, replace: true });
+    navigate({ to: "/onboarding", search: { step: "plan", plan_id: planId }, replace: true, resetScroll: false });
   }
 
 
