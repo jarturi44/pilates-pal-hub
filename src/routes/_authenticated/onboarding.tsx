@@ -1,8 +1,10 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { createCheckoutSession, syncCheckoutSession } from "@/lib/checkout.functions";
 import { toast } from "sonner";
 import { Check, Loader2, PackageCheck, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,6 +14,7 @@ type Step =
   | "shipping"
   | "commitment"
   | "checkout"
+  | "success"
   | "welcome"
   | "intake"
   | "waiver"
@@ -67,6 +70,8 @@ function OnboardingPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const startCheckout = useServerFn(createCheckoutSession);
+  const syncCheckout = useServerFn(syncCheckoutSession);
   const search = useSearch({ from: "/_authenticated/onboarding" });
   const step = search.step ?? "plan";
 
@@ -97,7 +102,7 @@ function OnboardingPage() {
   });
 
   // Active subscription (used in post-checkout steps)
-  const { data: activeSub } = useQuery({
+  const { data: activeSub, refetch: refetchActiveSub } = useQuery({
     queryKey: ["onboarding-active-sub", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
@@ -125,18 +130,34 @@ function OnboardingPage() {
   const activePlan = (activeSub?.plan as Plan | undefined) ?? null;
   const isLiveSessionPlan = activePlan && activePlan.type !== "mornings";
 
-  // After Stripe redirects back with session_id, route to welcome.
-  // The Stripe webhook creates the subscription server-side.
+  // After checkout redirects back with session_id, sync immediately so we don't depend on webhook timing.
   const successHandled = useRef(false);
   useEffect(() => {
     if (step !== "success" && !search.session_id) return;
     if (successHandled.current) return;
-    if (search.session_id || (step as string) === "success") {
-      successHandled.current = true;
-      toast.success("Payment received. Let's finish setting up your account.");
-      navigate({ to: "/onboarding", search: { step: "welcome" }, replace: true });
+    successHandled.current = true;
+
+    async function finishCheckoutReturn() {
+      try {
+        if (search.session_id) {
+          await syncCheckout({ data: { sessionId: search.session_id } });
+          await refetchActiveSub();
+        }
+        toast.success("Payment received. Let's finish setting up your account.");
+        navigate({ to: "/onboarding", search: { step: "welcome" }, replace: true });
+      } catch (err) {
+        console.error(err);
+        toast.error("Payment is still syncing. You can continue your intake and waiver now.");
+        navigate({
+          to: "/onboarding",
+          search: selectedPlanId ? { step: "intake", plan_id: selectedPlanId } : { step: "intake" },
+          replace: true,
+        });
+      }
     }
-  }, [step, search.session_id, navigate]);
+
+    finishCheckoutReturn();
+  }, [step, search.session_id, navigate, syncCheckout, refetchActiveSub, selectedPlanId]);
 
   function goTo(next: Step) {
     navigate({
@@ -181,18 +202,7 @@ function OnboardingPage() {
         if (efErr) throw efErr;
       }
 
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { plan_id: selectedPlanId, return_url: window.location.origin },
-      });
-      if (error) {
-        let message = error.message;
-        const context = (error as { context?: unknown }).context;
-        if (context instanceof Response) {
-          const payload = await context.clone().json().catch(() => null);
-          message = payload?.error ?? message;
-        }
-        throw new Error(message);
-      }
+      const data = await startCheckout({ data: { planId: selectedPlanId, returnUrl: window.location.origin } });
       if (!data?.url) throw new Error("No checkout URL returned");
       // Use top-level navigation so it works inside the Lovable preview iframe.
       try {

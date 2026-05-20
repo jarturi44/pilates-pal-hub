@@ -1,0 +1,37 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { createCheckoutSessionOnServer, syncCheckoutSessionOnServer } from "./checkout.server";
+
+export const createCheckoutSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    planId: z.string().uuid(),
+    returnUrl: z.string().url(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) throw new Error("Payments are not configured yet.");
+    return createCheckoutSessionOnServer({
+      stripeSecretKey,
+      userId: context.userId,
+      userEmail: typeof context.claims.email === "string" ? context.claims.email : undefined,
+      planId: data.planId,
+      returnUrl: data.returnUrl,
+    });
+  });
+
+export const syncCheckoutSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    sessionId: z.string().min(8).max(255),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) throw new Error("Payments are not configured yet.");
+    return syncCheckoutSessionOnServer({
+      stripeSecretKey,
+      userId: context.userId,
+      sessionId: data.sessionId,
+    });
+  });
