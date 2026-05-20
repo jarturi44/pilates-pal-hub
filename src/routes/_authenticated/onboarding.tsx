@@ -597,6 +597,14 @@ function IntakeStep({ onDone }: { onDone: () => void }) {
               >{g.label}</button>
             ))}
           </div>
+          {goal.includes("other") && (
+            <input
+              value={goalOther}
+              onChange={(e) => setGoalOther(e.target.value)}
+              placeholder="Please describe your goal"
+              className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          )}
         </div>
 
         <div>
