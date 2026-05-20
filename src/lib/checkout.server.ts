@@ -1,0 +1,133 @@
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+type PlanForCheckout = {
+  id: string;
+  display_name: string | null;
+  price_per_month: number | string;
+  stripe_price_id: string | null;
+};
+
+type StripeCheckoutSession = {
+  id: string;
+  url?: string;
+  customer?: string | { id?: string } | null;
+  customer_email?: string | null;
+  metadata?: Record<string, string> | null;
+  subscription?: string | StripeSubscription | null;
+};
+
+type StripeSubscription = {
+  id: string;
+  status?: string;
+  customer?: string | { id?: string } | null;
+  start_date?: number;
+  current_period_end?: number;
+  cancel_at_period_end?: boolean;
+};
+
+function asId(value: string | { id?: string } | null | undefined) {
+  return typeof value === "string" ? value : value?.id ?? null;
+}
+
+async function stripeFetch<T>(stripeSecretKey: string, path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`https://api.stripe.com/v1${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${stripeSecretKey}`,
+      ...(init?.headers ?? {}),
+    },
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json?.error?.message ?? "Stripe request failed");
+  return json as T;
+}
+
+export async function createCheckoutSessionOnServer(args: {
+  stripeSecretKey: string;
+  userId: string;
+  userEmail?: string;
+  planId: string;
+  returnUrl: string;
+}) {
+  const { data: plan, error } = await supabaseAdmin
+    .from("plans")
+    .select("id, display_name, price_per_month, stripe_price_id")
+    .eq("id", args.planId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!plan) throw new Error("Invalid plan");
+
+  const checkoutPlan = plan as PlanForCheckout;
+  const origin = args.returnUrl || "";
+  const successUrl = `${origin}/onboarding?step=success&plan_id=${encodeURIComponent(args.planId)}&session_id={CHECKOUT_SESSION_ID}`;
+  const cancelUrl = `${origin}/onboarding?step=commitment&plan_id=${encodeURIComponent(args.planId)}`;
+  const body = new URLSearchParams({
+    mode: "subscription",
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+    "metadata[user_id]": args.userId,
+    "metadata[plan_id]": args.planId,
+    "subscription_data[metadata][user_id]": args.userId,
+    "subscription_data[metadata][plan_id]": args.planId,
+    "line_items[0][quantity]": "1",
+  });
+
+  if (args.userEmail) body.set("customer_email", args.userEmail);
+  if (!args.stripeSecretKey.startsWith("sk_test_") && checkoutPlan.stripe_price_id) {
+    body.set("line_items[0][price]", checkoutPlan.stripe_price_id);
+  } else {
+    body.set("line_items[0][price_data][currency]", "usd");
+    body.set("line_items[0][price_data][unit_amount]", String(Math.round(Number(checkoutPlan.price_per_month) * 100)));
+    body.set("line_items[0][price_data][recurring][interval]", "month");
+    body.set("line_items[0][price_data][product_data][name]", checkoutPlan.display_name ?? "Pilates with Jon membership");
+  }
+
+  const session = await stripeFetch<StripeCheckoutSession>(args.stripeSecretKey, "/checkout/sessions", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+  if (!session.url) throw new Error("No checkout URL returned");
+  return { url: session.url };
+}
+
+export async function syncCheckoutSessionOnServer(args: {
+  stripeSecretKey: string;
+  userId: string;
+  sessionId: string;
+}) {
+  const session = await stripeFetch<StripeCheckoutSession>(
+    args.stripeSecretKey,
+    `/checkout/sessions/${encodeURIComponent(args.sessionId)}?expand[]=subscription`,
+  );
+  const userId = session.metadata?.user_id;
+  const planId = session.metadata?.plan_id;
+  const subscription = session.subscription;
+  const sub = typeof subscription === "string" ? null : subscription;
+  const subscriptionId = typeof subscription === "string" ? subscription : subscription?.id;
+
+  if (userId !== args.userId) throw new Error("Checkout session does not belong to this account");
+  if (!planId || !subscriptionId) throw new Error("Checkout session is not ready yet");
+
+  const fullSub = sub ?? await stripeFetch<StripeSubscription>(args.stripeSecretKey, `/subscriptions/${subscriptionId}`);
+  const start = new Date((fullSub.start_date ?? Math.floor(Date.now() / 1000)) * 1000);
+  const commitmentEnd = new Date(start);
+  commitmentEnd.setMonth(commitmentEnd.getMonth() + 3);
+  const periodEndSeconds = fullSub.current_period_end ?? Math.floor(Date.now() / 1000);
+
+  const { data, error } = await supabaseAdmin.from("subscriptions").upsert({
+    user_id: userId,
+    plan_id: planId,
+    stripe_subscription_id: subscriptionId,
+    stripe_customer_id: asId(fullSub.customer) ?? asId(session.customer),
+    status: fullSub.status ?? "active",
+    start_date: start.toISOString(),
+    commitment_end_date: commitmentEnd.toISOString(),
+    current_period_end: new Date(periodEndSeconds * 1000).toISOString(),
+    cancel_at_period_end: !!fullSub.cancel_at_period_end,
+    past_due_since: null,
+    access_suspended: false,
+  }, { onConflict: "stripe_subscription_id" }).select("*, plan:plans(*)").maybeSingle();
+  if (error) throw error;
+  return { subscription: data };
+}
