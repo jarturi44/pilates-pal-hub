@@ -148,7 +148,11 @@ function OnboardingPage() {
       } catch (err) {
         console.error(err);
         toast.error("Payment is still syncing. You can continue your intake and waiver now.");
-        navigate({ to: "/onboarding", search: { step: "intake", plan_id: selectedPlanId }, replace: true });
+        navigate({
+          to: "/onboarding",
+          search: selectedPlanId ? { step: "intake", plan_id: selectedPlanId } : { step: "intake" },
+          replace: true,
+        });
       }
     }
 
