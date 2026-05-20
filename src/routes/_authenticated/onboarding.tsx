@@ -488,13 +488,26 @@ const PRIMARY_GOALS = [
   { id: "other", label: "Other" },
 ] as const;
 
+const REFERRAL_SOURCES = [
+  "Social media",
+  "Friend",
+  "Family member",
+  "Google search",
+  "Podcast",
+  "Advertisement",
+  "Event or workshop",
+  "Other",
+] as const;
+
 function IntakeStep({ onDone }: { onDone: () => void }) {
   const { user } = useAuth();
   const [fitness, setFitness] = useState<string[]>([]);
   const [goal, setGoal] = useState<string[]>([]);
+  const [goalOther, setGoalOther] = useState("");
   const [injuries, setInjuries] = useState("");
   const [days, setDays] = useState<number>(3);
   const [referral, setReferral] = useState("");
+  const [referralSpecific, setReferralSpecific] = useState("");
   const [saving, setSaving] = useState(false);
 
   function toggle(list: string[], id: string, setter: (v: string[]) => void) {
@@ -506,17 +519,31 @@ function IntakeStep({ onDone }: { onDone: () => void }) {
     if (fitness.length === 0 || goal.length === 0 || !injuries.trim()) {
       return toast.error("Please answer the required questions");
     }
+    if (goal.includes("other") && !goalOther.trim()) {
+      return toast.error("Please describe your 'Other' goal");
+    }
+    if (!referral) {
+      return toast.error("Please tell us how you heard about us");
+    }
+    if (!referralSpecific.trim()) {
+      return toast.error("Please fill in the 'Get specific' field");
+    }
     setSaving(true);
     try {
+      const goalLabels = goal.map((id) => {
+        if (id === "other" && goalOther.trim()) return `Other: ${goalOther.trim()}`;
+        return PRIMARY_GOALS.find((g) => g.id === id)?.label ?? id;
+      });
       const fitnessStr = fitness.join(", ");
-      const goalStr = goal.join(", ");
+      const goalStr = goalLabels.join(", ");
+      const referralStr = `${referral} — ${referralSpecific.trim()}`;
       const { error } = await supabase.from("intake_forms").insert({
         user_id: user.id,
         fitness_level: fitnessStr,
         primary_goal: goalStr,
         injuries: injuries,
         days_per_week: days,
-        referral_source: referral || null,
+        referral_source: referralStr,
         // legacy mirror fields
         goals: goalStr,
         health_history: injuries,
