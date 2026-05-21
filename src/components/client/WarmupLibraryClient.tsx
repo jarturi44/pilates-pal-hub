@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { Check, Play, X } from "lucide-react";
 import { toEmbedUrl } from "@/lib/content-categories";
 
+export type WarmupKind = "warmup" | "cooldown";
+
 type Warmup = {
   id: string;
   title: string;
@@ -15,21 +17,41 @@ type Warmup = {
   duration_minutes: number | null;
   active: boolean;
   sort_order: number;
+  kind: WarmupKind;
 };
 
-export function WarmupLibraryClient() {
+const COPY: Record<WarmupKind, { intro: string; cta: string; toast: string; empty: string; label: string }> = {
+  warmup: {
+    intro: "Before your session, take a few minutes to warm up. Your body will thank you — and so will I. Pick one of these and get moving before we work together. See you in there! 💪",
+    cta: "Mark warm-up done for today",
+    toast: "Nice — you're warmed up.",
+    empty: "No warm-up videos yet.",
+    label: "Warm-up",
+  },
+  cooldown: {
+    intro: "After your session, ease your body down with a few minutes of stretching and breath. This is where the work settles in. Pick one and finish strong. 🧘",
+    cta: "Mark cool-down done for today",
+    toast: "Nice — fully cooled down.",
+    empty: "No cool-down videos yet.",
+    label: "Cool-down",
+  },
+};
+
+export function WarmupLibraryClient({ kind = "warmup" }: { kind?: WarmupKind }) {
   const { user } = useAuth();
   const userId = user?.id;
   const qc = useQueryClient();
   const [openId, setOpenId] = useState<string | null>(null);
+  const copy = COPY[kind];
 
   const { data: items, isLoading } = useQuery({
-    queryKey: ["warmups"],
+    queryKey: ["warmups", kind],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("warmup_content")
         .select("*")
         .eq("active", true)
+        .eq("kind", kind)
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return (data ?? []) as Warmup[];
@@ -63,20 +85,20 @@ export function WarmupLibraryClient() {
     if (!userId) return;
     const { error } = await supabase.from("warmup_completions").insert({ user_id: userId, content_id: w.id });
     if (error) return toast.error(error.message);
-    toast.success("Nice — you're warmed up.");
+    toast.success(copy.toast);
     qc.invalidateQueries({ queryKey: ["warmup-completions", userId] });
   }
 
   return (
     <>
       <div className="rounded-xl border border-border bg-card p-4 mb-6 text-sm text-foreground/90 leading-relaxed">
-        Before your session, take a few minutes to warm up. Your body will thank you — and so will I. Pick one of these and get moving before we work together. See you in there! 💪
+        {copy.intro}
       </div>
 
       {isLoading ? (
-        <div className="text-sm text-muted-foreground">Loading warm-ups…</div>
+        <div className="text-sm text-muted-foreground">Loading {copy.label.toLowerCase()}s…</div>
       ) : (items ?? []).length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">No warm-up videos yet.</div>
+        <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">{copy.empty}</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {(items ?? []).map((w) => {
@@ -105,6 +127,8 @@ export function WarmupLibraryClient() {
       {open && (
         <WarmupDetail
           warmup={open}
+          label={copy.label}
+          cta={copy.cta}
           completed={doneToday.has(open.id)}
           onClose={() => setOpenId(null)}
           onComplete={() => markDone(open)}
@@ -114,8 +138,10 @@ export function WarmupLibraryClient() {
   );
 }
 
-function WarmupDetail({ warmup, completed, onClose, onComplete }: {
+function WarmupDetail({ warmup, label, cta, completed, onClose, onComplete }: {
   warmup: Warmup;
+  label: string;
+  cta: string;
   completed: boolean;
   onClose: () => void;
   onComplete: () => void;
@@ -130,7 +156,7 @@ function WarmupDetail({ warmup, completed, onClose, onComplete }: {
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X size={18} /></button>
         </div>
         <div className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
-          Warm-up{warmup.difficulty && ` · ${warmup.difficulty}`}{warmup.duration_minutes != null && ` · ${warmup.duration_minutes} min`}
+          {label}{warmup.difficulty && ` · ${warmup.difficulty}`}{warmup.duration_minutes != null && ` · ${warmup.duration_minutes} min`}
         </div>
         {embed ? (
           <div className="aspect-video rounded-lg overflow-hidden border border-border bg-black mb-4">
@@ -147,7 +173,7 @@ function WarmupDetail({ warmup, completed, onClose, onComplete }: {
           className="w-full rounded-md bg-primary text-primary-foreground px-4 py-3 text-sm hover:opacity-90 inline-flex items-center justify-center gap-2"
         >
           <Check size={14} />
-          {completed ? "Mark done again" : "Mark warm-up done for today"}
+          {completed ? "Mark done again" : cta}
         </button>
       </aside>
     </div>
