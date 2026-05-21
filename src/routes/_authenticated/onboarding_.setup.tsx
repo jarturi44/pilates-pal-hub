@@ -7,7 +7,7 @@ import { Check, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/onboarding/setup")({
+export const Route = createFileRoute("/_authenticated/onboarding_/setup")({
   component: OnboardingSetupPage,
 });
 
