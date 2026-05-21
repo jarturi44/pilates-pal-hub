@@ -236,10 +236,15 @@ function ProgramPage() {
       />
 
       {/* 4. 10 Minute Mornings — goal 2/week, extras count too */}
-      <section className="mb-4">
-        <div className="rounded-xl border border-border bg-card p-4">
+      <section className="mb-12">
+        <h3 className="font-display text-2xl text-foreground">10 Minute Mornings</h3>
+        <p className="mt-1 text-sm text-muted-foreground mb-5 max-w-3xl">
+          On days without a live session, fit in a 10 Minute Mornings video. Aim for 2 a week — every extra one counts.
+        </p>
+
+        <div className="rounded-xl border border-border bg-card p-4 mb-5">
           <div className="flex items-baseline justify-between mb-2">
-            <span className="text-xs uppercase tracking-wide text-muted-foreground">10 Minute Mornings · this week</span>
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">This week</span>
             <span className="text-sm text-foreground">
               <strong>{morningsThisWeek}</strong> / {MORNING_GOAL} sessions
               {morningExtra > 0 && (
@@ -250,18 +255,52 @@ function ProgramPage() {
           <div className="h-2 rounded-full bg-muted overflow-hidden">
             <div className="h-full bg-primary transition-all" style={{ width: `${morningPct}%` }} />
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Aim for 2 a week — but every extra one counts. Short sessions add up.
-          </p>
         </div>
+
+        {mornings.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            No videos yet.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {mornings.slice(0, 2).map((v) => {
+              const done = completedVideoIds.has(v.id);
+              return (
+                <div key={v.id} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
+                  <div className="relative aspect-video bg-muted">
+                    {v.thumbnail_url ? (
+                      <img src={v.thumbnail_url} alt={v.title} className="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <VideoIcon size={28} />
+                      </div>
+                    )}
+                    {done && (
+                      <span className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-1">
+                        <Check size={12} /> Completed
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-4 flex-1 flex flex-col">
+                    <div className="font-medium text-foreground">{v.title}</div>
+                    {v.description && <div className="mt-1 text-sm text-muted-foreground line-clamp-2">{v.description}</div>}
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      {v.duration_minutes ? `${v.duration_minutes} min` : ""}
+                    </div>
+                    <button
+                      onClick={() => setOpenVideo(v)}
+                      className="mt-4 w-full rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm font-medium inline-flex items-center justify-center gap-1.5 hover:opacity-90"
+                    >
+                      <Play size={14} /> Watch
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
-      <VideoSection
-        heading=""
-        intro="On days when you don't have a live session, fit in a 10 Minute Mornings video. Short, energizing, and you'll feel better all day."
-        videos={mornings}
-        completedIds={completedVideoIds}
-        onOpen={setOpenVideo}
-      />
+
 
 
       {openVideo && (
