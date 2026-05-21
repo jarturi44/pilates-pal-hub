@@ -86,15 +86,18 @@ function ProfilePage() {
                 </div>
               )}
               <div className="pt-2">
-                <button
-                  onClick={cancel}
-                  disabled={working || lockedIn || sub.status === "canceled" || sub.cancel_at_period_end}
-                  className="rounded-md border border-border px-4 py-2 text-sm hover:bg-muted disabled:opacity-50 inline-flex items-center gap-2"
+                <div className="text-sm text-muted-foreground mb-3">
+                  All plans require a <strong>3-month minimum commitment</strong>. Your subscription will renew monthly, and you cannot cancel from within the app before the 3-month commitment period ends. <strong>Cancellation must be submitted in writing 3 weeks before end of billing cycle in order to not be charged for the next month.</strong>
+                </div>
+                <a
+                  href={`mailto:jon@pilateswithjon.com?subject=${encodeURIComponent("Cancel Subscription")}&body=${encodeURIComponent("Please briefly describe why you want to cancel.")}`}
+                  className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm hover:bg-muted disabled:opacity-50"
+                  aria-label="Cancel subscription by email"
                 >
-                  {working && <Loader2 size={14} className="animate-spin" />}
                   Cancel subscription
-                </button>
+                </a>
               </div>
+
             </div>
           )}
         </section>
