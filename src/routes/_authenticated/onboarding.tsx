@@ -80,7 +80,7 @@ function OnboardingPage() {
   const step = search.step ?? "plan";
 
   // Pre-checkout state
-  const [address, setAddress] = useState({ line1: "", line2: "", city: "", region: "", postal: "", country: "" });
+  const [address, setAddress] = useState({ firstName: "", lastName: "", phone: "", line1: "", line2: "", city: "", region: "", postal: "", country: "" });
   const [acknowledged, setAcknowledged] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [fallbackPlanId, setFallbackPlanId] = useState<string | null>(() => {
@@ -180,7 +180,7 @@ function OnboardingPage() {
   }
 
   async function handleProceedFromShipping() {
-    if (!address.line1 || !address.city || !address.country || !address.postal) {
+    if (!address.firstName || !address.lastName || !address.phone || !address.line1 || !address.city || !address.country || !address.postal) {
       return toast.error("Please complete the shipping address");
     }
     goTo("commitment");
@@ -192,7 +192,8 @@ function OnboardingPage() {
     setSubmitting(true);
     try {
       if (needsShipping) {
-        const full = [address.line1, address.line2, `${address.city}, ${address.region} ${address.postal}`, address.country]
+        const recipient = `${address.firstName} ${address.lastName}`.trim();
+        const full = [recipient, `Phone: ${address.phone}`, address.line1, address.line2, `${address.city}, ${address.region} ${address.postal}`, address.country]
           .filter(Boolean).join("\n");
         const { error: efErr } = await supabase.from("equipment_fulfillment").upsert({
           user_id: user.id,
@@ -293,6 +294,11 @@ function OnboardingPage() {
             <p className="mt-2 text-muted-foreground">Where should we ship your equipment kit?</p>
           </header>
           <div className="grid gap-4 bg-card border border-border rounded-xl p-6">
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="First name" value={address.firstName} onChange={(v) => setAddress({ ...address, firstName: v })} required />
+              <Field label="Last name" value={address.lastName} onChange={(v) => setAddress({ ...address, lastName: v })} required />
+            </div>
+            <Field label="Phone number" value={address.phone} onChange={(v) => setAddress({ ...address, phone: v })} required />
             <Field label="Address line 1" value={address.line1} onChange={(v) => setAddress({ ...address, line1: v })} required />
             <Field label="Address line 2" value={address.line2} onChange={(v) => setAddress({ ...address, line2: v })} />
             <div className="grid grid-cols-2 gap-4">
