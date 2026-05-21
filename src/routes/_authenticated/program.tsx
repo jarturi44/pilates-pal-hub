@@ -287,9 +287,10 @@ function VideoSection({
 }) {
   return (
     <section className="mb-12">
-      <h3 className="font-display text-2xl text-foreground">{heading}</h3>
+      {heading && <h3 className="font-display text-2xl text-foreground">{heading}</h3>}
       {intro && <p className="mt-1 text-sm text-muted-foreground mb-5 max-w-3xl">{intro}</p>}
-      {!intro && <div className="mb-5" />}
+      {!intro && heading && <div className="mb-5" />}
+
       {videos.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
           No videos yet.
