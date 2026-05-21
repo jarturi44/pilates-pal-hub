@@ -148,11 +148,11 @@ function OnboardingPage() {
           await refetchActiveSub();
         }
         toast.success("Payment received. Let's finish setting up your account.");
-        navigate({ to: "/onboarding/setup", replace: true });
+        navigate({ to: "/onboarding", search: { step: "welcome" }, replace: true });
       } catch (err) {
         console.error(err);
         toast.error("Payment is still syncing. You can continue your setup now.");
-        navigate({ to: "/onboarding/setup", replace: true });
+        navigate({ to: "/onboarding", search: { step: "welcome" }, replace: true });
       }
     }
 
