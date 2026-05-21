@@ -131,3 +131,31 @@ export async function syncCheckoutSessionOnServer(args: {
   if (error) throw error;
   return { subscription: data };
 }
+
+export async function createBillingPortalSessionOnServer(args: {
+  stripeSecretKey: string;
+  userId: string;
+  returnUrl: string;
+}) {
+  const { data: sub, error } = await supabaseAdmin
+    .from("subscriptions")
+    .select("stripe_customer_id")
+    .eq("user_id", args.userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!sub?.stripe_customer_id) throw new Error("No Stripe customer on file yet.");
+
+  const body = new URLSearchParams({
+    customer: sub.stripe_customer_id,
+    return_url: args.returnUrl,
+  });
+  const session = await stripeFetch<{ url?: string }>(args.stripeSecretKey, "/billing_portal/sessions", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+  if (!session.url) throw new Error("No portal URL returned");
+  return { url: session.url };
+}
