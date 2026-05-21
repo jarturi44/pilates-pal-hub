@@ -25,7 +25,7 @@ type VideoRow = {
   id: string;
   title: string;
   description: string | null;
-  category: "warmup" | "10_min_morning";
+  category: "warmup" | "10_min_morning" | "cool_down";
   thumbnail_url: string | null;
   video_url: string | null;
   duration_minutes: number | null;
@@ -115,6 +115,7 @@ function HomePage() {
 
   const library = (videos ?? []).filter((v) => v.category === "warmup");
   const mornings = (videos ?? []).filter((v) => v.category === "10_min_morning");
+  const cooldowns = (videos ?? []).filter((v) => v.category === "cool_down");
 
   const morningIds = useMemo(() => new Set(mornings.map((m) => m.id)), [mornings]);
   const morningsThisWeek = useMemo(() => {
@@ -292,6 +293,16 @@ function HomePage() {
           </div>
         )}
       </section>
+
+      <VideoSection
+        heading="Cool Down"
+        intro="Wind down after your session. Pick a cool down to stretch and recover."
+        videos={cooldowns}
+        completedIds={completedVideoIds}
+        onOpen={setOpenVideo}
+      />
+
+
 
       {openVideo && (
         <VideoModal

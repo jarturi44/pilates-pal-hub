@@ -1066,6 +1066,7 @@ export type Database = {
           difficulty: string | null
           duration_minutes: number | null
           id: string
+          kind: string
           sort_order: number
           title: string
           video_url: string | null
@@ -1077,6 +1078,7 @@ export type Database = {
           difficulty?: string | null
           duration_minutes?: number | null
           id?: string
+          kind?: string
           sort_order?: number
           title: string
           video_url?: string | null
@@ -1088,6 +1090,7 @@ export type Database = {
           difficulty?: string | null
           duration_minutes?: number | null
           id?: string
+          kind?: string
           sort_order?: number
           title?: string
           video_url?: string | null
