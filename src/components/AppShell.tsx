@@ -12,7 +12,6 @@ import { Wordmark } from "@/components/Wordmark";
 
 const clientNav = [
   { to: "/home", label: "Home", icon: Home },
-  { to: "/program", label: "My Program", icon: Calendar },
   { to: "/progress", label: "Progress", icon: LineChart },
   { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/profile", label: "Profile", icon: UserIcon },
