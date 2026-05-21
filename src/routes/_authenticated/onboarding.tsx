@@ -80,7 +80,7 @@ function OnboardingPage() {
   const step = search.step ?? "plan";
 
   // Pre-checkout state
-  const [address, setAddress] = useState({ line1: "", line2: "", city: "", region: "", postal: "", country: "" });
+  const [address, setAddress] = useState({ firstName: "", lastName: "", phone: "", line1: "", line2: "", city: "", region: "", postal: "", country: "" });
   const [acknowledged, setAcknowledged] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [fallbackPlanId, setFallbackPlanId] = useState<string | null>(() => {
