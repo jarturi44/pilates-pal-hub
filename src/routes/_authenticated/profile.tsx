@@ -10,8 +10,8 @@ export const Route = createFileRoute("/_authenticated/profile")({
 function ProfilePage() {
   const { user } = useAuth();
 
-
   const { data: sub } = useQuery({
+
     queryKey: ["my-subscription", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
@@ -31,8 +31,8 @@ function ProfilePage() {
   const lockedIn = commitmentEnd ? commitmentEnd > new Date() : false;
 
   return (
-
     <>
+
       <PageHeader title="Profile" subtitle="Manage your account and subscription." />
       <div className="space-y-6">
         <section className="rounded-xl border border-border bg-card p-6">
