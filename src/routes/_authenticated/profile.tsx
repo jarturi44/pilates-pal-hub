@@ -17,11 +17,14 @@ function ProfilePage() {
   const [portalLoading, setPortalLoading] = useState(false);
 
   const handleManageBilling = async () => {
+    const tab = window.open("", "_blank");
     try {
       setPortalLoading(true);
       const { url } = await openPortal({ data: { returnUrl: window.location.origin + "/profile" } });
-      window.location.href = url;
+      if (tab) tab.location.href = url;
+      else window.open(url, "_blank");
     } catch (err) {
+      tab?.close();
       toast.error((err as Error).message || "Couldn't open billing portal");
     } finally {
       setPortalLoading(false);
