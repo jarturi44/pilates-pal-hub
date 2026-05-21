@@ -6,8 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { createCheckoutSession, syncCheckoutSession } from "@/lib/checkout.functions";
 import { toast } from "sonner";
-import { Check, Loader2, PackageCheck, Sparkles } from "lucide-react";
+import { Check, ExternalLink, Loader2, PackageCheck, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const AVAILABILITY_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLScSSWRDsJGOzX7k3EQbSt9-T8GRIsw4BV7OnWNJYIaY9nkTrw/viewform";
 
 type Step =
   | "plan"
@@ -18,6 +21,7 @@ type Step =
   | "welcome"
   | "intake"
   | "waiver"
+  | "availability"
   | "done";
 
 type Search = { step?: Step; session_id?: string; plan_id?: string };
@@ -144,11 +148,11 @@ function OnboardingPage() {
           await refetchActiveSub();
         }
         toast.success("Payment received. Let's finish setting up your account.");
-        navigate({ to: "/onboarding/setup", replace: true });
+        navigate({ to: "/onboarding", search: { step: "welcome" }, replace: true });
       } catch (err) {
         console.error(err);
         toast.error("Payment is still syncing. You can continue your setup now.");
-        navigate({ to: "/onboarding/setup", replace: true });
+        navigate({ to: "/onboarding", search: { step: "welcome" }, replace: true });
       }
     }
 
@@ -365,44 +369,19 @@ function OnboardingPage() {
       {step === "waiver" && (
         <WaiverStep
           onSigned={async () => {
-            if (!user) return;
-            // Mark onboarding complete + flag for slot assignment when on a live plan.
-            const { error } = await supabase
-              .from("users")
-              .update({
-                onboarding_complete: true,
-                needs_slot_assignment: !!isLiveSessionPlan,
-              })
-              .eq("id", user.id);
-            if (error) {
-              toast.error(error.message);
-              return;
+            if (isLiveSessionPlan) {
+              goTo("availability");
+            } else {
+              await completeOnboarding();
             }
-            // Welcome notification (in-app + email)
-            try {
-              const { notify } = await import("@/lib/notify");
-              await notify({
-                userId: user.id,
-                type: "onboarding_complete",
-                title: "Look at you!",
-                message: isLiveSessionPlan
-                  ? "You're officially part of the crew. I'll be reaching out soon to set you up in your recurring slot."
-                  : "You're officially part of the crew. Poke around the app and get comfortable — I got you!",
-                link: "/home",
-                email: user.email
-                  ? {
-                      to: user.email,
-                      templateName: "onboarding-complete",
-                      idempotencyKey: `onboarding-complete-${user.id}`,
-                      templateData: { name: user.user_metadata?.name, isLiveSession: isLiveSessionPlan },
-                    }
-                  : undefined,
-              });
-            } catch (e) {
-              console.error("onboarding notify failed", e);
-            }
-            qc.invalidateQueries({ queryKey: ["onboarding-gate"] });
-            goTo("done");
+          }}
+        />
+      )}
+
+      {step === "availability" && (
+        <AvailabilityStep
+          onDone={async () => {
+            await completeOnboarding();
           }}
         />
       )}
@@ -415,6 +394,45 @@ function OnboardingPage() {
       )}
     </div>
   );
+
+  async function completeOnboarding() {
+    if (!user) return;
+    const { error } = await supabase
+      .from("users")
+      .update({
+        onboarding_complete: true,
+        needs_slot_assignment: !!isLiveSessionPlan,
+      })
+      .eq("id", user.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    try {
+      const { notify } = await import("@/lib/notify");
+      await notify({
+        userId: user.id,
+        type: "onboarding_complete",
+        title: "Look at you!",
+        message: isLiveSessionPlan
+          ? "You're officially part of the crew. I'll be reaching out soon to set you up in your recurring slot."
+          : "You're officially part of the crew. Poke around the app and get comfortable — I got you!",
+        link: "/home",
+        email: user.email
+          ? {
+              to: user.email,
+              templateName: "onboarding-complete",
+              idempotencyKey: `onboarding-complete-${user.id}`,
+              templateData: { name: user.user_metadata?.name, isLiveSession: isLiveSessionPlan },
+            }
+          : undefined,
+      });
+    } catch (e) {
+      console.error("onboarding notify failed", e);
+    }
+    qc.invalidateQueries({ queryKey: ["onboarding-gate"] });
+    goTo("done");
+  }
 }
 
 function WelcomeStep({ plan, onContinue }: { plan: Plan | null; onContinue: () => void }) {
@@ -787,13 +805,77 @@ function DoneStep({ plan, onExplore }: { plan: Plan | null; onExplore: () => voi
   );
 }
 
+function AvailabilityStep({ onDone }: { onDone: () => void | Promise<void> }) {
+  const [confirmed, setConfirmed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  async function submit() {
+    if (!confirmed) return toast.error("Please confirm you've submitted the availability form");
+    setSubmitting(true);
+    try {
+      await onDone();
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1 className="font-display text-4xl text-foreground">Set your availability</h1>
+        <p className="mt-2 text-muted-foreground">
+          Tell us what days and times work for you so we can match you to a class slot.
+        </p>
+      </header>
+
+      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Click below to open the availability form. Once you've submitted it, come back here and check the box.
+        </p>
+        <a
+          href={AVAILABILITY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-md border border-border bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 text-sm font-medium"
+        >
+          Open availability form
+          <ExternalLink size={14} />
+        </a>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-6">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-input"
+          />
+          <span className="text-sm text-foreground">I have submitted the availability form.</span>
+        </label>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          onClick={submit}
+          disabled={submitting || !confirmed}
+          className="rounded-md bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-2"
+        >
+          {submitting && <Loader2 size={16} className="animate-spin" />}
+          Finish setup
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Stepper({ step }: { step: Step }) {
-  const isPostCheckout = step === "welcome" || step === "intake" || step === "waiver" || step === "done";
+  const isPostCheckout =
+    step === "welcome" || step === "intake" || step === "waiver" || step === "availability" || step === "done";
   const steps = isPostCheckout
     ? ([
         { id: "welcome", label: "Welcome" },
         { id: "intake", label: "Intake" },
         { id: "waiver", label: "Waiver" },
+        { id: "availability", label: "Availability" },
         { id: "done", label: "Done" },
       ] as const)
     : ([
