@@ -4,12 +4,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PagePrimitives";
-import { Check, Play, X, Calendar as CalendarIcon } from "lucide-react";
+import { Check, Play, X, Video as VideoIcon, Calendar as CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { toEmbedUrl } from "@/lib/content-categories";
-import { WarmupLibraryClient } from "@/components/client/WarmupLibraryClient";
-import { ExerciseLibraryClient } from "@/components/client/ExerciseLibraryClient";
 
 export const Route = createFileRoute("/_authenticated/home")({
   component: HomePage,
@@ -24,12 +21,12 @@ type LiveSession = {
   duration_minutes: number | null;
   meeting_url: string | null;
 };
-type MorningRow = {
+type VideoRow = {
   id: string;
   title: string;
   description: string | null;
-  category: string | null;
-  difficulty: string | null;
+  category: "warmup" | "10_min_morning";
+  thumbnail_url: string | null;
   video_url: string | null;
   duration_minutes: number | null;
 };
@@ -51,7 +48,7 @@ function HomePage() {
   const { user } = useAuth();
   const userId = user?.id;
   const qc = useQueryClient();
-  const [openMorning, setOpenMorning] = useState<MorningRow | null>(null);
+  const [openVideo, setOpenVideo] = useState<VideoRow | null>(null);
 
   const { data: sub } = useQuery({
     enabled: !!userId,
@@ -86,47 +83,46 @@ function HomePage() {
     },
   });
 
-  // 10 Minute Mornings — sourced from `content` table (admin: Content → 10 Minute Mornings tab)
-  const { data: mornings } = useQuery({
-    queryKey: ["mornings-content"],
+  const { data: videos } = useQuery({
+    queryKey: ["program-videos"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("content")
-        .select("id, title, description, category, difficulty, video_url, duration_minutes")
-        .eq("active", true)
-        .order("sort_order", { ascending: true });
+        .from("videos")
+        .select("*")
+        .order("created_at", { ascending: true });
       if (error) throw error;
-      return (data ?? []) as MorningRow[];
+      return (data ?? []) as VideoRow[];
     },
   });
 
-  // Completions for mornings (`content_completions`)
-  const { data: morningCompletions } = useQuery({
+  const { data: activity } = useQuery({
     enabled: !!userId,
-    queryKey: ["my-content-completions", userId],
+    queryKey: ["program-activity", userId],
     queryFn: async () => {
       const { data } = await supabase
-        .from("content_completions")
-        .select("content_id, completed_at")
-        .eq("user_id", userId!);
-      return (data ?? []) as { content_id: string; completed_at: string }[];
+        .from("client_activity")
+        .select("activity_type, reference_id, occurred_at")
+        .eq("user_id", userId!)
+        .eq("activity_type", "video_complete");
+      return (data ?? []) as { activity_type: string; reference_id: string | null; occurred_at: string }[];
     },
   });
 
-  const completedMorningIdsToday = useMemo(() => {
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const s = new Set<string>();
-    (morningCompletions ?? []).forEach((c) => {
-      if (new Date(c.completed_at) >= today) s.add(c.content_id);
-    });
-    return s;
-  }, [morningCompletions]);
+  const completedVideoIds = useMemo(
+    () => new Set((activity ?? []).map((a) => a.reference_id).filter(Boolean) as string[]),
+    [activity],
+  );
 
+  const library = (videos ?? []).filter((v) => v.category === "warmup");
+  const mornings = (videos ?? []).filter((v) => v.category === "10_min_morning");
+
+  const morningIds = useMemo(() => new Set(mornings.map((m) => m.id)), [mornings]);
   const morningsThisWeek = useMemo(() => {
     const start = startOfWeek();
-    return (morningCompletions ?? []).filter((c) => new Date(c.completed_at) >= start).length;
-  }, [morningCompletions]);
-
+    return (activity ?? []).filter(
+      (a) => a.reference_id && morningIds.has(a.reference_id) && new Date(a.occurred_at) >= start,
+    ).length;
+  }, [activity, morningIds]);
   const MORNING_GOAL = 2;
   const morningPct = Math.min(100, (morningsThisWeek / MORNING_GOAL) * 100);
   const morningExtra = Math.max(0, morningsThisWeek - MORNING_GOAL);
@@ -144,22 +140,20 @@ function HomePage() {
     if (error) toast.error(error.message);
   }
 
-  async function markMorningDone(m: MorningRow) {
+  async function markVideoDone(v: VideoRow) {
     if (!userId) return;
-    const { error } = await supabase.from("content_completions").insert({
+    const { error } = await supabase.from("client_activity").insert({
       user_id: userId,
-      content_id: m.id,
+      activity_type: "video_complete",
+      reference_id: v.id,
     });
     if (error) return toast.error(error.message);
     toast.success("Logged. Nice work.");
-    qc.invalidateQueries({ queryKey: ["my-content-completions", userId] });
-    qc.invalidateQueries({ queryKey: ["progress-data", userId] });
-    setOpenMorning(null);
+    qc.invalidateQueries({ queryKey: ["program-activity", userId] });
+    setOpenVideo(null);
   }
 
   const planName = sub?.plan?.display_name ?? null;
-  const planType = sub?.plan?.type ?? null;
-  const isLivePlan = planType && planType !== "mornings";
 
   return (
     <>
@@ -185,81 +179,59 @@ function HomePage() {
         )}
       </section>
 
-      {isLivePlan && (
-        <section className="mb-12">
-          <h3 className="font-display text-2xl text-foreground">
-            Your Live Sessions{planName ? ` — ${planName}` : ""}
-          </h3>
-          <p className="mt-1 text-sm text-muted-foreground mb-5">
-            This week's sessions for your {planName ?? "current"} plan. Warm up before each one.
-          </p>
-          {upcoming.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-              No upcoming sessions this week.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {upcoming.map((s) => {
-                const d = new Date(s.scheduled_at);
-                const dayLabel = d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
-                const timeLabel = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-                return (
-                  <div key={s.id} className="rounded-xl border border-border bg-card p-5 flex flex-col">
-                    <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground mb-2">
-                      <CalendarIcon size={12} />
-                      <span>{dayLabel}</span>
-                    </div>
-                    <div className="font-medium text-foreground">{s.title}</div>
-                    <div className="text-sm text-muted-foreground mt-0.5">
-                      {timeLabel}{s.duration_minutes ? ` · ${s.duration_minutes} min` : ""}
-                    </div>
-                    <button
-                      onClick={() => joinSession(s)}
-                      disabled={!s.meeting_url}
-                      className="mt-4 w-full rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
-                    >
-                      Join Live Session
-                    </button>
+      <section className="mb-12">
+        <h3 className="font-display text-2xl text-foreground">
+          Your Live Sessions{planName ? ` — ${planName}` : ""}
+        </h3>
+        <p className="mt-1 text-sm text-muted-foreground mb-5">
+          This week's sessions for your {planName ?? "current"} plan. Warm up before each one.
+        </p>
+        {upcoming.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            No upcoming sessions this week.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {upcoming.map((s) => {
+              const d = new Date(s.scheduled_at);
+              const dayLabel = d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+              const timeLabel = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+              return (
+                <div key={s.id} className="rounded-xl border border-border bg-card p-5 flex flex-col">
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground mb-2">
+                    <CalendarIcon size={12} />
+                    <span>{dayLabel}</span>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      )}
+                  <div className="font-medium text-foreground">{s.title}</div>
+                  <div className="text-sm text-muted-foreground mt-0.5">
+                    {timeLabel}{s.duration_minutes ? ` · ${s.duration_minutes} min` : ""}
+                  </div>
+                  <button
+                    onClick={() => joinSession(s)}
+                    disabled={!s.meeting_url}
+                    className="mt-4 w-full rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
+                  >
+                    Join Live Session
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
-      {/* Warm-Ups (admin: Content → Warm-Up Videos) */}
-      {isLivePlan && (
-        <section className="mb-12">
-          <h3 className="font-display text-2xl text-foreground mb-1">Warm-Up Videos</h3>
-          <p className="text-sm text-muted-foreground mb-5">Pick one before each live session.</p>
-          <WarmupLibraryClient kind="warmup" />
-        </section>
-      )}
+      <VideoSection
+        heading="Warm-Up & Exercise Library"
+        intro="One library, organized by exercise. Pick the warm-up that matches what we're working on."
+        videos={library}
+        completedIds={completedVideoIds}
+        onOpen={setOpenVideo}
+      />
 
-      {/* Cool-Downs (admin: Content → Cool-Down Videos) */}
-      {isLivePlan && (
-        <section className="mb-12">
-          <h3 className="font-display text-2xl text-foreground mb-1">Cool-Down Videos</h3>
-          <p className="text-sm text-muted-foreground mb-5">Wind down after each live session.</p>
-          <WarmupLibraryClient kind="cooldown" />
-        </section>
-      )}
-
-      {/* Exercise Library + assigned Program (admin: Content → Exercise Library / Programs) */}
-      {isLivePlan && (
-        <section className="mb-12">
-          <h3 className="font-display text-2xl text-foreground mb-1">Exercise Library & Your Program</h3>
-          <p className="text-sm text-muted-foreground mb-5">Your assigned program plus the full library to explore.</p>
-          <ExerciseLibraryClient />
-        </section>
-      )}
-
-      {/* 10 Minute Mornings (admin: Content → 10 Minute Mornings) */}
       <section className="mb-12">
         <h3 className="font-display text-2xl text-foreground">10 Minute Mornings</h3>
         <p className="mt-1 text-sm text-muted-foreground mb-5 max-w-3xl">
-          Short guided sessions you can fit into any day. Aim for {MORNING_GOAL} a week — every extra one counts.
+          On days without a live session, fit in a 10 Minute Mornings video. Aim for 2 a week — every extra one counts.
         </p>
 
         <div className="rounded-xl border border-border bg-card p-4 mb-5">
@@ -277,102 +249,157 @@ function HomePage() {
           </div>
         </div>
 
-        {!mornings?.length ? (
+        {mornings.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-            No morning sessions available yet. Check back soon.
+            No videos yet.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {mornings.map((m) => {
-              const done = completedMorningIdsToday.has(m.id);
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {mornings.slice(0, 2).map((v) => {
+              const done = completedVideoIds.has(v.id);
               return (
-                <button
-                  key={m.id}
-                  onClick={() => setOpenMorning(m)}
-                  className="text-left rounded-xl border border-border bg-card p-4 hover:border-primary/50 transition-colors relative"
-                >
-                  {done && (
-                    <span className="absolute top-3 right-3 inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground">
-                      <Check size={14} />
-                    </span>
-                  )}
-                  <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
-                    {m.category && <span>{m.category}</span>}
-                    {m.category && m.difficulty && <span>·</span>}
-                    {m.difficulty && <span>{m.difficulty}</span>}
+                <div key={v.id} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
+                  <div className="relative aspect-video bg-muted">
+                    {v.thumbnail_url ? (
+                      <img src={v.thumbnail_url} alt={v.title} className="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <VideoIcon size={28} />
+                      </div>
+                    )}
+                    {done && (
+                      <span className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-1">
+                        <Check size={12} /> Completed
+                      </span>
+                    )}
                   </div>
-                  <div className="font-medium text-foreground mb-1">{m.title}</div>
-                  {m.description && <div className="text-xs text-muted-foreground line-clamp-2 mb-2">{m.description}</div>}
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-[10px] text-muted-foreground">
-                      {m.duration_minutes ? `${m.duration_minutes} min` : ""}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-xs text-primary">
-                      <Play size={12} /> Watch
-                    </span>
+                  <div className="p-4 flex-1 flex flex-col">
+                    <div className="font-medium text-foreground">{v.title}</div>
+                    {v.description && <div className="mt-1 text-sm text-muted-foreground line-clamp-2">{v.description}</div>}
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      {v.duration_minutes ? `${v.duration_minutes} min` : ""}
+                    </div>
+                    <button
+                      onClick={() => setOpenVideo(v)}
+                      className="mt-4 w-full rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm font-medium inline-flex items-center justify-center gap-1.5 hover:opacity-90"
+                    >
+                      <Play size={14} /> Watch
+                    </button>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
         )}
       </section>
 
-      {openMorning && (
-        <MorningModal
-          item={openMorning}
-          completed={completedMorningIdsToday.has(openMorning.id)}
-          onClose={() => setOpenMorning(null)}
-          onMarkDone={() => markMorningDone(openMorning)}
+      {openVideo && (
+        <VideoModal
+          video={openVideo}
+          completed={completedVideoIds.has(openVideo.id)}
+          onClose={() => setOpenVideo(null)}
+          onMarkDone={() => markVideoDone(openVideo)}
         />
       )}
     </>
   );
 }
 
-function MorningModal({
-  item, completed, onClose, onMarkDone,
+function VideoSection({
+  heading, intro, videos, completedIds, onOpen,
 }: {
-  item: MorningRow;
+  heading: string;
+  intro?: string;
+  videos: VideoRow[];
+  completedIds: Set<string>;
+  onOpen: (v: VideoRow) => void;
+}) {
+  return (
+    <section className="mb-12">
+      {heading && <h3 className="font-display text-2xl text-foreground">{heading}</h3>}
+      {intro && <p className="mt-1 text-sm text-muted-foreground mb-5 max-w-3xl">{intro}</p>}
+      {!intro && heading && <div className="mb-5" />}
+
+      {videos.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+          No videos yet.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {videos.map((v) => {
+            const done = completedIds.has(v.id);
+            return (
+              <div key={v.id} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
+                <div className="relative aspect-video bg-muted">
+                  {v.thumbnail_url ? (
+                    <img src={v.thumbnail_url} alt={v.title} className="w-full h-full object-cover" loading="lazy" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                      <VideoIcon size={28} />
+                    </div>
+                  )}
+                  {done && (
+                    <span className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-1">
+                      <Check size={12} /> Completed
+                    </span>
+                  )}
+                </div>
+                <div className="p-4 flex-1 flex flex-col">
+                  <div className="font-medium text-foreground">{v.title}</div>
+                  {v.description && <div className="mt-1 text-sm text-muted-foreground line-clamp-2">{v.description}</div>}
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {v.duration_minutes ? `${v.duration_minutes} min` : ""}
+                  </div>
+                  <button
+                    onClick={() => onOpen(v)}
+                    className={cn(
+                      "mt-4 w-full rounded-md px-3 py-2 text-sm font-medium inline-flex items-center justify-center gap-1.5",
+                      "bg-primary text-primary-foreground hover:opacity-90",
+                    )}
+                  >
+                    <Play size={14} /> Watch
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function VideoModal({
+  video, completed, onClose, onMarkDone,
+}: {
+  video: VideoRow;
   completed: boolean;
   onClose: () => void;
   onMarkDone: () => void;
 }) {
-  const embed = toEmbedUrl(item.video_url);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm" onClick={onClose}>
       <div className="w-full max-w-3xl rounded-xl bg-background border border-border overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <div>
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              {item.category}{item.difficulty && ` · ${item.difficulty}`}
-            </div>
-            <h2 className="font-display text-xl text-foreground">{item.title}</h2>
-          </div>
+          <h2 className="font-display text-xl text-foreground">{video.title}</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground" aria-label="Close">
             <X size={18} />
           </button>
         </div>
         <div className="aspect-video bg-black">
-          {embed ? (
-            <iframe src={embed} className="w-full h-full" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title={item.title} />
-          ) : item.video_url ? (
-            <div className="w-full h-full flex items-center justify-center">
-              <a href={item.video_url} target="_blank" rel="noreferrer" className="text-sm text-primary">Open video ↗</a>
-            </div>
+          {video.video_url ? (
+            <video src={video.video_url} controls className="w-full h-full" poster={video.thumbnail_url ?? undefined} />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">No video available.</div>
           )}
         </div>
-        {item.description && (
-          <div className="p-4 text-sm text-foreground/90 whitespace-pre-line">{item.description}</div>
+        {video.description && (
+          <div className="p-4 text-sm text-foreground/90 whitespace-pre-line">{video.description}</div>
         )}
         <div className="p-4 border-t border-border">
           <button
             onClick={onMarkDone}
-            className={cn(
-              "w-full rounded-md bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium inline-flex items-center justify-center gap-2 hover:opacity-90",
-            )}
+            className="w-full rounded-md bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium inline-flex items-center justify-center gap-2 hover:opacity-90"
           >
             <Check size={14} />
             {completed ? "Mark as done again" : "Mark as Done"}

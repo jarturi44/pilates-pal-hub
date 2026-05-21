@@ -1,44 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PagePrimitives";
-import { createBillingPortalSession } from "@/lib/billing-portal.functions";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
 });
 function ProfilePage() {
   const { user } = useAuth();
-  const openPortal = useServerFn(createBillingPortalSession);
-  const [openingPortal, setOpeningPortal] = useState(false);
-
-  async function handleOpenPortal() {
-    setOpeningPortal(true);
-    try {
-      const { url } = await openPortal({ data: { returnUrl: window.location.href } });
-      // Stripe's billing portal cannot render inside the Lovable preview iframe.
-      // Navigate the top-level window instead, matching the checkout flow.
-      try {
-        if (window.top && window.top !== window.self) {
-          window.top.location.href = url;
-        } else {
-          window.location.href = url;
-        }
-      } catch {
-        window.open(url, "_blank", "noopener,noreferrer");
-        setOpeningPortal(false);
-      }
-    } catch (err) {
-      toast.error((err as Error).message ?? "Couldn't open billing portal");
-      setOpeningPortal(false);
-    }
-  }
-
 
   const { data: profile } = useQuery({
     queryKey: ["my-profile", user?.id],
@@ -124,19 +94,6 @@ function ProfilePage() {
                     : <>Commitment period ended on {commitmentEnd.toLocaleDateString()}. You can cancel anytime.</>}
                 </div>
               )}
-              <div className="pt-2">
-                <button
-                  onClick={handleOpenPortal}
-                  disabled={openingPortal}
-                  className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-60"
-                >
-                  {openingPortal && <Loader2 size={14} className="animate-spin" />}
-                  Upgrade or change plan
-                </button>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Opens a secure Stripe page where you can switch plans or update your card — no need to re-enter payment details.
-                </p>
-              </div>
             </div>
           )}
         </section>

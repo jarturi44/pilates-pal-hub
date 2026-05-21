@@ -6,8 +6,6 @@ import { ArrowDown, ArrowUp, Eye, EyeOff, Loader2, Pencil, Plus, Trash2, X } fro
 import { DIFFICULTIES, type Difficulty } from "@/lib/content-categories";
 import { cn } from "@/lib/utils";
 
-export type WarmupKind = "warmup" | "cooldown";
-
 type Warmup = {
   id: string;
   title: string;
@@ -17,24 +15,19 @@ type Warmup = {
   duration_minutes: number | null;
   active: boolean;
   sort_order: number;
-  kind: WarmupKind;
 };
 
-export function WarmupLibraryAdmin({ kind = "warmup" }: { kind?: WarmupKind }) {
+export function WarmupLibraryAdmin() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Warmup | null>(null);
   const [creating, setCreating] = useState(false);
 
-  const label = kind === "cooldown" ? "Cool-Down" : "Warm-Up";
-  const queryKey = ["admin-warmups", kind];
-
   const { data: items, isLoading } = useQuery({
-    queryKey,
+    queryKey: ["admin-warmups"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("warmup_content")
         .select("*")
-        .eq("kind", kind)
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return (data ?? []) as Warmup[];
@@ -46,7 +39,7 @@ export function WarmupLibraryAdmin({ kind = "warmup" }: { kind?: WarmupKind }) {
   async function toggleActive(w: Warmup) {
     const { error } = await supabase.from("warmup_content").update({ active: !w.active }).eq("id", w.id);
     if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey });
+    qc.invalidateQueries({ queryKey: ["admin-warmups"] });
   }
 
   async function remove(w: Warmup) {
@@ -54,7 +47,7 @@ export function WarmupLibraryAdmin({ kind = "warmup" }: { kind?: WarmupKind }) {
     const { error } = await supabase.from("warmup_content").delete().eq("id", w.id);
     if (error) return toast.error(error.message);
     toast.success("Deleted");
-    qc.invalidateQueries({ queryKey });
+    qc.invalidateQueries({ queryKey: ["admin-warmups"] });
   }
 
   async function move(w: Warmup, dir: -1 | 1) {
@@ -69,23 +62,23 @@ export function WarmupLibraryAdmin({ kind = "warmup" }: { kind?: WarmupKind }) {
       { ...swap, sort_order: newB },
     ]);
     if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey });
+    qc.invalidateQueries({ queryKey: ["admin-warmups"] });
   }
 
   return (
     <>
       <div className="flex justify-between items-center mb-3">
-        <h2 className="font-display text-2xl text-foreground">{label} Videos</h2>
+        <h2 className="font-display text-2xl text-foreground">Warm-Up Videos</h2>
         <button onClick={() => setCreating(true)}
           className="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm hover:opacity-90">
-          <Plus size={14} /> New {label.toLowerCase()}
+          <Plus size={14} /> New warm-up
         </button>
       </div>
 
       {isLoading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>
       ) : list.length === 0 ? (
-        <div className="rounded-md border border-dashed border-border bg-card/50 p-6 text-sm text-muted-foreground">No {label.toLowerCase()} videos yet.</div>
+        <div className="rounded-md border border-dashed border-border bg-card/50 p-6 text-sm text-muted-foreground">No warm-up videos yet.</div>
       ) : (
         <div className="rounded-xl border border-border bg-card divide-y divide-border">
           {list.map((w, i) => (
@@ -116,21 +109,17 @@ export function WarmupLibraryAdmin({ kind = "warmup" }: { kind?: WarmupKind }) {
 
       {(editing || creating) && (
         <WarmupEditor
-          kind={kind}
-          label={label}
           warmup={editing}
           existingMaxOrder={list.reduce((m, w) => Math.max(m, w.sort_order), 0)}
           onClose={() => { setEditing(null); setCreating(false); }}
-          onSaved={() => { setEditing(null); setCreating(false); qc.invalidateQueries({ queryKey }); }}
+          onSaved={() => { setEditing(null); setCreating(false); qc.invalidateQueries({ queryKey: ["admin-warmups"] }); }}
         />
       )}
     </>
   );
 }
 
-function WarmupEditor({ kind, label, warmup, existingMaxOrder, onClose, onSaved }: {
-  kind: WarmupKind;
-  label: string;
+function WarmupEditor({ warmup, existingMaxOrder, onClose, onSaved }: {
   warmup: Warmup | null;
   existingMaxOrder: number;
   onClose: () => void;
@@ -154,7 +143,6 @@ function WarmupEditor({ kind, label, warmup, existingMaxOrder, onClose, onSaved 
       difficulty,
       duration_minutes: duration ? parseInt(duration, 10) : null,
       active,
-      kind,
     };
     const res = warmup
       ? await supabase.from("warmup_content").update(payload).eq("id", warmup.id)
@@ -170,7 +158,7 @@ function WarmupEditor({ kind, label, warmup, existingMaxOrder, onClose, onSaved 
       <div className="flex-1 bg-foreground/30 backdrop-blur-sm" onClick={onClose} />
       <aside className="w-full max-w-lg bg-background border-l border-border h-full overflow-y-auto p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-2xl text-foreground">{warmup ? `Edit ${label.toLowerCase()}` : `New ${label.toLowerCase()}`}</h2>
+          <h2 className="font-display text-2xl text-foreground">{warmup ? "Edit warm-up" : "New warm-up"}</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X size={18} /></button>
         </div>
         <div className="space-y-3">
@@ -201,7 +189,7 @@ function WarmupEditor({ kind, label, warmup, existingMaxOrder, onClose, onSaved 
           </Field>
           <button onClick={save} disabled={saving} className="w-full rounded-md bg-primary text-primary-foreground px-4 py-2.5 text-sm hover:opacity-90 inline-flex items-center justify-center gap-2 disabled:opacity-60">
             {saving && <Loader2 size={14} className="animate-spin" />}
-            Save {label.toLowerCase()}
+            Save warm-up
           </button>
         </div>
       </aside>

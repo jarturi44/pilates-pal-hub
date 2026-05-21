@@ -1,2 +1,0 @@
-ALTER TABLE public.warmup_content ADD COLUMN IF NOT EXISTS kind text NOT NULL DEFAULT 'warmup';
-ALTER TABLE public.warmup_content ADD CONSTRAINT warmup_content_kind_check CHECK (kind IN ('warmup','cooldown'));

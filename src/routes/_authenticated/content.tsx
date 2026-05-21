@@ -15,31 +15,29 @@ export const Route = createFileRoute("/_authenticated/content")({
   component: AdminContentPage,
 });
 
-type Tab = "mornings" | "exercises" | "warmups" | "cooldowns" | "programs";
+type Tab = "mornings" | "exercises" | "warmups" | "programs";
 
 function AdminContentPage() {
   const [tab, setTab] = useState<Tab>("mornings");
   return (
     <>
       <PageHeader title="Content" subtitle="Manage everything clients see in My Program." />
-      <div className="flex gap-2 mb-6 border-b border-border overflow-x-auto">
+      <div className="flex gap-2 mb-6 border-b border-border">
         {([
           { id: "mornings", label: "10 Minute Mornings" },
           { id: "exercises", label: "Exercise Library" },
           { id: "warmups", label: "Warm-Up Videos" },
-          { id: "cooldowns", label: "Cool-Down Videos" },
           { id: "programs", label: "Programs" },
         ] as const).map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)} className={cn(
-            "px-3 py-2 text-sm border-b-2 -mb-px whitespace-nowrap",
+            "px-3 py-2 text-sm border-b-2 -mb-px",
             tab === t.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
           )}>{t.label}</button>
         ))}
       </div>
       {tab === "mornings" && <MorningsContentTab />}
       {tab === "exercises" && <ExerciseLibraryAdmin />}
-      {tab === "warmups" && <WarmupLibraryAdmin kind="warmup" />}
-      {tab === "cooldowns" && <WarmupLibraryAdmin kind="cooldown" />}
+      {tab === "warmups" && <WarmupLibraryAdmin />}
       {tab === "programs" && <ProgramsAdmin />}
     </>
   );
