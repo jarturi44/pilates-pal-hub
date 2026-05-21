@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { createCheckoutSession, syncCheckoutSession } from "@/lib/checkout.functions";
 import { toast } from "sonner";
-import { Check, ExternalLink, Loader2, PackageCheck, Sparkles } from "lucide-react";
+import { Check, Loader2, PackageCheck, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const AVAILABILITY_URL =
@@ -688,12 +688,13 @@ function IntakeStep({ onDone }: { onDone: () => void }) {
 
 function WaiverStep({ onSigned }: { onSigned: () => void }) {
   const { user } = useAuth();
-  const [confirmed, setConfirmed] = useState(false);
+  const loadCount = useRef(0);
+  const submittedRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
 
-  async function submit() {
-    if (!user) return;
-    if (!confirmed) return toast.error("Please confirm you've submitted the waiver form");
+  async function handleSubmitted() {
+    if (!user || submittedRef.current) return;
+    submittedRef.current = true;
     setSubmitting(true);
     try {
       let ip: string | null = null;
@@ -712,7 +713,7 @@ function WaiverStep({ onSigned }: { onSigned: () => void }) {
       await onSigned();
     } catch (err) {
       toast.error((err as Error).message);
-    } finally {
+      submittedRef.current = false;
       setSubmitting(false);
     }
   }
@@ -721,7 +722,7 @@ function WaiverStep({ onSigned }: { onSigned: () => void }) {
     <div className="space-y-6">
       <header>
         <h1 className="font-display text-4xl text-foreground">Liability waiver</h1>
-        <p className="mt-2 text-muted-foreground">Please complete and submit the waiver form below.</p>
+        <p className="mt-2 text-muted-foreground">Please complete and submit the waiver form below. We'll advance automatically once you submit.</p>
       </header>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -730,31 +731,20 @@ function WaiverStep({ onSigned }: { onSigned: () => void }) {
           className="w-full block"
           style={{ height: "2617px", border: 0 }}
           title="Liability waiver"
+          onLoad={() => {
+            loadCount.current += 1;
+            if (loadCount.current > 1) handleSubmitted();
+          }}
         >
           Loading…
         </iframe>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6">
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input
-            type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)}
-            className="mt-1 h-4 w-4 rounded border-input"
-          />
-          <span className="text-sm text-foreground">I have completed and submitted the waiver form above.</span>
-        </label>
-      </div>
-
-      <div className="flex justify-end">
-        <button
-          onClick={submit}
-          disabled={submitting || !confirmed}
-          className="rounded-md bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-2"
-        >
-          {submitting && <Loader2 size={16} className="animate-spin" />}
-          Continue
-        </button>
-      </div>
+      {submitting && (
+        <div className="flex justify-center items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 size={14} className="animate-spin" /> Saving your waiver…
+        </div>
+      )}
     </div>
   );
 }
@@ -806,15 +796,19 @@ function DoneStep({ plan, onExplore }: { plan: Plan | null; onExplore: () => voi
 }
 
 function AvailabilityStep({ onDone }: { onDone: () => void | Promise<void> }) {
-  const [confirmed, setConfirmed] = useState(false);
+  const loadCount = useRef(0);
+  const submittedRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
 
-  async function submit() {
-    if (!confirmed) return toast.error("Please confirm you've submitted the availability form");
+  async function handleSubmitted() {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
     setSubmitting(true);
     try {
       await onDone();
-    } finally {
+    } catch (err) {
+      toast.error((err as Error).message);
+      submittedRef.current = false;
       setSubmitting(false);
     }
   }
@@ -824,45 +818,30 @@ function AvailabilityStep({ onDone }: { onDone: () => void | Promise<void> }) {
       <header>
         <h1 className="font-display text-4xl text-foreground">Set your availability</h1>
         <p className="mt-2 text-muted-foreground">
-          Tell us what days and times work for you so we can match you to a class slot.
+          Tell us what days and times work for you so we can match you to a class slot. We'll advance automatically once you submit.
         </p>
       </header>
 
-      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Click below to open the availability form. Once you've submitted it, come back here and check the box.
-        </p>
-        <a
-          href={AVAILABILITY_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-md border border-border bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 text-sm font-medium"
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <iframe
+          src={`${AVAILABILITY_URL}?embedded=true`}
+          className="w-full block"
+          style={{ height: "2617px", border: 0 }}
+          title="Availability form"
+          onLoad={() => {
+            loadCount.current += 1;
+            if (loadCount.current > 1) handleSubmitted();
+          }}
         >
-          Open availability form
-          <ExternalLink size={14} />
-        </a>
+          Loading…
+        </iframe>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6">
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input
-            type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)}
-            className="mt-1 h-4 w-4 rounded border-input"
-          />
-          <span className="text-sm text-foreground">I have submitted the availability form.</span>
-        </label>
-      </div>
-
-      <div className="flex justify-end">
-        <button
-          onClick={submit}
-          disabled={submitting || !confirmed}
-          className="rounded-md bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-2"
-        >
-          {submitting && <Loader2 size={16} className="animate-spin" />}
-          Finish setup
-        </button>
-      </div>
+      {submitting && (
+        <div className="flex justify-center items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 size={14} className="animate-spin" /> Finishing setup…
+        </div>
+      )}
     </div>
   );
 }
