@@ -557,6 +557,30 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_progress: {
+        Row: {
+          availability_completed_at: string | null
+          created_at: string
+          updated_at: string
+          user_id: string
+          waiver_completed_at: string | null
+        }
+        Insert: {
+          availability_completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+          user_id: string
+          waiver_completed_at?: string | null
+        }
+        Update: {
+          availability_completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+          waiver_completed_at?: string | null
+        }
+        Relationships: []
+      }
       plans: {
         Row: {
           created_at: string

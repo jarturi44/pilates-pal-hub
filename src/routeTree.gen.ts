@@ -30,6 +30,7 @@ import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedBroadcastsRouteImport } from './routes/_authenticated/broadcasts'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as AuthenticatedOnboardingSetupRouteImport } from './routes/_authenticated/onboarding_.setup'
 import { Route as AuthenticatedClientsClientIdRouteImport } from './routes/_authenticated/clients.$clientId'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -144,6 +145,12 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedOnboardingSetupRoute =
+  AuthenticatedOnboardingSetupRouteImport.update({
+    id: '/onboarding_/setup',
+    path: '/onboarding/setup',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedClientsClientIdRoute =
   AuthenticatedClientsClientIdRouteImport.update({
     id: '/$clientId',
@@ -208,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/slots': typeof AuthenticatedSlotsRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
+  '/onboarding/setup': typeof AuthenticatedOnboardingSetupRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/billing-jobs': typeof ApiPublicHooksBillingJobsRoute
   '/api/public/hooks/send-mornings-reminders': typeof ApiPublicHooksSendMorningsRemindersRoute
@@ -237,6 +245,7 @@ export interface FileRoutesByTo {
   '/slots': typeof AuthenticatedSlotsRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
+  '/onboarding/setup': typeof AuthenticatedOnboardingSetupRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/billing-jobs': typeof ApiPublicHooksBillingJobsRoute
   '/api/public/hooks/send-mornings-reminders': typeof ApiPublicHooksSendMorningsRemindersRoute
@@ -268,6 +277,7 @@ export interface FileRoutesById {
   '/_authenticated/slots': typeof AuthenticatedSlotsRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/_authenticated/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
+  '/_authenticated/onboarding_/setup': typeof AuthenticatedOnboardingSetupRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/billing-jobs': typeof ApiPublicHooksBillingJobsRoute
   '/api/public/hooks/send-mornings-reminders': typeof ApiPublicHooksSendMorningsRemindersRoute
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/slots'
     | '/email/unsubscribe'
     | '/clients/$clientId'
+    | '/onboarding/setup'
     | '/lovable/email/suppression'
     | '/api/public/hooks/billing-jobs'
     | '/api/public/hooks/send-mornings-reminders'
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/slots'
     | '/email/unsubscribe'
     | '/clients/$clientId'
+    | '/onboarding/setup'
     | '/lovable/email/suppression'
     | '/api/public/hooks/billing-jobs'
     | '/api/public/hooks/send-mornings-reminders'
@@ -358,6 +370,7 @@ export interface FileRouteTypes {
     | '/_authenticated/slots'
     | '/email/unsubscribe'
     | '/_authenticated/clients/$clientId'
+    | '/_authenticated/onboarding_/setup'
     | '/lovable/email/suppression'
     | '/api/public/hooks/billing-jobs'
     | '/api/public/hooks/send-mornings-reminders'
@@ -533,6 +546,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/onboarding_/setup': {
+      id: '/_authenticated/onboarding_/setup'
+      path: '/onboarding/setup'
+      fullPath: '/onboarding/setup'
+      preLoaderRoute: typeof AuthenticatedOnboardingSetupRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/clients/$clientId': {
       id: '/_authenticated/clients/$clientId'
       path: '/$clientId'
@@ -610,6 +630,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedProgressRoute: typeof AuthenticatedProgressRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSlotsRoute: typeof AuthenticatedSlotsRoute
+  AuthenticatedOnboardingSetupRoute: typeof AuthenticatedOnboardingSetupRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -626,6 +647,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProgressRoute: AuthenticatedProgressRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSlotsRoute: AuthenticatedSlotsRoute,
+  AuthenticatedOnboardingSetupRoute: AuthenticatedOnboardingSetupRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
