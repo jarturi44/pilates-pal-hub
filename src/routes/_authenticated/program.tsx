@@ -101,10 +101,10 @@ function ProgramPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("client_activity")
-        .select("activity_type, reference_id")
+        .select("activity_type, reference_id, occurred_at")
         .eq("user_id", userId!)
         .eq("activity_type", "video_complete");
-      return (data ?? []) as { activity_type: string; reference_id: string | null }[];
+      return (data ?? []) as { activity_type: string; reference_id: string | null; occurred_at: string }[];
     },
   });
 
@@ -113,10 +113,25 @@ function ProgramPage() {
     [activity],
   );
 
-  const warmups = (videos ?? []).filter((v) => v.category === "warmup").slice(0, 10);
-  const mornings = (videos ?? []).filter((v) => v.category === "10_min_morning").slice(0, 2);
+  // Merged: warm-up videos + exercise library are one library now, organized by exercise name.
+  const library = (videos ?? []).filter((v) => v.category === "warmup");
+  const mornings = (videos ?? []).filter((v) => v.category === "10_min_morning");
+
+  // 10 Minute Mornings — weekly progress with overflow.
+  // Goal is 2/week, but extra completions count and are rewarded.
+  const morningIds = useMemo(() => new Set(mornings.map((m) => m.id)), [mornings]);
+  const morningsThisWeek = useMemo(() => {
+    const start = startOfWeek();
+    return (activity ?? []).filter(
+      (a) => a.reference_id && morningIds.has(a.reference_id) && new Date(a.occurred_at) >= start,
+    ).length;
+  }, [activity, morningIds]);
+  const MORNING_GOAL = 2;
+  const morningPct = Math.min(100, (morningsThisWeek / MORNING_GOAL) * 100);
+  const morningExtra = Math.max(0, morningsThisWeek - MORNING_GOAL);
 
   const upcoming = (sessions ?? []).filter((s) => new Date(s.scheduled_at) >= new Date());
+
 
   async function joinSession(s: LiveSession) {
     if (s.meeting_url) window.open(s.meeting_url, "_blank", "noopener,noreferrer");
@@ -169,11 +184,13 @@ function ProgramPage() {
         )}
       </section>
 
-      {/* 2. Live Sessions */}
+      {/* 2. Live Sessions — matches the user's current plan */}
       <section className="mb-12">
-        <h3 className="font-display text-2xl text-foreground">Your Live Sessions This Week</h3>
+        <h3 className="font-display text-2xl text-foreground">
+          Your Live Sessions{planName ? ` — ${planName}` : ""}
+        </h3>
         <p className="mt-1 text-sm text-muted-foreground mb-5">
-          Make sure you warm up before each session — check out the warm-up videos below.
+          This week's sessions for your {planName ?? "current"} plan. Warm up before each one.
         </p>
         {upcoming.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
@@ -209,22 +226,43 @@ function ProgramPage() {
         )}
       </section>
 
-      {/* 3. Warm-Up Videos */}
+      {/* 3. Warm-Up & Exercise Library (merged — by exercise name) */}
       <VideoSection
-        heading="Warm-Up Videos"
-        videos={warmups}
+        heading="Warm-Up & Exercise Library"
+        intro="One library, organized by exercise. Pick the warm-up that matches what we're working on."
+        videos={library}
         completedIds={completedVideoIds}
         onOpen={setOpenVideo}
       />
 
-      {/* 4. 10 Minute Mornings */}
+      {/* 4. 10 Minute Mornings — goal 2/week, extras count too */}
+      <section className="mb-4">
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-baseline justify-between mb-2">
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">10 Minute Mornings · this week</span>
+            <span className="text-sm text-foreground">
+              <strong>{morningsThisWeek}</strong> / {MORNING_GOAL} sessions
+              {morningExtra > 0 && (
+                <span className="ml-2 text-xs text-primary">+{morningExtra} bonus 🎉</span>
+              )}
+            </span>
+          </div>
+          <div className="h-2 rounded-full bg-muted overflow-hidden">
+            <div className="h-full bg-primary transition-all" style={{ width: `${morningPct}%` }} />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Aim for 2 a week — but every extra one counts. Short sessions add up.
+          </p>
+        </div>
+      </section>
       <VideoSection
-        heading="10 Minute Mornings"
-        intro="On days when you don't have a live session, try to fit in a 10 Minute Mornings video at least 2 days a week. They're short, energizing, and you'll feel better all day for doing them."
+        heading=""
+        intro="On days when you don't have a live session, fit in a 10 Minute Mornings video. Short, energizing, and you'll feel better all day."
         videos={mornings}
         completedIds={completedVideoIds}
         onOpen={setOpenVideo}
       />
+
 
       {openVideo && (
         <VideoModal
@@ -249,9 +287,10 @@ function VideoSection({
 }) {
   return (
     <section className="mb-12">
-      <h3 className="font-display text-2xl text-foreground">{heading}</h3>
+      {heading && <h3 className="font-display text-2xl text-foreground">{heading}</h3>}
       {intro && <p className="mt-1 text-sm text-muted-foreground mb-5 max-w-3xl">{intro}</p>}
-      {!intro && <div className="mb-5" />}
+      {!intro && heading && <div className="mb-5" />}
+
       {videos.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
           No videos yet.
