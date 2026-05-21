@@ -25,7 +25,7 @@ type VideoRow = {
   id: string;
   title: string;
   description: string | null;
-  category: "warmup" | "10_min_morning";
+  category: "warmup" | "10_min_morning" | "cool_down";
   thumbnail_url: string | null;
   video_url: string | null;
   duration_minutes: number | null;
