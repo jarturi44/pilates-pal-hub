@@ -113,8 +113,8 @@ function ProgramPage() {
     [activity],
   );
 
-  const warmups = (videos ?? []).filter((v) => v.category === "warmup");
-  const mornings = (videos ?? []).filter((v) => v.category === "10_min_morning");
+  const warmups = (videos ?? []).filter((v) => v.category === "warmup").slice(0, 10);
+  const mornings = (videos ?? []).filter((v) => v.category === "10_min_morning").slice(0, 2);
 
   const upcoming = (sessions ?? []).filter((s) => new Date(s.scheduled_at) >= new Date());
 
