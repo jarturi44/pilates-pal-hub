@@ -1,20 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PagePrimitives";
-import { toast } from "sonner";
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
 });
 
+
 function ProfilePage() {
   const { user } = useAuth();
-  const qc = useQueryClient();
-  const [working, setWorking] = useState(false);
 
   const { data: sub } = useQuery({
     queryKey: ["my-subscription", user?.id],
@@ -35,28 +31,8 @@ function ProfilePage() {
   const commitmentEnd = sub?.commitment_end_date ? new Date(sub.commitment_end_date) : null;
   const lockedIn = commitmentEnd ? commitmentEnd > new Date() : false;
 
-  async function cancel() {
-    if (!sub) return;
-    setWorking(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("cancel-subscription", {
-        body: { subscription_id: sub.id },
-      });
-      if (error) throw error;
-      if (data?.error === "commitment_active") {
-        toast.error("You can cancel after your 3-month commitment ends.");
-      } else {
-        toast.success("Your subscription will cancel at the end of the current period.");
-        qc.invalidateQueries({ queryKey: ["my-subscription"] });
-      }
-    } catch (err) {
-      toast.error((err as Error).message);
-    } finally {
-      setWorking(false);
-    }
-  }
-
   return (
+
     <>
       <PageHeader title="Profile" subtitle="Manage your account and subscription." />
       <div className="space-y-6">
