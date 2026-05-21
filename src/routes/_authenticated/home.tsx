@@ -115,6 +115,7 @@ function HomePage() {
 
   const library = (videos ?? []).filter((v) => v.category === "warmup");
   const mornings = (videos ?? []).filter((v) => v.category === "10_min_morning");
+  const cooldowns = (videos ?? []).filter((v) => v.category === "cool_down");
 
   const morningIds = useMemo(() => new Set(mornings.map((m) => m.id)), [mornings]);
   const morningsThisWeek = useMemo(() => {
