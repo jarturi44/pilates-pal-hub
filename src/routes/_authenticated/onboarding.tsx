@@ -369,44 +369,19 @@ function OnboardingPage() {
       {step === "waiver" && (
         <WaiverStep
           onSigned={async () => {
-            if (!user) return;
-            // Mark onboarding complete + flag for slot assignment when on a live plan.
-            const { error } = await supabase
-              .from("users")
-              .update({
-                onboarding_complete: true,
-                needs_slot_assignment: !!isLiveSessionPlan,
-              })
-              .eq("id", user.id);
-            if (error) {
-              toast.error(error.message);
-              return;
+            if (isLiveSessionPlan) {
+              goTo("availability");
+            } else {
+              await completeOnboarding();
             }
-            // Welcome notification (in-app + email)
-            try {
-              const { notify } = await import("@/lib/notify");
-              await notify({
-                userId: user.id,
-                type: "onboarding_complete",
-                title: "Look at you!",
-                message: isLiveSessionPlan
-                  ? "You're officially part of the crew. I'll be reaching out soon to set you up in your recurring slot."
-                  : "You're officially part of the crew. Poke around the app and get comfortable — I got you!",
-                link: "/home",
-                email: user.email
-                  ? {
-                      to: user.email,
-                      templateName: "onboarding-complete",
-                      idempotencyKey: `onboarding-complete-${user.id}`,
-                      templateData: { name: user.user_metadata?.name, isLiveSession: isLiveSessionPlan },
-                    }
-                  : undefined,
-              });
-            } catch (e) {
-              console.error("onboarding notify failed", e);
-            }
-            qc.invalidateQueries({ queryKey: ["onboarding-gate"] });
-            goTo("done");
+          }}
+        />
+      )}
+
+      {step === "availability" && (
+        <AvailabilityStep
+          onDone={async () => {
+            await completeOnboarding();
           }}
         />
       )}
@@ -419,6 +394,45 @@ function OnboardingPage() {
       )}
     </div>
   );
+
+  async function completeOnboarding() {
+    if (!user) return;
+    const { error } = await supabase
+      .from("users")
+      .update({
+        onboarding_complete: true,
+        needs_slot_assignment: !!isLiveSessionPlan,
+      })
+      .eq("id", user.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    try {
+      const { notify } = await import("@/lib/notify");
+      await notify({
+        userId: user.id,
+        type: "onboarding_complete",
+        title: "Look at you!",
+        message: isLiveSessionPlan
+          ? "You're officially part of the crew. I'll be reaching out soon to set you up in your recurring slot."
+          : "You're officially part of the crew. Poke around the app and get comfortable — I got you!",
+        link: "/home",
+        email: user.email
+          ? {
+              to: user.email,
+              templateName: "onboarding-complete",
+              idempotencyKey: `onboarding-complete-${user.id}`,
+              templateData: { name: user.user_metadata?.name, isLiveSession: isLiveSessionPlan },
+            }
+          : undefined,
+      });
+    } catch (e) {
+      console.error("onboarding notify failed", e);
+    }
+    qc.invalidateQueries({ queryKey: ["onboarding-gate"] });
+    goTo("done");
+  }
 }
 
 function WelcomeStep({ plan, onContinue }: { plan: Plan | null; onContinue: () => void }) {
