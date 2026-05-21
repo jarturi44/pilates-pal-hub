@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { createCheckoutSession, syncCheckoutSession } from "@/lib/checkout.functions";
 import { toast } from "sonner";
-import { Check, ExternalLink, Loader2, PackageCheck, Sparkles } from "lucide-react";
+import { Check, Loader2, PackageCheck, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const AVAILABILITY_URL =
