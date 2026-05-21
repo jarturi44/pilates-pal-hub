@@ -158,7 +158,7 @@ function HomePage() {
 
   return (
     <>
-      <PageHeader title="Welcome back" subtitle="Your home for movement, mindfulness, and progress." />
+      <PageHeader title="Welcome back" subtitle="Making you Stronger, more Flexible, and more Pain Free" />
 
       <section className="rounded-2xl border border-border bg-gradient-to-br from-card to-muted/40 p-8 md:p-12 text-center mb-10">
         {planName ? (
