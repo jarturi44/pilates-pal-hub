@@ -686,11 +686,37 @@ function IntakeStep({ onDone }: { onDone: () => void }) {
   );
 }
 
+const WAIVER_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSehzGlygRHXHP3aan7baRPN2bwrRtHDHvNb5Oq56uBKqUOh7w/viewform";
+
 function WaiverStep({ onSigned }: { onSigned: () => void }) {
   const { user } = useAuth();
   const loadCount = useRef(0);
   const submittedRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
+  const [checkingPrior, setCheckingPrior] = useState(true);
+
+  // If they already completed the waiver previously, auto-advance.
+  useEffect(() => {
+    let cancelled = false;
+    async function check() {
+      if (!user) { setCheckingPrior(false); return; }
+      const { data } = await supabase
+        .from("onboarding_progress")
+        .select("waiver_completed_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (data?.waiver_completed_at) {
+        submittedRef.current = true;
+        onSigned();
+      } else {
+        setCheckingPrior(false);
+      }
+    }
+    check();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   async function handleSubmitted() {
     if (!user || submittedRef.current) return;
@@ -706,10 +732,17 @@ function WaiverStep({ onSigned }: { onSigned: () => void }) {
 
       const { error } = await supabase.from("waivers").insert({
         user_id: user.id,
-        content_snapshot: "Signed via Google Form: https://docs.google.com/forms/d/e/1FAIpQLSehzGlygRHXHP3aan7baRPN2bwrRtHDHvNb5Oq56uBKqUOh7w/viewform",
+        content_snapshot: `Signed via Google Form: ${WAIVER_FORM_URL}`,
         ip_address: ip,
       });
       if (error) throw error;
+
+      // Persist progress so this step is skipped if they come back later
+      await supabase.from("onboarding_progress").upsert({
+        user_id: user.id,
+        waiver_completed_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+
       await onSigned();
     } catch (err) {
       toast.error((err as Error).message);
@@ -718,16 +751,34 @@ function WaiverStep({ onSigned }: { onSigned: () => void }) {
     }
   }
 
+  if (checkingPrior) {
+    return (
+      <div className="flex justify-center items-center gap-2 text-sm text-muted-foreground py-20">
+        <Loader2 size={14} className="animate-spin" /> Loading…
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <header>
         <h1 className="font-display text-4xl text-foreground">Liability waiver</h1>
         <p className="mt-2 text-muted-foreground">Please complete and submit the waiver form below. We'll advance automatically once you submit.</p>
+        <p className="mt-3 text-sm">
+          <a
+            href={`${typeof window !== "undefined" ? window.location.origin : ""}/waiver`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline underline-offset-4 hover:opacity-80"
+          >
+            Open the full waiver in a new tab →
+          </a>
+        </p>
       </header>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <iframe
-          src="https://docs.google.com/forms/d/e/1FAIpQLSehzGlygRHXHP3aan7baRPN2bwrRtHDHvNb5Oq56uBKqUOh7w/viewform?embedded=true"
+          src={`${WAIVER_FORM_URL}?embedded=true`}
           className="w-full block"
           style={{ height: "2617px", border: 0 }}
           title="Liability waiver"
@@ -796,21 +847,59 @@ function DoneStep({ plan, onExplore }: { plan: Plan | null; onExplore: () => voi
 }
 
 function AvailabilityStep({ onDone }: { onDone: () => void | Promise<void> }) {
+  const { user } = useAuth();
   const loadCount = useRef(0);
   const submittedRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
+  const [checkingPrior, setCheckingPrior] = useState(true);
+
+  // If they already submitted availability previously, auto-advance.
+  useEffect(() => {
+    let cancelled = false;
+    async function check() {
+      if (!user) { setCheckingPrior(false); return; }
+      const { data } = await supabase
+        .from("onboarding_progress")
+        .select("availability_completed_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (data?.availability_completed_at) {
+        submittedRef.current = true;
+        onDone();
+      } else {
+        setCheckingPrior(false);
+      }
+    }
+    check();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   async function handleSubmitted() {
-    if (submittedRef.current) return;
+    if (submittedRef.current || !user) return;
     submittedRef.current = true;
     setSubmitting(true);
     try {
+      // Persist FIRST so a later failure in completeOnboarding doesn't ask the user to re-submit.
+      await supabase.from("onboarding_progress").upsert({
+        user_id: user.id,
+        availability_completed_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
       await onDone();
     } catch (err) {
       toast.error((err as Error).message);
       submittedRef.current = false;
       setSubmitting(false);
     }
+  }
+
+  if (checkingPrior) {
+    return (
+      <div className="flex justify-center items-center gap-2 text-sm text-muted-foreground py-20">
+        <Loader2 size={14} className="animate-spin" /> Loading…
+      </div>
+    );
   }
 
   return (

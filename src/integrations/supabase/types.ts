@@ -953,9 +953,11 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          last_onboarding_reminder_at: string | null
           name: string | null
           needs_slot_assignment: boolean
           onboarding_complete: boolean
+          onboarding_reminder_count: number
           role: Database["public"]["Enums"]["app_role"]
         }
         Insert: {
@@ -963,9 +965,11 @@ export type Database = {
           created_at?: string
           email: string
           id: string
+          last_onboarding_reminder_at?: string | null
           name?: string | null
           needs_slot_assignment?: boolean
           onboarding_complete?: boolean
+          onboarding_reminder_count?: number
           role?: Database["public"]["Enums"]["app_role"]
         }
         Update: {
@@ -973,9 +977,11 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          last_onboarding_reminder_at?: string | null
           name?: string | null
           needs_slot_assignment?: boolean
           onboarding_complete?: boolean
+          onboarding_reminder_count?: number
           role?: Database["public"]["Enums"]["app_role"]
         }
         Relationships: []
