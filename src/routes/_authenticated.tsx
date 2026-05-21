@@ -55,7 +55,7 @@ function AuthLayout() {
       return <Navigate to="/onboarding" search={{ step: "plan" }} />;
     }
     if (!gate.onboardingComplete) {
-      return <Navigate to="/onboarding/setup" />;
+      return <Navigate to="/onboarding" search={{ step: "welcome" }} />;
     }
     if (gate.activeSub.access_suspended && !pathname.startsWith("/settings") && !pathname.startsWith("/notifications")) {
       return <SuspendedScreen />;
