@@ -35,3 +35,18 @@ export const syncCheckoutSession = createServerFn({ method: "POST" })
       sessionId: data.sessionId,
     });
   });
+
+export const createBillingPortalSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    returnUrl: z.string().url(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) throw new Error("Payments are not configured yet.");
+    return createBillingPortalSessionOnServer({
+      stripeSecretKey,
+      userId: context.userId,
+      returnUrl: data.returnUrl,
+    });
+  });
