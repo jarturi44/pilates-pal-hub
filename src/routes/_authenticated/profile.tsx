@@ -14,6 +14,20 @@ export const Route = createFileRoute("/_authenticated/profile")({
 });
 function ProfilePage() {
   const { user } = useAuth();
+  const openPortal = useServerFn(createBillingPortalSession);
+  const [openingPortal, setOpeningPortal] = useState(false);
+
+  async function handleOpenPortal() {
+    setOpeningPortal(true);
+    try {
+      const { url } = await openPortal({ data: { returnUrl: window.location.href } });
+      window.location.href = url;
+    } catch (err) {
+      toast.error((err as Error).message ?? "Couldn't open billing portal");
+      setOpeningPortal(false);
+    }
+  }
+
 
   const { data: profile } = useQuery({
     queryKey: ["my-profile", user?.id],
