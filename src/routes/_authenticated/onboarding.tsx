@@ -144,15 +144,11 @@ function OnboardingPage() {
           await refetchActiveSub();
         }
         toast.success("Payment received. Let's finish setting up your account.");
-        navigate({ to: "/onboarding", search: { step: "welcome" }, replace: true });
+        navigate({ to: "/onboarding/setup", replace: true });
       } catch (err) {
         console.error(err);
-        toast.error("Payment is still syncing. You can continue your intake and waiver now.");
-        navigate({
-          to: "/onboarding",
-          search: selectedPlanId ? { step: "intake", plan_id: selectedPlanId } : { step: "intake" },
-          replace: true,
-        });
+        toast.error("Payment is still syncing. You can continue your setup now.");
+        navigate({ to: "/onboarding/setup", replace: true });
       }
     }
 
