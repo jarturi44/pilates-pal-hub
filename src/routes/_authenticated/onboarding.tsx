@@ -180,7 +180,7 @@ function OnboardingPage() {
   }
 
   async function handleProceedFromShipping() {
-    if (!address.line1 || !address.city || !address.country || !address.postal) {
+    if (!address.firstName || !address.lastName || !address.phone || !address.line1 || !address.city || !address.country || !address.postal) {
       return toast.error("Please complete the shipping address");
     }
     goTo("commitment");
@@ -192,7 +192,8 @@ function OnboardingPage() {
     setSubmitting(true);
     try {
       if (needsShipping) {
-        const full = [address.line1, address.line2, `${address.city}, ${address.region} ${address.postal}`, address.country]
+        const recipient = `${address.firstName} ${address.lastName}`.trim();
+        const full = [recipient, `Phone: ${address.phone}`, address.line1, address.line2, `${address.city}, ${address.region} ${address.postal}`, address.country]
           .filter(Boolean).join("\n");
         const { error: efErr } = await supabase.from("equipment_fulfillment").upsert({
           user_id: user.id,
