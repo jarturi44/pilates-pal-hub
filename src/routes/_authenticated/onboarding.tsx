@@ -294,6 +294,11 @@ function OnboardingPage() {
             <p className="mt-2 text-muted-foreground">Where should we ship your equipment kit?</p>
           </header>
           <div className="grid gap-4 bg-card border border-border rounded-xl p-6">
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="First name" value={address.firstName} onChange={(v) => setAddress({ ...address, firstName: v })} required />
+              <Field label="Last name" value={address.lastName} onChange={(v) => setAddress({ ...address, lastName: v })} required />
+            </div>
+            <Field label="Phone number" value={address.phone} onChange={(v) => setAddress({ ...address, phone: v })} required />
             <Field label="Address line 1" value={address.line1} onChange={(v) => setAddress({ ...address, line1: v })} required />
             <Field label="Address line 2" value={address.line2} onChange={(v) => setAddress({ ...address, line2: v })} />
             <div className="grid grid-cols-2 gap-4">
