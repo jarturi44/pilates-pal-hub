@@ -6,8 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { createCheckoutSession, syncCheckoutSession } from "@/lib/checkout.functions";
 import { toast } from "sonner";
-import { Check, Loader2, PackageCheck, Sparkles } from "lucide-react";
+import { Check, ExternalLink, Loader2, PackageCheck, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const AVAILABILITY_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLScSSWRDsJGOzX7k3EQbSt9-T8GRIsw4BV7OnWNJYIaY9nkTrw/viewform";
 
 type Step =
   | "plan"
@@ -18,6 +21,7 @@ type Step =
   | "welcome"
   | "intake"
   | "waiver"
+  | "availability"
   | "done";
 
 type Search = { step?: Step; session_id?: string; plan_id?: string };
