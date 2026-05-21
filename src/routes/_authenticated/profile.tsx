@@ -7,10 +7,9 @@ import { PageHeader } from "@/components/PagePrimitives";
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
 });
-
-
 function ProfilePage() {
   const { user } = useAuth();
+
 
   const { data: sub } = useQuery({
     queryKey: ["my-subscription", user?.id],
