@@ -21,7 +21,18 @@ function ProfilePage() {
     setOpeningPortal(true);
     try {
       const { url } = await openPortal({ data: { returnUrl: window.location.href } });
-      window.location.href = url;
+      // Stripe's billing portal cannot render inside the Lovable preview iframe.
+      // Navigate the top-level window instead, matching the checkout flow.
+      try {
+        if (window.top && window.top !== window.self) {
+          window.top.location.href = url;
+        } else {
+          window.location.href = url;
+        }
+      } catch {
+        window.open(url, "_blank", "noopener,noreferrer");
+        setOpeningPortal(false);
+      }
     } catch (err) {
       toast.error((err as Error).message ?? "Couldn't open billing portal");
       setOpeningPortal(false);
