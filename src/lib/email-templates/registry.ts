@@ -12,6 +12,7 @@ import { template as equipmentShipped } from './equipment-shipped'
 import { template as morningsReminder } from './mornings-reminder'
 import { template as subscriptionConfirmed } from './subscription-confirmed'
 import { template as onboardingComplete } from './onboarding-complete'
+import { template as onboardingReminder } from './onboarding-reminder'
 import { template as slotAssigned } from './slot-assigned'
 import { template as sessionReminder } from './session-reminder'
 import { template as paymentFailed } from './payment-failed'
@@ -25,6 +26,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'mornings-reminder': morningsReminder,
   'subscription-confirmed': subscriptionConfirmed,
   'onboarding-complete': onboardingComplete,
+  'onboarding-reminder': onboardingReminder,
   'slot-assigned': slotAssigned,
   'session-reminder': sessionReminder,
   'payment-failed': paymentFailed,
