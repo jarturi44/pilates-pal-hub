@@ -106,8 +106,13 @@ export async function syncCheckoutSessionOnServer(args: {
   const sub = typeof subscription === "string" ? null : subscription;
   const subscriptionId = typeof subscription === "string" ? subscription : subscription?.id;
 
-  if (userId !== args.userId) throw new Error("Checkout session does not belong to this account");
-  if (!planId || !subscriptionId) throw new Error("Checkout session is not ready yet");
+  if (userId !== args.userId) {
+    // Stale session_id from a different account in the URL — don't error out,
+    // let the Stripe webhook reconcile and let the user keep moving.
+    console.warn("[syncCheckoutSession] session.user_id mismatch", { sessionUserId: userId, callerUserId: args.userId });
+    return { subscription: null };
+  }
+  if (!planId || !subscriptionId) return { subscription: null };
 
   const fullSub = sub ?? await stripeFetch<StripeSubscription>(args.stripeSecretKey, `/subscriptions/${subscriptionId}`);
   const start = new Date((fullSub.start_date ?? Math.floor(Date.now() / 1000)) * 1000);
