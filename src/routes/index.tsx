@@ -10,5 +10,5 @@ function Index() {
   const { loading, session, role } = useAuth();
   if (loading) return <LoadingScreen />;
   if (!session) return <Navigate to="/login" />;
-  return <Navigate to={role === "admin" ? "/dashboard" : "/home"} />;
+  return <Navigate to={role === "admin" ? "/dashboard" : "/program"} />;
 }

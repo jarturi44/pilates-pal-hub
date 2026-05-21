@@ -118,6 +118,30 @@ export type Database = {
         }
         Relationships: []
       }
+      client_activity: {
+        Row: {
+          activity_type: string
+          id: string
+          occurred_at: string
+          reference_id: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          id?: string
+          occurred_at?: string
+          reference_id?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          id?: string
+          occurred_at?: string
+          reference_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       client_slots: {
         Row: {
           created_at: string
@@ -445,6 +469,36 @@ export type Database = {
           primary_goal?: string | null
           referral_source?: string | null
           submitted_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      live_sessions: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          id: string
+          meeting_url: string | null
+          scheduled_at: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          meeting_url?: string | null
+          scheduled_at: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          meeting_url?: string | null
+          scheduled_at?: string
+          title?: string
           user_id?: string
         }
         Relationships: []
@@ -899,6 +953,39 @@ export type Database = {
           needs_slot_assignment?: boolean
           onboarding_complete?: boolean
           role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
+      videos: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          thumbnail_url: string | null
+          title: string
+          video_url: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          thumbnail_url?: string | null
+          title: string
+          video_url?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          thumbnail_url?: string | null
+          title?: string
+          video_url?: string | null
         }
         Relationships: []
       }
