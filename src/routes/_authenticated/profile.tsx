@@ -1,14 +1,33 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/PagePrimitives";
+import { createBillingPortalSession } from "@/lib/checkout.functions";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
 });
 function ProfilePage() {
   const { user } = useAuth();
+  const openPortal = useServerFn(createBillingPortalSession);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const handleManageBilling = async () => {
+    try {
+      setPortalLoading(true);
+      const { url } = await openPortal({ data: { returnUrl: window.location.origin + "/profile" } });
+      window.location.href = url;
+    } catch (err) {
+      toast.error((err as Error).message || "Couldn't open billing portal");
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
 
   const { data: profile } = useQuery({
     queryKey: ["my-profile", user?.id],
@@ -94,9 +113,18 @@ function ProfilePage() {
                     : <>Commitment period ended on {commitmentEnd.toLocaleDateString()}. You can cancel anytime.</>}
                 </div>
               )}
+              <button
+                type="button"
+                onClick={handleManageBilling}
+                disabled={portalLoading}
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+              >
+                {portalLoading ? "Opening…" : "Upgrade or change membership"}
+              </button>
             </div>
           )}
         </section>
+
 
         {sub && (
           <section className="rounded-xl border border-border bg-card p-6">

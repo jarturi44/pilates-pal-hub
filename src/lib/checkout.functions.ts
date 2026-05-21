@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { createCheckoutSessionOnServer, syncCheckoutSessionOnServer } from "./checkout.server";
+import { createCheckoutSessionOnServer, syncCheckoutSessionOnServer, createBillingPortalSessionOnServer } from "./checkout.server";
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -33,5 +33,20 @@ export const syncCheckoutSession = createServerFn({ method: "POST" })
       stripeSecretKey,
       userId: context.userId,
       sessionId: data.sessionId,
+    });
+  });
+
+export const createBillingPortalSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    returnUrl: z.string().url(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) throw new Error("Payments are not configured yet.");
+    return createBillingPortalSessionOnServer({
+      stripeSecretKey,
+      userId: context.userId,
+      returnUrl: data.returnUrl,
     });
   });
