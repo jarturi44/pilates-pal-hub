@@ -233,7 +233,16 @@ function HomePage() {
         <section className="mb-12">
           <h3 className="font-display text-2xl text-foreground mb-1">Warm-Up Videos</h3>
           <p className="text-sm text-muted-foreground mb-5">Pick one before each live session.</p>
-          <WarmupLibraryClient />
+          <WarmupLibraryClient kind="warmup" />
+        </section>
+      )}
+
+      {/* Cool-Downs (admin: Content → Cool-Down Videos) */}
+      {isLivePlan && (
+        <section className="mb-12">
+          <h3 className="font-display text-2xl text-foreground mb-1">Cool-Down Videos</h3>
+          <p className="text-sm text-muted-foreground mb-5">Wind down after each live session.</p>
+          <WarmupLibraryClient kind="cooldown" />
         </section>
       )}
 
