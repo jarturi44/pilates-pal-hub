@@ -42,18 +42,21 @@ function AuthLayout() {
       let activeSub = subRes.data;
       // Recovery: if no local sub row but Stripe has one for this user, import it.
       if (!activeSub) {
-        try {
-          const result = await recover();
-          if (result?.subscription) {
-            activeSub = {
-              id: result.subscription.id,
-              status: result.subscription.status,
-              access_suspended: result.subscription.access_suspended,
-              past_due_since: result.subscription.past_due_since,
-            };
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData.session?.access_token) {
+          try {
+            const result = await recover();
+            if (result?.subscription) {
+              activeSub = {
+                id: result.subscription.id,
+                status: result.subscription.status,
+                access_suspended: result.subscription.access_suspended,
+                past_due_since: result.subscription.past_due_since,
+              };
+            }
+          } catch (err) {
+            console.warn("Subscription recovery failed", err);
           }
-        } catch (err) {
-          console.warn("Subscription recovery failed", err);
         }
       }
 
