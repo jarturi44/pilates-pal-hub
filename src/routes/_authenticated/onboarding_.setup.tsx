@@ -277,8 +277,8 @@ function StepCard({
   n,
   title,
   body,
-  buttonLabel,
-  href,
+  iframeTitle,
+  src,
   checked,
   onCheckedChange,
   checkboxLabel,
@@ -287,8 +287,8 @@ function StepCard({
   n: number;
   title: string;
   body: string;
-  buttonLabel: string;
-  href: string;
+  iframeTitle: string;
+  src: string;
   checked: boolean;
   onCheckedChange: (v: boolean) => void;
   checkboxLabel: string;
@@ -311,25 +311,40 @@ function StepCard({
         </div>
       </div>
 
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
-      >
-        {buttonLabel} <ExternalLink size={14} />
-      </a>
+      <div className="rounded-lg overflow-hidden border border-border bg-background">
+        <iframe
+          src={src}
+          title={iframeTitle}
+          className="w-full block"
+          style={{ height: "70vh", minHeight: 520 }}
+          frameBorder={0}
+          marginHeight={0}
+          marginWidth={0}
+        >
+          Loading…
+        </iframe>
+      </div>
 
-      <label className="flex items-start gap-3 cursor-pointer pt-2 border-t border-border">
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={(e) => onCheckedChange(e.target.checked)}
-          disabled={saving}
-          className="mt-1 h-4 w-4 rounded border-input"
-        />
-        <span className="text-sm text-foreground">{checkboxLabel}</span>
-      </label>
+      <div className="flex items-center justify-between gap-3 pt-2 border-t border-border flex-wrap">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => onCheckedChange(e.target.checked)}
+            disabled={saving}
+            className="mt-1 h-4 w-4 rounded border-input"
+          />
+          <span className="text-sm text-foreground">{checkboxLabel}</span>
+        </label>
+        <a
+          href={src}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+        >
+          Open in new tab <ExternalLink size={12} />
+        </a>
+      </div>
     </section>
   );
 }
