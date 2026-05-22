@@ -403,11 +403,12 @@ function OnboardingPage() {
 
   async function completeOnboarding() {
     if (!user) return;
+    const isLive = !!isLiveSessionPlan;
     const { error } = await supabase
       .from("users")
       .update({
         onboarding_complete: true,
-        needs_slot_assignment: !!isLiveSessionPlan,
+        needs_slot_assignment: isLive,
       })
       .eq("id", user.id);
     if (error) {
@@ -420,7 +421,7 @@ function OnboardingPage() {
         userId: user.id,
         type: "onboarding_complete",
         title: "Look at you!",
-        message: isLiveSessionPlan
+        message: isLive
           ? "You're officially part of the crew. I'll be reaching out soon to set you up in your recurring slot."
           : "You're officially part of the crew. Poke around the app and get comfortable — I got you!",
         link: "/home",
@@ -429,15 +430,15 @@ function OnboardingPage() {
               to: user.email,
               templateName: "onboarding-complete",
               idempotencyKey: `onboarding-complete-${user.id}`,
-              templateData: { name: user.user_metadata?.name, isLiveSession: isLiveSessionPlan },
+              templateData: { name: user.user_metadata?.name, isLiveSession: isLive },
             }
           : undefined,
       });
     } catch (e) {
       console.error("onboarding notify failed", e);
     }
-    qc.invalidateQueries({ queryKey: ["onboarding-gate"] });
     goTo("done");
+    qc.invalidateQueries({ queryKey: ["onboarding-gate"] });
   }
 }
 

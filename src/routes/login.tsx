@@ -1,13 +1,18 @@
-import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouterState, useSearch } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LoadingScreen, Wordmark } from "@/components/Wordmark";
 import { useAuth } from "@/lib/auth-context";
 
+function getSafeRedirect(redirect: string | undefined) {
+  if (!redirect?.startsWith("/") || redirect.startsWith("//") || redirect.startsWith("/login")) return null;
+  return redirect;
+}
+
 export const Route = createFileRoute("/login")({
   validateSearch: (s: Record<string, unknown>): { redirect?: string } => ({
-    redirect: typeof s.redirect === "string" ? s.redirect : undefined,
+    redirect: getSafeRedirect(typeof s.redirect === "string" ? s.redirect : undefined) ?? undefined,
   }),
   component: LoginPage,
 });
@@ -15,17 +20,19 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/login" });
+  const rawSearch = useRouterState({ select: (s) => s.location.searchStr });
   const { loading: authLoading, session } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const safeRedirect =
-    search.redirect?.startsWith("/") &&
-    !search.redirect.startsWith("//") &&
-    !search.redirect.startsWith("/login")
-      ? search.redirect
-      : null;
+  const safeRedirect = getSafeRedirect(search.redirect);
+
+  useEffect(() => {
+    if (!authLoading && !session && !safeRedirect && rawSearch) {
+      navigate({ to: "/login", replace: true });
+    }
+  }, [authLoading, navigate, rawSearch, safeRedirect, session]);
 
   useEffect(() => {
     if (authLoading || !session) return;
