@@ -12,9 +12,9 @@ export const Route = createFileRoute("/_authenticated/onboarding_/setup")({
 });
 
 const WAIVER_FORM_BASE =
-  "https://docs.google.com/forms/d/e/1FAIpQLSehzGlygRHXHP3aan7baRPN2bwrRtHDHvNb5Oq56uBKqUOh7w/viewform";
+  "https://docs.google.com/forms/d/e/1FAIpQLSehzGlygRHXHP3aan7baRPN2bwrRtHDHvNb5Oq56uBKqUOh7w/viewform?embedded=true";
 const AVAILABILITY_FORM_BASE =
-  "https://docs.google.com/forms/d/e/1FAIpQLScSSWRDsJGOzX7k3EQbSt9-T8GRIsw4BV7OnWNJYIaY9nkTrw/viewform";
+  "https://docs.google.com/forms/d/e/1FAIpQLScSSWRDsJGOzX7k3EQbSt9-T8GRIsw4BV7OnWNJYIaY9nkTrw/viewform?embedded=true";
 
 const MORNINGS_ONLY_PLAN_NAME = "10 Minute Mornings only";
 
@@ -138,7 +138,7 @@ function OnboardingSetupPage() {
       "entry.289220116": data.phone,
       "entry.130104280": data.address,
     });
-    return `${WAIVER_FORM_BASE}?${p.toString()}`;
+    return `${WAIVER_FORM_BASE}&${p.toString()}`;
   }, [data]);
 
   const availabilityUrl = useMemo(() => {
@@ -150,7 +150,7 @@ function OnboardingSetupPage() {
       "entry.370732051": data.email,
       "entry.817882999": data.planName,
     });
-    return `${AVAILABILITY_FORM_BASE}?${p.toString()}`;
+    return `${AVAILABILITY_FORM_BASE}&${p.toString()}`;
   }, [data]);
 
   async function toggleWaiver(checked: boolean) {
@@ -234,9 +234,9 @@ function OnboardingSetupPage() {
       <StepCard
         n={1}
         title="Sign your liability waiver"
-        body="We've pre-filled your info to save you time. Please review and sign the waiver. Form Publisher will email you a PDF copy when you're done."
-        buttonLabel="Open the waiver"
-        href={waiverUrl}
+        body="We've pre-filled your info to save you time. Review and sign below — Form Publisher will email you a PDF copy when you're done. Then check the box."
+        iframeTitle="Liability Waiver"
+        src={waiverUrl}
         checked={waiverChecked}
         onCheckedChange={toggleWaiver}
         checkboxLabel="I've completed the waiver."
@@ -247,9 +247,9 @@ function OnboardingSetupPage() {
         <StepCard
           n={2}
           title="Set your availability"
-          body="Tell us what days and times work for you so we can match you to the right class slot."
-          buttonLabel="Set my availability"
-          href={availabilityUrl}
+          body="Tell us what days and times work for you so we can match you to the right class slot. Then check the box."
+          iframeTitle="Availability Form"
+          src={availabilityUrl}
           checked={availabilityChecked}
           onCheckedChange={toggleAvailability}
           checkboxLabel="I've completed the availability form."
@@ -277,8 +277,8 @@ function StepCard({
   n,
   title,
   body,
-  buttonLabel,
-  href,
+  iframeTitle,
+  src,
   checked,
   onCheckedChange,
   checkboxLabel,
@@ -287,8 +287,8 @@ function StepCard({
   n: number;
   title: string;
   body: string;
-  buttonLabel: string;
-  href: string;
+  iframeTitle: string;
+  src: string;
   checked: boolean;
   onCheckedChange: (v: boolean) => void;
   checkboxLabel: string;
@@ -311,25 +311,40 @@ function StepCard({
         </div>
       </div>
 
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
-      >
-        {buttonLabel} <ExternalLink size={14} />
-      </a>
+      <div className="rounded-lg overflow-hidden border border-border bg-background">
+        <iframe
+          src={src}
+          title={iframeTitle}
+          className="w-full block"
+          style={{ height: "70vh", minHeight: 520 }}
+          frameBorder={0}
+          marginHeight={0}
+          marginWidth={0}
+        >
+          Loading…
+        </iframe>
+      </div>
 
-      <label className="flex items-start gap-3 cursor-pointer pt-2 border-t border-border">
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={(e) => onCheckedChange(e.target.checked)}
-          disabled={saving}
-          className="mt-1 h-4 w-4 rounded border-input"
-        />
-        <span className="text-sm text-foreground">{checkboxLabel}</span>
-      </label>
+      <div className="flex items-center justify-between gap-3 pt-2 border-t border-border flex-wrap">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => onCheckedChange(e.target.checked)}
+            disabled={saving}
+            className="mt-1 h-4 w-4 rounded border-input"
+          />
+          <span className="text-sm text-foreground">{checkboxLabel}</span>
+        </label>
+        <a
+          href={src}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+        >
+          Open in new tab <ExternalLink size={12} />
+        </a>
+      </div>
     </section>
   );
 }
