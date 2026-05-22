@@ -16,12 +16,13 @@ function AuthLayout() {
   const { loading, session, role, user } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const location = useRouterState({ select: (s) => s.location });
+  const isOnOnboarding = pathname.startsWith("/onboarding");
 
   const recover = useServerFn(recoverSubscription);
 
   const { data: gate, isLoading: gateLoading } = useQuery({
     queryKey: ["onboarding-gate", user?.id],
-    enabled: !!user?.id && role === "client",
+    enabled: !!user?.id && role === "client" && !isOnOnboarding,
     queryFn: async () => {
       const [subRes, userRes] = await Promise.all([
         supabase
@@ -67,7 +68,7 @@ function AuthLayout() {
     },
   });
 
-  if (loading || (role === "client" && gateLoading)) {
+  if (loading || (session && !role) || (role === "client" && !isOnOnboarding && gateLoading)) {
     return <LoadingScreen />;
   }
   if (!session) {
@@ -75,7 +76,6 @@ function AuthLayout() {
     return <Navigate to="/login" search={{ redirect }} />;
   }
 
-  const isOnOnboarding = pathname.startsWith("/onboarding");
   if (role === "client" && gate && !isOnOnboarding) {
     if (!gate.activeSub) {
       return <Navigate to="/onboarding" search={{ step: "plan" }} />;
