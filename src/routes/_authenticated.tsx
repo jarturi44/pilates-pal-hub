@@ -17,6 +17,8 @@ function AuthLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const location = useRouterState({ select: (s) => s.location });
 
+  const recover = useServerFn(recoverSubscription);
+
   const { data: gate, isLoading: gateLoading } = useQuery({
     queryKey: ["onboarding-gate", user?.id],
     enabled: !!user?.id && role === "client",
@@ -36,8 +38,27 @@ function AuthLayout() {
           .eq("id", user!.id)
           .maybeSingle(),
       ]);
+
+      let activeSub = subRes.data;
+      // Recovery: if no local sub row but Stripe has one for this user, import it.
+      if (!activeSub) {
+        try {
+          const result = await recover();
+          if (result?.subscription) {
+            activeSub = {
+              id: result.subscription.id,
+              status: result.subscription.status,
+              access_suspended: result.subscription.access_suspended,
+              past_due_since: result.subscription.past_due_since,
+            };
+          }
+        } catch (err) {
+          console.warn("Subscription recovery failed", err);
+        }
+      }
+
       return {
-        activeSub: subRes.data,
+        activeSub,
         onboardingComplete: !!userRes.data?.onboarding_complete,
       };
     },
