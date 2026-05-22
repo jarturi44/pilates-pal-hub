@@ -234,9 +234,9 @@ function OnboardingSetupPage() {
       <StepCard
         n={1}
         title="Sign your liability waiver"
-        body="We've pre-filled your info to save you time. Please review and sign the waiver. Form Publisher will email you a PDF copy when you're done."
-        buttonLabel="Open the waiver"
-        href={waiverUrl}
+        body="We've pre-filled your info to save you time. Review and sign below — Form Publisher will email you a PDF copy when you're done. Then check the box."
+        iframeTitle="Liability Waiver"
+        src={waiverUrl}
         checked={waiverChecked}
         onCheckedChange={toggleWaiver}
         checkboxLabel="I've completed the waiver."
@@ -247,9 +247,9 @@ function OnboardingSetupPage() {
         <StepCard
           n={2}
           title="Set your availability"
-          body="Tell us what days and times work for you so we can match you to the right class slot."
-          buttonLabel="Set my availability"
-          href={availabilityUrl}
+          body="Tell us what days and times work for you so we can match you to the right class slot. Then check the box."
+          iframeTitle="Availability Form"
+          src={availabilityUrl}
           checked={availabilityChecked}
           onCheckedChange={toggleAvailability}
           checkboxLabel="I've completed the availability form."
