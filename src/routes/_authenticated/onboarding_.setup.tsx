@@ -12,9 +12,9 @@ export const Route = createFileRoute("/_authenticated/onboarding_/setup")({
 });
 
 const WAIVER_FORM_BASE =
-  "https://docs.google.com/forms/d/e/1FAIpQLSehzGlygRHXHP3aan7baRPN2bwrRtHDHvNb5Oq56uBKqUOh7w/viewform";
+  "https://docs.google.com/forms/d/e/1FAIpQLSehzGlygRHXHP3aan7baRPN2bwrRtHDHvNb5Oq56uBKqUOh7w/viewform?embedded=true";
 const AVAILABILITY_FORM_BASE =
-  "https://docs.google.com/forms/d/e/1FAIpQLScSSWRDsJGOzX7k3EQbSt9-T8GRIsw4BV7OnWNJYIaY9nkTrw/viewform";
+  "https://docs.google.com/forms/d/e/1FAIpQLScSSWRDsJGOzX7k3EQbSt9-T8GRIsw4BV7OnWNJYIaY9nkTrw/viewform?embedded=true";
 
 const MORNINGS_ONLY_PLAN_NAME = "10 Minute Mornings only";
 
