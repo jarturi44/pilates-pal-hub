@@ -1,11 +1,10 @@
 // Stripe webhook handler — keeps subscriptions table in sync.
 // verify_jwt is disabled in supabase/config.toml for this function.
-import Stripe from "https://esm.sh/stripe@17.5.0?target=deno";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import Stripe from "npm:stripe@17.5.0";
+import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
   apiVersion: "2024-12-18.acacia",
-  httpClient: Stripe.createFetchHttpClient(),
 });
 
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET")!;
