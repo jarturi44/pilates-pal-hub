@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { createCheckoutSessionOnServer, syncCheckoutSessionOnServer, createBillingPortalSessionOnServer } from "./checkout.server";
+import { createCheckoutSessionOnServer, syncCheckoutSessionOnServer, createBillingPortalSessionOnServer, recoverSubscriptionByEmailOnServer } from "./checkout.server";
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -48,5 +48,16 @@ export const createBillingPortalSession = createServerFn({ method: "POST" })
       stripeSecretKey,
       userId: context.userId,
       returnUrl: data.returnUrl,
+    });
+  });
+
+export const recoverSubscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) throw new Error("Payments are not configured yet.");
+    return recoverSubscriptionByEmailOnServer({
+      stripeSecretKey,
+      userId: context.userId,
     });
   });

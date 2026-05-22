@@ -1,7 +1,9 @@
 import { createFileRoute, Outlet, Navigate, useRouterState, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { recoverSubscription } from "@/lib/checkout.functions";
 import { AppShell } from "@/components/AppShell";
 import { AlertOctagon } from "lucide-react";
 import { LoadingScreen } from "@/components/Wordmark";
@@ -14,6 +16,8 @@ function AuthLayout() {
   const { loading, session, role, user } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const location = useRouterState({ select: (s) => s.location });
+
+  const recover = useServerFn(recoverSubscription);
 
   const { data: gate, isLoading: gateLoading } = useQuery({
     queryKey: ["onboarding-gate", user?.id],
@@ -34,8 +38,27 @@ function AuthLayout() {
           .eq("id", user!.id)
           .maybeSingle(),
       ]);
+
+      let activeSub = subRes.data;
+      // Recovery: if no local sub row but Stripe has one for this user, import it.
+      if (!activeSub) {
+        try {
+          const result = await recover();
+          if (result?.subscription) {
+            activeSub = {
+              id: result.subscription.id,
+              status: result.subscription.status,
+              access_suspended: result.subscription.access_suspended,
+              past_due_since: result.subscription.past_due_since,
+            };
+          }
+        } catch (err) {
+          console.warn("Subscription recovery failed", err);
+        }
+      }
+
       return {
-        activeSub: subRes.data,
+        activeSub,
         onboardingComplete: !!userRes.data?.onboarding_complete,
       };
     },
