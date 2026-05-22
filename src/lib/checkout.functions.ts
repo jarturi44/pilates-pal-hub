@@ -50,3 +50,14 @@ export const createBillingPortalSession = createServerFn({ method: "POST" })
       returnUrl: data.returnUrl,
     });
   });
+
+export const recoverSubscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) throw new Error("Payments are not configured yet.");
+    return recoverSubscriptionByEmailOnServer({
+      stripeSecretKey,
+      userId: context.userId,
+    });
+  });
