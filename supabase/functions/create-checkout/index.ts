@@ -1,6 +1,6 @@
 // Creates a Stripe Checkout Session for the authenticated user.
-import Stripe from "https://esm.sh/stripe@17.5.0?target=deno";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import Stripe from "npm:stripe@17.5.0";
+import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,7 +20,6 @@ Deno.serve(async (req) => {
 
     const stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2024-12-18.acacia",
-      httpClient: Stripe.createFetchHttpClient(),
     });
 
     const authHeader = req.headers.get("Authorization") ?? "";
