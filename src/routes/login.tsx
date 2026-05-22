@@ -23,7 +23,7 @@ function LoginPage() {
   useEffect(() => {
     if (authLoading || !session) return;
     if (search.redirect?.startsWith("/") && !search.redirect.startsWith("//")) {
-      navigate({ to: search.redirect, replace: true });
+      window.location.replace(search.redirect);
       return;
     }
     navigate({ to: "/", replace: true });
