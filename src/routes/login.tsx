@@ -20,14 +20,21 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const safeRedirect =
+    search.redirect?.startsWith("/") &&
+    !search.redirect.startsWith("//") &&
+    !search.redirect.startsWith("/login")
+      ? search.redirect
+      : null;
+
   useEffect(() => {
     if (authLoading || !session) return;
-    if (search.redirect?.startsWith("/") && !search.redirect.startsWith("//")) {
-      window.location.replace(search.redirect);
+    if (safeRedirect) {
+      window.location.replace(safeRedirect);
       return;
     }
     navigate({ to: "/", replace: true });
-  }, [authLoading, navigate, search.redirect, session]);
+  }, [authLoading, navigate, safeRedirect, session]);
 
   if (authLoading || session) {
     return <LoadingScreen />;
@@ -43,8 +50,8 @@ function LoginPage() {
       return;
     }
     toast.success("Welcome back");
-    if (search.redirect?.startsWith("/") && !search.redirect.startsWith("//")) {
-      window.location.href = search.redirect;
+    if (safeRedirect) {
+      window.location.href = safeRedirect;
       return;
     }
     navigate({ to: "/" });
