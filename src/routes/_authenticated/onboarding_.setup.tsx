@@ -138,7 +138,7 @@ function OnboardingSetupPage() {
       "entry.289220116": data.phone,
       "entry.130104280": data.address,
     });
-    return `${WAIVER_FORM_BASE}?${p.toString()}`;
+    return `${WAIVER_FORM_BASE}&${p.toString()}`;
   }, [data]);
 
   const availabilityUrl = useMemo(() => {
