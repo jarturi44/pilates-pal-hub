@@ -5,9 +5,14 @@ import { toast } from "sonner";
 import { LoadingScreen, Wordmark } from "@/components/Wordmark";
 import { useAuth } from "@/lib/auth-context";
 
+function getSafeRedirect(redirect: string | undefined) {
+  if (!redirect?.startsWith("/") || redirect.startsWith("//") || redirect.startsWith("/login")) return null;
+  return redirect;
+}
+
 export const Route = createFileRoute("/login")({
   validateSearch: (s: Record<string, unknown>): { redirect?: string } => ({
-    redirect: typeof s.redirect === "string" ? s.redirect : undefined,
+    redirect: getSafeRedirect(typeof s.redirect === "string" ? s.redirect : undefined) ?? undefined,
   }),
   component: LoginPage,
 });
@@ -20,12 +25,7 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const safeRedirect =
-    search.redirect?.startsWith("/") &&
-    !search.redirect.startsWith("//") &&
-    !search.redirect.startsWith("/login")
-      ? search.redirect
-      : null;
+  const safeRedirect = getSafeRedirect(search.redirect);
 
   useEffect(() => {
     if (authLoading || !session) return;
