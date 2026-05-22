@@ -1,7 +1,9 @@
 import { createFileRoute, Outlet, Navigate, useRouterState, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { recoverSubscription } from "@/lib/checkout.functions";
 import { AppShell } from "@/components/AppShell";
 import { AlertOctagon } from "lucide-react";
 import { LoadingScreen } from "@/components/Wordmark";
