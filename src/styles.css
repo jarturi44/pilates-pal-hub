@@ -48,13 +48,13 @@
   --radius: 0.625rem;
 
   /* Studio brand palette */
-  --background: #f4f6fb;             /* page background */
+  --background: #f5efe1;             /* page background — cream */
   --foreground: #0f1f3a;              /* primary text on light */
 
-  --card: #ffffff;
+  --card: #fbf6e8;
   --card-foreground: #0f1f3a;
 
-  --popover: #ffffff;
+  --popover: #fbf6e8;
   --popover-foreground: #0f1f3a;
 
   /* Navy primary — main buttons, active nav, headings, hero */
