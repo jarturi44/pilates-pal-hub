@@ -164,3 +164,76 @@ export async function createBillingPortalSessionOnServer(args: {
   if (!session.url) throw new Error("No portal URL returned");
   return { url: session.url };
 }
+
+type StripeListResponse<T> = { data: T[] };
+type StripeCustomer = { id: string; email?: string | null };
+type StripeSubscriptionWithMetadata = StripeSubscription & {
+  metadata?: Record<string, string> | null;
+};
+
+/**
+ * Recovery path: when a user has no subscription row (webhook + success-redirect
+ * both missed), look up their Stripe customer by email and import any
+ * active/trialing subscription whose metadata.user_id matches.
+ */
+export async function recoverSubscriptionByEmailOnServer(args: {
+  stripeSecretKey: string;
+  userId: string;
+}) {
+  const { data: user } = await supabaseAdmin
+    .from("users")
+    .select("email")
+    .eq("id", args.userId)
+    .maybeSingle();
+  if (!user?.email) return { subscription: null };
+
+  const customers = await stripeFetch<StripeListResponse<StripeCustomer>>(
+    args.stripeSecretKey,
+    `/customers?email=${encodeURIComponent(user.email)}&limit=10`,
+  );
+
+  for (const customer of customers.data) {
+    const subs = await stripeFetch<StripeListResponse<StripeSubscriptionWithMetadata>>(
+      args.stripeSecretKey,
+      `/subscriptions?customer=${encodeURIComponent(customer.id)}&status=all&limit=10`,
+    );
+    const match = subs.data.find(
+      (s) =>
+        s.metadata?.user_id === args.userId &&
+        ["active", "trialing", "past_due"].includes(s.status ?? ""),
+    );
+    if (!match) continue;
+    const planId = match.metadata?.plan_id;
+    if (!planId) continue;
+
+    const start = new Date((match.start_date ?? Math.floor(Date.now() / 1000)) * 1000);
+    const commitmentEnd = new Date(start);
+    commitmentEnd.setMonth(commitmentEnd.getMonth() + 3);
+    const periodEndSeconds = match.current_period_end ?? Math.floor(Date.now() / 1000);
+
+    const { data, error } = await supabaseAdmin
+      .from("subscriptions")
+      .upsert(
+        {
+          user_id: args.userId,
+          plan_id: planId,
+          stripe_subscription_id: match.id,
+          stripe_customer_id: customer.id,
+          status: match.status ?? "active",
+          start_date: start.toISOString(),
+          commitment_end_date: commitmentEnd.toISOString(),
+          current_period_end: new Date(periodEndSeconds * 1000).toISOString(),
+          cancel_at_period_end: !!match.cancel_at_period_end,
+          past_due_since: null,
+          access_suspended: false,
+        },
+        { onConflict: "stripe_subscription_id" },
+      )
+      .select("*, plan:plans(*)")
+      .maybeSingle();
+    if (error) throw error;
+    return { subscription: data };
+  }
+
+  return { subscription: null };
+}
