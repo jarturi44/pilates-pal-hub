@@ -150,7 +150,7 @@ function OnboardingSetupPage() {
       "entry.370732051": data.email,
       "entry.817882999": data.planName,
     });
-    return `${AVAILABILITY_FORM_BASE}?${p.toString()}`;
+    return `${AVAILABILITY_FORM_BASE}&${p.toString()}`;
   }, [data]);
 
   async function toggleWaiver(checked: boolean) {
