@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Wordmark } from "@/components/Wordmark";
+import { LoadingScreen, Wordmark } from "@/components/Wordmark";
+import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (s: Record<string, unknown>): { redirect?: string } => ({
@@ -14,9 +15,23 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/login" });
+  const { loading: authLoading, session } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (authLoading || !session) return;
+    if (search.redirect?.startsWith("/") && !search.redirect.startsWith("//")) {
+      window.location.replace(search.redirect);
+      return;
+    }
+    navigate({ to: "/", replace: true });
+  }, [authLoading, navigate, search.redirect, session]);
+
+  if (authLoading || session) {
+    return <LoadingScreen />;
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
