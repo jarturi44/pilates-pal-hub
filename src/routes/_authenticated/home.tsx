@@ -49,6 +49,10 @@ function getYouTubeId(url: string | null | undefined): string | null {
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
   return m ? m[1] : null;
 }
+function isExternalEmbed(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return /zoom\.us\//i.test(url);
+}
 function videoThumb(v: { video_url: string | null; thumbnail_url: string | null }): string | null {
   if (v.thumbnail_url) return v.thumbnail_url;
   const id = getYouTubeId(v.video_url);
@@ -420,6 +424,21 @@ function VideoModal({
                   allow="accelerated-sensors; autoplay; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 />
+              );
+            }
+            if (isExternalEmbed(video.video_url) && video.video_url) {
+              return (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-6 text-center">
+                  <p className="text-sm text-background/80">This recording opens in a new tab.</p>
+                  <a
+                    href={video.video_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium inline-flex items-center gap-1.5 hover:opacity-90"
+                  >
+                    <Play size={14} /> Open recording
+                  </a>
+                </div>
               );
             }
             return video.video_url ? (
