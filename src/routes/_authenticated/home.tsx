@@ -353,13 +353,13 @@ function VideoSection({
             return (
               <div key={v.id} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
                 <div className="relative aspect-video bg-muted">
-                  {v.thumbnail_url ? (
-                    <img src={v.thumbnail_url} alt={v.title} className="w-full h-full object-cover" loading="lazy" />
+                  {(() => { const t = videoThumb(v); return t ? (
+                    <img src={t} alt={v.title} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                       <VideoIcon size={28} />
                     </div>
-                  )}
+                  ); })()}
                   {done && (
                     <span className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-1">
                       <Check size={12} /> Completed
