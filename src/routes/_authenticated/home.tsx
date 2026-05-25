@@ -44,6 +44,17 @@ function endOfWeek(d = new Date()) {
   return e;
 }
 
+function getYouTubeId(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+function videoThumb(v: { video_url: string | null; thumbnail_url: string | null }): string | null {
+  if (v.thumbnail_url) return v.thumbnail_url;
+  const id = getYouTubeId(v.video_url);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
+}
+
 function HomePage() {
   const { user } = useAuth();
   const userId = user?.id;
@@ -261,13 +272,13 @@ function HomePage() {
               return (
                 <div key={v.id} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
                   <div className="relative aspect-video bg-muted">
-                    {v.thumbnail_url ? (
-                      <img src={v.thumbnail_url} alt={v.title} className="w-full h-full object-cover" loading="lazy" />
+                    {(() => { const t = videoThumb(v); return t ? (
+                      <img src={t} alt={v.title} className="w-full h-full object-cover" loading="lazy" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                         <VideoIcon size={28} />
                       </div>
-                    )}
+                    ); })()}
                     {done && (
                       <span className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-1">
                         <Check size={12} /> Completed
@@ -342,13 +353,13 @@ function VideoSection({
             return (
               <div key={v.id} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
                 <div className="relative aspect-video bg-muted">
-                  {v.thumbnail_url ? (
-                    <img src={v.thumbnail_url} alt={v.title} className="w-full h-full object-cover" loading="lazy" />
+                  {(() => { const t = videoThumb(v); return t ? (
+                    <img src={t} alt={v.title} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                       <VideoIcon size={28} />
                     </div>
-                  )}
+                  ); })()}
                   {done && (
                     <span className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-1">
                       <Check size={12} /> Completed
@@ -398,11 +409,25 @@ function VideoModal({
           </button>
         </div>
         <div className="aspect-video bg-black">
-          {video.video_url ? (
-            <video src={video.video_url} controls className="w-full h-full" poster={video.thumbnail_url ?? undefined} />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">No video available.</div>
-          )}
+          {(() => {
+            const ytId = getYouTubeId(video.video_url);
+            if (ytId) {
+              return (
+                <iframe
+                  src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`}
+                  title={video.title}
+                  className="w-full h-full"
+                  allow="accelerated-sensors; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              );
+            }
+            return video.video_url ? (
+              <video src={video.video_url} controls className="w-full h-full" poster={video.thumbnail_url ?? undefined} />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">No video available.</div>
+            );
+          })()}
         </div>
         {video.description && (
           <div className="p-4 text-sm text-foreground/90 whitespace-pre-line">{video.description}</div>
