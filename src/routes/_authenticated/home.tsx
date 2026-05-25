@@ -426,6 +426,21 @@ function VideoModal({
                 />
               );
             }
+            if (isExternalEmbed(video.video_url) && video.video_url) {
+              return (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-6 text-center">
+                  <p className="text-sm text-background/80">This recording opens in a new tab.</p>
+                  <a
+                    href={video.video_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium inline-flex items-center gap-1.5 hover:opacity-90"
+                  >
+                    <Play size={14} /> Open recording
+                  </a>
+                </div>
+              );
+            }
             return video.video_url ? (
               <video src={video.video_url} controls className="w-full h-full" poster={video.thumbnail_url ?? undefined} />
             ) : (
