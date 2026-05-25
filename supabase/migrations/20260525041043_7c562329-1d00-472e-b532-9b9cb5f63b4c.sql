@@ -1,0 +1,2 @@
+ALTER TABLE videos DROP CONSTRAINT IF EXISTS videos_category_check;
+ALTER TABLE videos ADD CONSTRAINT videos_category_check CHECK (category = ANY (ARRAY['warmup'::text, '10_min_morning'::text, 'cool_down'::text]));
