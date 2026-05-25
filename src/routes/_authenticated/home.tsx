@@ -49,6 +49,10 @@ function getYouTubeId(url: string | null | undefined): string | null {
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
   return m ? m[1] : null;
 }
+function isExternalEmbed(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return /zoom\.us\//i.test(url);
+}
 function videoThumb(v: { video_url: string | null; thumbnail_url: string | null }): string | null {
   if (v.thumbnail_url) return v.thumbnail_url;
   const id = getYouTubeId(v.video_url);
