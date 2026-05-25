@@ -409,11 +409,25 @@ function VideoModal({
           </button>
         </div>
         <div className="aspect-video bg-black">
-          {video.video_url ? (
-            <video src={video.video_url} controls className="w-full h-full" poster={video.thumbnail_url ?? undefined} />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">No video available.</div>
-          )}
+          {(() => {
+            const ytId = getYouTubeId(video.video_url);
+            if (ytId) {
+              return (
+                <iframe
+                  src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`}
+                  title={video.title}
+                  className="w-full h-full"
+                  allow="accelerated-sensors; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              );
+            }
+            return video.video_url ? (
+              <video src={video.video_url} controls className="w-full h-full" poster={video.thumbnail_url ?? undefined} />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">No video available.</div>
+            );
+          })()}
         </div>
         {video.description && (
           <div className="p-4 text-sm text-foreground/90 whitespace-pre-line">{video.description}</div>
