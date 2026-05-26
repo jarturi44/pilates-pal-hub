@@ -23,8 +23,10 @@ function ClientProfilePage() {
   const { clientId } = Route.useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const deleteClientFn = useServerFn(deleteClient);
   const [showMessage, setShowMessage] = useState(false);
   const [showAssign, setShowAssign] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["client-profile", clientId],
