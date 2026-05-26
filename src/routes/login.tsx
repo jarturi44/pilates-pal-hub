@@ -97,6 +97,9 @@ function LoginPage() {
           New here?{" "}
           <Link to="/signup" className="text-primary font-medium hover:underline">Create an account</Link>
         </p>
+        <p className="text-center text-sm text-muted-foreground mt-3">
+          <Link to="/reset-password" className="text-primary font-medium hover:underline">Forgot password?</Link>
+        </p>
       </div>
     </div>
   );
