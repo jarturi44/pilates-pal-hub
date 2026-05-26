@@ -128,6 +128,18 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          {role !== "admin" && shopUrl && (
+            <a
+              href={shopUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            >
+              <ShoppingBag size={18} />
+              <span className="flex-1">Shop</span>
+            </a>
+          )}
         </nav>
         <div className="p-3 border-t border-sidebar-border">
           <div className="px-3 py-2 text-xs text-muted-foreground truncate">{user?.email}</div>
