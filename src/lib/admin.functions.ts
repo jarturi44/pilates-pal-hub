@@ -42,7 +42,7 @@ export const deleteClient = createServerFn({ method: "POST" })
       "live_sessions", "reminder_send_log", "user_roles",
     ];
     for (const t of tables) {
-      await supabaseAdmin.from(t).delete().eq("user_id", data.userId);
+      await (supabaseAdmin as any).from(t).delete().eq("user_id", data.userId);
     }
     await supabaseAdmin.from("users").delete().eq("id", data.userId);
 
