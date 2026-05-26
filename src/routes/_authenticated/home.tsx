@@ -128,9 +128,20 @@ function HomePage() {
     [activity],
   );
 
-  const library = (videos ?? []).filter((v) => v.category === "warmup");
+  const WARMUP_ORDER = ["Knee Folds + Arm Circles", "Side Lying Arms", "Seated Arms", "Mermaid", "Hip Up Legs", "Resistance Stretching"];
+  const COOLDOWN_ORDER = ["Seal", "Knee, Ankle, Foot", "Running + Breathing"];
+  function sortByOrder(list: VideoRow[], order: string[]) {
+    const map = new Map(order.map((t, i) => [t.toLowerCase().replace(/[^a-z0-9]/g, ""), i]));
+    return [...list].sort((a, b) => {
+      const ai = map.get(a.title.toLowerCase().replace(/[^a-z0-9]/g, "")) ?? 999;
+      const bi = map.get(b.title.toLowerCase().replace(/[^a-z0-9]/g, "")) ?? 999;
+      return ai - bi;
+    });
+  }
+
+  const library = sortByOrder((videos ?? []).filter((v) => v.category === "warmup"), WARMUP_ORDER);
   const mornings = (videos ?? []).filter((v) => v.category === "10_min_morning");
-  const cooldowns = (videos ?? []).filter((v) => v.category === "cool_down");
+  const cooldowns = sortByOrder((videos ?? []).filter((v) => v.category === "cool_down"), COOLDOWN_ORDER);
 
   const morningIds = useMemo(() => new Set(mornings.map((m) => m.id)), [mornings]);
   const morningsThisWeek = useMemo(() => {
