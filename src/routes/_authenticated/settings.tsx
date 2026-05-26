@@ -58,6 +58,7 @@ function GeneralTab() {
       admin_email: form.admin_email,
       grace_period_days: form.grace_period_days,
       commitment_months: form.commitment_months,
+      shop_url: form.shop_url,
       updated_at: new Date().toISOString(),
     }).eq("id", 1);
     if (error) return toast.error(error.message);
