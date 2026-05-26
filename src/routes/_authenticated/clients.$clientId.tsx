@@ -6,10 +6,12 @@ import { PageHeader } from "@/components/PagePrimitives";
 import { ProgressDashboard } from "@/components/ProgressDashboard";
 import { ClientProgramsSection } from "@/components/admin/ClientProgramsSection";
 import { toast } from "sonner";
-import { ArrowLeft, Download, FileText, Check, Loader2, X, Send, ClipboardCheck, CalendarPlus, RefreshCw, XCircle } from "lucide-react";
+import { ArrowLeft, Download, FileText, Check, Loader2, X, Send, ClipboardCheck, CalendarPlus, RefreshCw, XCircle, Trash2 } from "lucide-react";
 import jsPDF from "jspdf";
 import { cn } from "@/lib/utils";
 import { sendTransactionalEmail } from "@/lib/email/send";
+import { useServerFn } from "@tanstack/react-start";
+import { deleteClient } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   component: ClientProfilePage,
@@ -21,8 +23,10 @@ function ClientProfilePage() {
   const { clientId } = Route.useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const deleteClientFn = useServerFn(deleteClient);
   const [showMessage, setShowMessage] = useState(false);
   const [showAssign, setShowAssign] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["client-profile", clientId],
@@ -113,6 +117,21 @@ function ClientProfilePage() {
     qc.invalidateQueries({ queryKey: ["client-profile", clientId] });
   }
 
+  async function handleDelete() {
+    const name = u?.name || u?.email || "this client";
+    if (!confirm(`Permanently DELETE ${name}? This removes their account, subscription, attendance, intake, waiver, and all related data. This cannot be undone.`)) return;
+    if (!confirm(`Are you absolutely sure? Type-check: this will delete ${name} forever.`)) return;
+    setDeleting(true);
+    try {
+      await deleteClientFn({ data: { userId: clientId } });
+      toast.success("Client deleted");
+      navigate({ to: "/clients" });
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to delete client");
+      setDeleting(false);
+    }
+  }
+
   return (
     <>
       <Link to="/clients" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
@@ -130,6 +149,7 @@ function ClientProfilePage() {
           if (id) changePlan(id);
         }} />
         <ActionBtn icon={<XCircle size={12} />} label="Cancel subscription" onClick={cancelSubscription} destructive />
+        <ActionBtn icon={deleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />} label={deleting ? "Deleting…" : "Delete client"} onClick={handleDelete} destructive />
       </div>
 
       <div className="grid gap-6">
