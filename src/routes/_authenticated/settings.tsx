@@ -86,6 +86,11 @@ function GeneralTab() {
           onChange={(e) => setForm({ ...form, commitment_months: Math.min(24, Math.max(1, +e.target.value)) })}
           className="w-32 rounded-md border border-border bg-background px-3 py-2 text-sm" />
       </Field>
+      <Field label="Printful shop URL">
+        <input type="url" value={form.shop_url ?? ""} onChange={(e) => setForm({ ...form, shop_url: e.target.value })}
+          placeholder="https://your-store.printful.com"
+          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+      </Field>
       <button onClick={save} className="rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs">Save changes</button>
     </div>
   );
