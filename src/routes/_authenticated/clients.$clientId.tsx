@@ -6,10 +6,12 @@ import { PageHeader } from "@/components/PagePrimitives";
 import { ProgressDashboard } from "@/components/ProgressDashboard";
 import { ClientProgramsSection } from "@/components/admin/ClientProgramsSection";
 import { toast } from "sonner";
-import { ArrowLeft, Download, FileText, Check, Loader2, X, Send, ClipboardCheck, CalendarPlus, RefreshCw, XCircle } from "lucide-react";
+import { ArrowLeft, Download, FileText, Check, Loader2, X, Send, ClipboardCheck, CalendarPlus, RefreshCw, XCircle, Trash2 } from "lucide-react";
 import jsPDF from "jspdf";
 import { cn } from "@/lib/utils";
 import { sendTransactionalEmail } from "@/lib/email/send";
+import { useServerFn } from "@tanstack/react-start";
+import { deleteClient } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   component: ClientProfilePage,
