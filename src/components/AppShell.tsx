@@ -38,6 +38,15 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const items = role === "admin" ? adminNav : clientNav;
 
+  // Shop URL for client nav
+  const { data: shopUrl } = useQuery({
+    queryKey: ["studio-shop-url"],
+    queryFn: async () => {
+      const { data } = await supabase.from("studio_settings").select("shop_url").eq("id", 1).maybeSingle();
+      return data?.shop_url as string | null | undefined;
+    },
+  });
+
   // Unread count for the Notifications nav item.
   const { data: unread = 0 } = useQuery({
     queryKey: ["notif-unread", user?.id],
