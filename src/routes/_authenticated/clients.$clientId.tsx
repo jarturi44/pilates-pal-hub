@@ -117,6 +117,21 @@ function ClientProfilePage() {
     qc.invalidateQueries({ queryKey: ["client-profile", clientId] });
   }
 
+  async function handleDelete() {
+    const name = u?.name || u?.email || "this client";
+    if (!confirm(`Permanently DELETE ${name}? This removes their account, subscription, attendance, intake, waiver, and all related data. This cannot be undone.`)) return;
+    if (!confirm(`Are you absolutely sure? Type-check: this will delete ${name} forever.`)) return;
+    setDeleting(true);
+    try {
+      await deleteClientFn({ data: { userId: clientId } });
+      toast.success("Client deleted");
+      navigate({ to: "/clients" });
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to delete client");
+      setDeleting(false);
+    }
+  }
+
   return (
     <>
       <Link to="/clients" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
