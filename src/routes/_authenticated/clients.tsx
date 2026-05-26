@@ -129,15 +129,13 @@ function ClientsPage() {
                 const ful = data!.fulBy.get(u.id);
                 const last = data!.lastActiveBy.get(u.id);
                 return (
-                  <tr key={u.id} className="hover:bg-muted/30">
+                  <tr key={u.id} onClick={() => navigate({ to: "/clients/$clientId", params: { clientId: u.id } })} className="hover:bg-muted/30 cursor-pointer">
                     <td className="px-4 py-3">
-                      <Link to="/clients/$clientId" params={{ clientId: u.id }} className="block">
-                        <div className="font-medium text-foreground inline-flex items-center gap-2">
-                          {u.name || u.email}
-                          {u.needs_slot_assignment && <AlertCircle size={12} className="text-primary" />}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{u.email}</div>
-                      </Link>
+                      <div className="font-medium text-foreground inline-flex items-center gap-2">
+                        {u.name || u.email}
+                        {u.needs_slot_assignment && <AlertCircle size={12} className="text-primary" />}
+                      </div>
+                      <div className="text-xs text-muted-foreground">{u.email}</div>
                     </td>
                     <td className="px-4 py-3 text-foreground">
                       {sub?.plan?.display_name ?? "—"}
