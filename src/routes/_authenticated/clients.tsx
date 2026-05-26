@@ -13,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/clients")({
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function ClientsPage() {
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [planFilter, setPlanFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
