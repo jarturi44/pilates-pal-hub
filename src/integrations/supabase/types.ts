@@ -823,6 +823,7 @@ export type Database = {
           current_waiver_version_id: string | null
           grace_period_days: number
           id: number
+          shop_url: string | null
           studio_name: string
           updated_at: string
         }
@@ -832,6 +833,7 @@ export type Database = {
           current_waiver_version_id?: string | null
           grace_period_days?: number
           id?: number
+          shop_url?: string | null
           studio_name?: string
           updated_at?: string
         }
@@ -841,6 +843,7 @@ export type Database = {
           current_waiver_version_id?: string | null
           grace_period_days?: number
           id?: number
+          shop_url?: string | null
           studio_name?: string
           updated_at?: string
         }

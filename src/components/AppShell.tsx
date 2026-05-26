@@ -2,7 +2,7 @@ import { useState, useEffect, type ReactNode } from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   Home, Calendar, LineChart, Bell, User as UserIcon,
-  LayoutDashboard, Users, Clock, Film, Settings, Menu, X, LogOut, Package, ClipboardCheck, Megaphone,
+  LayoutDashboard, Users, Clock, Film, Settings, Menu, X, LogOut, Package, ClipboardCheck, Megaphone, ShoppingBag,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +37,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
 
   const items = role === "admin" ? adminNav : clientNav;
+
+  // Shop URL for client nav
+  const { data: shopUrl } = useQuery({
+    queryKey: ["studio-shop-url"],
+    queryFn: async () => {
+      const { data } = await supabase.from("studio_settings").select("shop_url").eq("id", 1).maybeSingle();
+      return data?.shop_url as string | null | undefined;
+    },
+  });
 
   // Unread count for the Notifications nav item.
   const { data: unread = 0 } = useQuery({
@@ -119,6 +128,18 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          {role !== "admin" && shopUrl && (
+            <a
+              href={shopUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            >
+              <ShoppingBag size={18} />
+              <span className="flex-1">Shop</span>
+            </a>
+          )}
         </nav>
         <div className="p-3 border-t border-sidebar-border">
           <div className="px-3 py-2 text-xs text-muted-foreground truncate">{user?.email}</div>
