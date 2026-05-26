@@ -149,6 +149,7 @@ function ClientProfilePage() {
           if (id) changePlan(id);
         }} />
         <ActionBtn icon={<XCircle size={12} />} label="Cancel subscription" onClick={cancelSubscription} destructive />
+        <ActionBtn icon={deleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />} label={deleting ? "Deleting…" : "Delete client"} onClick={handleDelete} destructive />
       </div>
 
       <div className="grid gap-6">
