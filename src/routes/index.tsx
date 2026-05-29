@@ -232,6 +232,9 @@ function Programs() {
               </Bullet>
               <Bullet light>A program that grows with you, not against you</Bullet>
             </ul>
+            <p className="mt-5 text-xs text-primary-foreground/70 italic">
+              Live sessions require a 3‑month minimum commitment — that's how long it takes to really feel the change.
+            </p>
             <Link
               to="/signup"
               className="mt-8 inline-flex items-center justify-center gap-2 rounded-md bg-action text-action-foreground px-5 py-3 text-sm font-semibold hover:opacity-90"
