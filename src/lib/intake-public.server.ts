@@ -165,14 +165,14 @@ export async function claimIntakeForUserOnServer(args: {
   if (!authUser) throw new Error("Account not found. Try logging in again.");
 
   // Update users row
-  const updates: Record<string, unknown> = {
-    intake_paid_at: new Date().toISOString(),
-    intake_stripe_session_id: pending.stripe_session_id,
-  };
-  if (pending.intake_completed_at) {
-    updates.intake_completed_at = pending.intake_completed_at;
-  }
-  const { error: updErr } = await supabaseAdmin.from("users").update(updates).eq("id", authUser.id);
+  const { error: updErr } = await supabaseAdmin
+    .from("users")
+    .update({
+      intake_paid_at: new Date().toISOString(),
+      intake_stripe_session_id: pending.stripe_session_id,
+      ...(pending.intake_completed_at ? { intake_completed_at: pending.intake_completed_at } : {}),
+    })
+    .eq("id", authUser.id);
   if (updErr) throw updErr;
 
   // Mark pending row as claimed

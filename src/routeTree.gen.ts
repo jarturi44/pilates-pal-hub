@@ -14,8 +14,10 @@ import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OnboardingCreateAccountRouteImport } from './routes/onboarding_.create-account'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedSlotsRouteImport } from './routes/_authenticated/slots'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -67,6 +69,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GetStartedRoute = GetStartedRouteImport.update({
+  id: '/get-started',
+  path: '/get-started',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -74,6 +81,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingCreateAccountRoute = OnboardingCreateAccountRouteImport.update({
+  id: '/onboarding_/create-account',
+  path: '/onboarding/create-account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
@@ -215,6 +227,7 @@ const ApiPublicHooksBillingJobsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/get-started': typeof GetStartedRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
@@ -234,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/slots': typeof AuthenticatedSlotsRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/onboarding/create-account': typeof OnboardingCreateAccountRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/onboarding/setup': typeof AuthenticatedOnboardingSetupRoute
   '/api/public/keep-alive': typeof ApiPublicKeepAliveRoute
@@ -248,6 +262,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/get-started': typeof GetStartedRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
@@ -267,6 +282,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/slots': typeof AuthenticatedSlotsRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/onboarding/create-account': typeof OnboardingCreateAccountRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/onboarding/setup': typeof AuthenticatedOnboardingSetupRoute
   '/api/public/keep-alive': typeof ApiPublicKeepAliveRoute
@@ -283,6 +299,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/get-started': typeof GetStartedRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
@@ -302,6 +319,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/slots': typeof AuthenticatedSlotsRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/onboarding_/create-account': typeof OnboardingCreateAccountRoute
   '/_authenticated/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/_authenticated/onboarding_/setup': typeof AuthenticatedOnboardingSetupRoute
   '/api/public/keep-alive': typeof ApiPublicKeepAliveRoute
@@ -318,6 +336,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/get-started'
     | '/login'
     | '/reset-password'
     | '/signup'
@@ -337,6 +356,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/slots'
     | '/email/unsubscribe'
+    | '/onboarding/create-account'
     | '/clients/$clientId'
     | '/onboarding/setup'
     | '/api/public/keep-alive'
@@ -351,6 +371,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/get-started'
     | '/login'
     | '/reset-password'
     | '/signup'
@@ -370,6 +391,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/slots'
     | '/email/unsubscribe'
+    | '/onboarding/create-account'
     | '/clients/$clientId'
     | '/onboarding/setup'
     | '/api/public/keep-alive'
@@ -385,6 +407,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/get-started'
     | '/login'
     | '/reset-password'
     | '/signup'
@@ -404,6 +427,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/slots'
     | '/email/unsubscribe'
+    | '/onboarding_/create-account'
     | '/_authenticated/clients/$clientId'
     | '/_authenticated/onboarding_/setup'
     | '/api/public/keep-alive'
@@ -420,12 +444,14 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  GetStartedRoute: typeof GetStartedRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   WaiverRoute: typeof WaiverRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  OnboardingCreateAccountRoute: typeof OnboardingCreateAccountRoute
   ApiPublicKeepAliveRoute: typeof ApiPublicKeepAliveRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksBillingJobsRoute: typeof ApiPublicHooksBillingJobsRoute
@@ -474,6 +500,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/get-started': {
+      id: '/get-started'
+      path: '/get-started'
+      fullPath: '/get-started'
+      preLoaderRoute: typeof GetStartedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -486,6 +519,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding_/create-account': {
+      id: '/onboarding_/create-account'
+      path: '/onboarding/create-account'
+      fullPath: '/onboarding/create-account'
+      preLoaderRoute: typeof OnboardingCreateAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
@@ -718,12 +758,14 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  GetStartedRoute: GetStartedRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   WaiverRoute: WaiverRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  OnboardingCreateAccountRoute: OnboardingCreateAccountRoute,
   ApiPublicKeepAliveRoute: ApiPublicKeepAliveRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksBillingJobsRoute: ApiPublicHooksBillingJobsRoute,
