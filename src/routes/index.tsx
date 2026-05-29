@@ -341,13 +341,14 @@ function Contact() {
   return (
     <section id="contact" className="border-b border-border">
       <div className="mx-auto max-w-4xl px-6 py-20 text-center">
-        <p className="text-sm uppercase tracking-[0.18em] text-accent font-medium">Contact</p>
+        <p className="text-sm uppercase tracking-[0.18em] text-accent font-medium">Say hi</p>
         <h2 className="font-display text-4xl md:text-5xl mt-4 text-foreground">
-          Curious if this is right for you?
+          Not sure where to start? I got you.
         </h2>
         <p className="mt-4 text-lg text-muted-foreground max-w-xl mx-auto">
-          Send me a note — I'll personally reply with a recommendation based on what
-          you're working on.
+          Shoot me a note and tell me what you're working on — pain, mobility, getting
+          back into a routine, whatever it is. I'll personally write back with a real
+          recommendation, no pressure.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
           <a
