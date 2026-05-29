@@ -581,6 +581,60 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_intakes: {
+        Row: {
+          amount_paid: number | null
+          claimed_at: string | null
+          claimed_by_user_id: string | null
+          created_at: string
+          email: string
+          id: string
+          intake_completed_at: string | null
+          intake_completed_by: string | null
+          name: string | null
+          paid_at: string
+          resume_email_sent_at: string | null
+          resume_token: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          claimed_at?: string | null
+          claimed_by_user_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          intake_completed_at?: string | null
+          intake_completed_by?: string | null
+          name?: string | null
+          paid_at?: string
+          resume_email_sent_at?: string | null
+          resume_token?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_paid?: number | null
+          claimed_at?: string | null
+          claimed_by_user_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          intake_completed_at?: string | null
+          intake_completed_by?: string | null
+          name?: string | null
+          paid_at?: string
+          resume_email_sent_at?: string | null
+          resume_token?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       plans: {
         Row: {
           created_at: string
