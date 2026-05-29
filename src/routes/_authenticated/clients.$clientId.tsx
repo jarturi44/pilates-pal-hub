@@ -160,6 +160,11 @@ function ClientProfilePage() {
           <Row k="Shipping address" v={data.fulfill?.shipping_address} multiline />
         </Section>
 
+        <IntakeSection user={u} onChanged={() => qc.invalidateQueries({ queryKey: ["client-profile", clientId] })} />
+
+        <AvailabilityNotesSection user={u} onSaved={() => qc.invalidateQueries({ queryKey: ["client-profile", clientId] })} />
+
+
         <Section title="Plan">
           {!data.sub ? <p className="text-sm text-muted-foreground">No subscription.</p> : (
             <>
