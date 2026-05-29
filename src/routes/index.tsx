@@ -1,14 +1,385 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
-import { LoadingScreen } from "@/components/Wordmark";
+import { LoadingScreen, Wordmark } from "@/components/Wordmark";
+import heroImg from "@/assets/landing-hero.jpg";
+import {
+  ArrowRight,
+  Sunrise,
+  Video,
+  Package,
+  PlayCircle,
+  CheckCircle2,
+  Mail,
+} from "lucide-react";
 
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Pilates with Jon — Stronger, more flexible, more pain-free" },
+      {
+        name: "description",
+        content:
+          "Virtual pilates with Jon. One-on-one and small group sessions, 10 Minute Mornings, and a home equipment kit — built around you.",
+      },
+      { property: "og:title", content: "Pilates with Jon" },
+      {
+        property: "og:description",
+        content:
+          "Making you stronger, more flexible, and more pain-free. Virtual pilates programs built around you.",
+      },
+    ],
+  }),
+  component: Landing,
 });
 
-function Index() {
+function Landing() {
   const { loading, session, role } = useAuth();
   if (loading) return <LoadingScreen />;
-  if (!session) return <Navigate to="/login" />;
-  return <Navigate to={role === "admin" ? "/dashboard" : "/home"} />;
+
+  const primaryHref = session ? (role === "admin" ? "/dashboard" : "/home") : "/signup";
+  const primaryLabel = session ? "Go to your home" : "Start your practice";
+
+  return (
+    <div className="min-h-screen bg-background text-foreground font-sans">
+      <Nav session={!!session} role={role} />
+      <Hero primaryHref={primaryHref} primaryLabel={primaryLabel} />
+      <MeetJon />
+      <Programs />
+      <DemoVideo />
+      <Testimonials />
+      <Contact />
+      <Footer />
+    </div>
+  );
+}
+
+function Nav({ session, role }: { session: boolean; role: string | null }) {
+  return (
+    <header className="sticky top-0 z-30 bg-background/85 backdrop-blur border-b border-border">
+      <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
+        <Wordmark size="md" showText />
+        <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
+          <a href="#about" className="hover:text-foreground">About</a>
+          <a href="#programs" className="hover:text-foreground">Programs</a>
+          <a href="#demo" className="hover:text-foreground">See it</a>
+          <a href="#testimonials" className="hover:text-foreground">Testimonials</a>
+          <a href="#contact" className="hover:text-foreground">Contact</a>
+        </nav>
+        <div className="flex items-center gap-3">
+          {session ? (
+            <Link
+              to={role === "admin" ? "/dashboard" : "/home"}
+              className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+            >
+              Open app
+            </Link>
+          ) : (
+            <>
+              <Link to="/login" className="text-sm text-foreground hover:text-primary">
+                Sign in
+              </Link>
+              <Link
+                to="/signup"
+                className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+              >
+                Get started
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function Hero({ primaryHref, primaryLabel }: { primaryHref: string; primaryLabel: string }) {
+  return (
+    <section className="border-b border-border">
+      <div className="mx-auto max-w-6xl px-6 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
+        <div>
+          <p className="text-sm uppercase tracking-[0.18em] text-accent font-medium">
+            Virtual pilates studio
+          </p>
+          <h1 className="font-display text-5xl md:text-6xl leading-[1.05] mt-4 text-foreground">
+            Making you <em className="italic text-primary">stronger</em>, more{" "}
+            <em className="italic text-primary">flexible</em>, and more{" "}
+            <em className="italic text-primary">pain‑free</em>.
+          </h1>
+          <p className="mt-6 text-lg text-muted-foreground max-w-lg">
+            Live one‑on‑one and small‑group pilates sessions with Jon — designed around
+            your body, delivered to your living room.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            <Link
+              to={primaryHref}
+              className="inline-flex items-center gap-2 rounded-md bg-action text-action-foreground px-6 py-3 text-sm font-semibold hover:opacity-90"
+            >
+              {primaryLabel} <ArrowRight className="h-4 w-4" />
+            </Link>
+            <a
+              href="#programs"
+              className="text-sm font-medium text-foreground hover:text-primary underline-offset-4 hover:underline"
+            >
+              Explore programs
+            </a>
+          </div>
+        </div>
+        <div className="relative">
+          <div className="absolute -inset-3 bg-primary/10 rounded-2xl rotate-1" aria-hidden />
+          <img
+            src={heroImg}
+            alt="Pilates practice in a sunlit studio"
+            className="relative rounded-2xl shadow-xl object-cover w-full aspect-[3/4]"
+            width={1080}
+            height={1440}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MeetJon() {
+  return (
+    <section id="about" className="border-b border-border">
+      <div className="mx-auto max-w-4xl px-6 py-20 text-center">
+        <p className="text-sm uppercase tracking-[0.18em] text-accent font-medium">Meet Jon</p>
+        <h2 className="font-display text-4xl md:text-5xl mt-4 text-foreground">
+          Pilates that listens to <em className="italic text-primary">your</em> body.
+        </h2>
+        <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
+          I'm Jon — a pilates teacher who believes movement should make life easier, not
+          harder. Whether you're recovering from pain, building strength, or just trying
+          to feel at home in your body again, I'll meet you exactly where you are and
+          build a practice that grows with you.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function Programs() {
+  return (
+    <section id="programs" className="border-b border-border bg-card">
+      <div className="mx-auto max-w-6xl px-6 py-20">
+        <div className="text-center max-w-2xl mx-auto">
+          <p className="text-sm uppercase tracking-[0.18em] text-accent font-medium">Programs</p>
+          <h2 className="font-display text-4xl md:text-5xl mt-4 text-foreground">
+            Two ways to move with me.
+          </h2>
+        </div>
+
+        <div className="mt-14 grid md:grid-cols-2 gap-8">
+          {/* 10 Minute Mornings */}
+          <article className="rounded-2xl border border-border bg-background p-8 flex flex-col">
+            <div className="flex items-center gap-3">
+              <span className="rounded-lg bg-highlight/20 text-highlight-foreground p-2">
+                <Sunrise className="h-5 w-5" />
+              </span>
+              <h3 className="font-display text-2xl text-foreground">10 Minute Mornings</h3>
+            </div>
+            <p className="mt-4 text-muted-foreground leading-relaxed">
+              A bi‑weekly pilates practice you can do on your own — built to{" "}
+              <span className="text-foreground font-medium">
+                supplement your main sessions with me
+              </span>{" "}
+              and keep your body honest between live workouts.
+            </p>
+            <p className="mt-3 text-muted-foreground leading-relaxed">
+              New to pilates? You can also start here as a standalone program. Once it
+              starts to feel easy, that's your signal to level up to live sessions for
+              real results.
+            </p>
+            <ul className="mt-6 space-y-2 text-sm text-foreground">
+              <Bullet>Short, focused sequences you'll actually finish</Bullet>
+              <Bullet>Builds a daily habit without taking over your morning</Bullet>
+              <Bullet>Great gateway into the full practice</Bullet>
+            </ul>
+          </article>
+
+          {/* Virtual Sessions */}
+          <article className="rounded-2xl border border-primary/30 bg-primary text-primary-foreground p-8 flex flex-col shadow-lg">
+            <div className="flex items-center gap-3">
+              <span className="rounded-lg bg-primary-foreground/15 p-2">
+                <Video className="h-5 w-5" />
+              </span>
+              <h3 className="font-display text-2xl">Virtual Sessions with Jon</h3>
+              <span className="ml-auto text-xs uppercase tracking-wider bg-action text-action-foreground px-2 py-1 rounded">
+                Most popular
+              </span>
+            </div>
+            <p className="mt-4 text-primary-foreground/85 leading-relaxed">
+              30‑minute live sessions, 1–3 times a week —{" "}
+              <span className="text-primary-foreground font-medium">one‑on‑one or small group</span>
+              , programmed for you after a virtual intake and evaluation with me.
+            </p>
+            <ul className="mt-6 space-y-3 text-sm">
+              <Bullet light>
+                <strong className="font-semibold">Home equipment kit</strong> shipped to your door
+                <span className="inline-flex items-center gap-1 ml-2 text-primary-foreground/70">
+                  <Package className="h-3.5 w-3.5" /> over $100 value
+                </span>
+              </Bullet>
+              <Bullet light>
+                <strong className="font-semibold">Warm‑up & cool‑down videos</strong> to do
+                independently before and after each live session
+              </Bullet>
+              <Bullet light>
+                <strong className="font-semibold">Complimentary 10 Minute Mornings</strong> to keep
+                the habit going between sessions
+              </Bullet>
+              <Bullet light>Programs that adapt as your body changes</Bullet>
+            </ul>
+            <Link
+              to="/signup"
+              className="mt-8 inline-flex items-center justify-center gap-2 rounded-md bg-action text-action-foreground px-5 py-3 text-sm font-semibold hover:opacity-90"
+            >
+              Book your intake <ArrowRight className="h-4 w-4" />
+            </Link>
+          </article>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Bullet({ children, light = false }: { children: React.ReactNode; light?: boolean }) {
+  return (
+    <li className="flex items-start gap-2">
+      <CheckCircle2
+        className={`h-4 w-4 mt-0.5 shrink-0 ${light ? "text-highlight" : "text-accent"}`}
+      />
+      <span className={light ? "text-primary-foreground/90" : ""}>{children}</span>
+    </li>
+  );
+}
+
+function DemoVideo() {
+  return (
+    <section id="demo" className="border-b border-border">
+      <div className="mx-auto max-w-5xl px-6 py-20">
+        <div className="text-center max-w-2xl mx-auto">
+          <p className="text-sm uppercase tracking-[0.18em] text-accent font-medium">
+            See it in action
+          </p>
+          <h2 className="font-display text-4xl md:text-5xl mt-4 text-foreground">
+            A quick tour of your home base.
+          </h2>
+          <p className="mt-4 text-muted-foreground">
+            Watch how clients track sessions, follow programs, and stay on rhythm between
+            our live workouts.
+          </p>
+        </div>
+        <div className="mt-10 relative aspect-video rounded-2xl border border-border bg-card overflow-hidden flex items-center justify-center">
+          {/* Reserved demo slot — drop in a screen recording when ready */}
+          <div className="text-center text-muted-foreground p-8">
+            <PlayCircle className="h-14 w-14 mx-auto text-primary/60" />
+            <p className="mt-3 text-sm">Walkthrough video coming soon</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Testimonials() {
+  const quotes = [
+    {
+      quote:
+        "I came in with chronic back pain. Six weeks later I'm sleeping through the night and walking taller.",
+      name: "Sarah M.",
+      detail: "One‑on‑one client",
+    },
+    {
+      quote:
+        "10 Minute Mornings is the only fitness habit I've ever actually kept. It's that good.",
+      name: "Daniel R.",
+      detail: "Mornings member",
+    },
+    {
+      quote:
+        "Jon programs like he knows my body better than I do. The small group format is magic.",
+      name: "Priya K.",
+      detail: "Small group client",
+    },
+  ];
+  return (
+    <section id="testimonials" className="border-b border-border bg-card">
+      <div className="mx-auto max-w-6xl px-6 py-20">
+        <div className="text-center max-w-2xl mx-auto">
+          <p className="text-sm uppercase tracking-[0.18em] text-accent font-medium">
+            From the studio
+          </p>
+          <h2 className="font-display text-4xl md:text-5xl mt-4 text-foreground">
+            Words from clients.
+          </h2>
+        </div>
+        <div className="mt-12 grid md:grid-cols-3 gap-6">
+          {quotes.map((q) => (
+            <figure
+              key={q.name}
+              className="rounded-2xl border border-border bg-background p-6 flex flex-col"
+            >
+              <blockquote className="font-display text-xl text-foreground leading-snug">
+                <span className="text-primary">“</span>
+                {q.quote}
+                <span className="text-primary">”</span>
+              </blockquote>
+              <figcaption className="mt-6 text-sm text-muted-foreground">
+                <span className="text-foreground font-medium">{q.name}</span> · {q.detail}
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Contact() {
+  return (
+    <section id="contact" className="border-b border-border">
+      <div className="mx-auto max-w-4xl px-6 py-20 text-center">
+        <p className="text-sm uppercase tracking-[0.18em] text-accent font-medium">Contact</p>
+        <h2 className="font-display text-4xl md:text-5xl mt-4 text-foreground">
+          Curious if this is right for you?
+        </h2>
+        <p className="mt-4 text-lg text-muted-foreground max-w-xl mx-auto">
+          Send me a note — I'll personally reply with a recommendation based on what
+          you're working on.
+        </p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <a
+            href="mailto:jon@pilateswithjon.com"
+            className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:opacity-90"
+          >
+            <Mail className="h-4 w-4" /> jon@pilateswithjon.com
+          </a>
+          <Link
+            to="/signup"
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground hover:bg-secondary"
+          >
+            Create an account
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="bg-background">
+      <div className="mx-auto max-w-6xl px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-3">
+          <Wordmark size="sm" />
+          <span>© {new Date().getFullYear()} Pilates with Jon</span>
+        </div>
+        <div className="flex items-center gap-6">
+          <Link to="/login" className="hover:text-foreground">Sign in</Link>
+          <Link to="/signup" className="hover:text-foreground">Get started</Link>
+        </div>
+      </div>
+    </footer>
+  );
 }
