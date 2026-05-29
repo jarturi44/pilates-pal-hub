@@ -5,8 +5,8 @@ import { enqueueTemplateEmail, notifyUser } from '@/lib/email/enqueue.server';
 const APP_BASE_URL = 'https://pilateswithjon.com';
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const TYPE_LABEL: Record<string, string> = {
-  semi_private: 'Semi-Private',
-  private: 'Private',
+  small_group: 'Small Group',
+  one_on_one: 'One-On-One',
   combo: 'Combo',
 };
 

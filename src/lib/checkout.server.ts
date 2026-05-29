@@ -59,8 +59,8 @@ export async function createCheckoutSessionOnServer(args: {
 
   const checkoutPlan = plan as PlanForCheckout;
   const origin = args.returnUrl || "";
-  const successUrl = `${origin}/onboarding?step=success&plan_id=${encodeURIComponent(args.planId)}&session_id={CHECKOUT_SESSION_ID}`;
-  const cancelUrl = `${origin}/onboarding?step=commitment&plan_id=${encodeURIComponent(args.planId)}`;
+  const successUrl = `${origin}/onboarding?step=sub_success&plan_id=${encodeURIComponent(args.planId)}&session_id={CHECKOUT_SESSION_ID}`;
+  const cancelUrl = `${origin}/onboarding`;
   const body = new URLSearchParams({
     mode: "subscription",
     success_url: successUrl,
@@ -236,4 +236,66 @@ export async function recoverSubscriptionByEmailOnServer(args: {
   }
 
   return { subscription: null };
+}
+
+/** One-time $60 intake-session checkout. */
+export async function createIntakeCheckoutOnServer(args: {
+  stripeSecretKey: string;
+  userId: string;
+  userEmail?: string;
+  returnUrl: string;
+}) {
+  const origin = args.returnUrl || "";
+  const body = new URLSearchParams({
+    mode: "payment",
+    success_url: `${origin}/onboarding?intake=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/onboarding`,
+    "metadata[user_id]": args.userId,
+    "metadata[purpose]": "intake_session",
+    "line_items[0][quantity]": "1",
+    "line_items[0][price_data][currency]": "usd",
+    "line_items[0][price_data][unit_amount]": "6000",
+    "line_items[0][price_data][product_data][name]": "Pilates with Jon — Initial Intake Session",
+    "line_items[0][price_data][product_data][description]":
+      "60-minute virtual intake. We'll discuss your goals, frequency, and availability.",
+  });
+  if (args.userEmail) body.set("customer_email", args.userEmail);
+
+  const session = await stripeFetch<StripeCheckoutSession>(args.stripeSecretKey, "/checkout/sessions", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+  if (!session.url) throw new Error("No checkout URL returned");
+  return { url: session.url };
+}
+
+/** Verifies the intake checkout session belongs to this user and was paid. */
+export async function syncIntakeCheckoutOnServer(args: {
+  stripeSecretKey: string;
+  userId: string;
+  sessionId: string;
+}) {
+  const session = await stripeFetch<StripeCheckoutSession & { payment_status?: string }>(
+    args.stripeSecretKey,
+    `/checkout/sessions/${encodeURIComponent(args.sessionId)}`,
+  );
+  if (session.metadata?.user_id !== args.userId) {
+    return { paid: false };
+  }
+  if (session.metadata?.purpose !== "intake_session") {
+    return { paid: false };
+  }
+  if (session.payment_status !== "paid") {
+    return { paid: false };
+  }
+  const { error } = await supabaseAdmin
+    .from("users")
+    .update({
+      intake_paid_at: new Date().toISOString(),
+      intake_stripe_session_id: session.id,
+    })
+    .eq("id", args.userId);
+  if (error) throw error;
+  return { paid: true };
 }

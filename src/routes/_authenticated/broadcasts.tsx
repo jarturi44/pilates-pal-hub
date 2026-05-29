@@ -163,7 +163,7 @@ function BroadcastsPage() {
                 <option value="">Choose a slot…</option>
                 {slots.map((s: any) => (
                   <option key={s.id} value={s.id}>
-                    {DAYS[s.day_of_week]} {s.time.slice(0, 5)} · {s.session_type === "private" ? "Private" : "Semi-Private"}
+                    {DAYS[s.day_of_week]} {s.time.slice(0, 5)} · {s.session_type === "one_on_one" ? "One-On-One" : "Small Group"}
                   </option>
                 ))}
               </select>

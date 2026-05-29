@@ -25,5 +25,5 @@ export const template = {
   component: Email,
   subject: "You've got a spot!",
   displayName: "Slot assigned",
-  previewData: { name: "Sam", day: "Monday", time: "9:00 AM", sessionType: "Private" },
+  previewData: { name: "Sam", day: "Monday", time: "9:00 AM", sessionType: "One-On-One" },
 } satisfies TemplateEntry;

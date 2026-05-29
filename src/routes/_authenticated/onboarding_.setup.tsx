@@ -13,10 +13,6 @@ export const Route = createFileRoute("/_authenticated/onboarding_/setup")({
 
 const WAIVER_FORM_BASE =
   "https://docs.google.com/forms/d/e/1FAIpQLSehzGlygRHXHP3aan7baRPN2bwrRtHDHvNb5Oq56uBKqUOh7w/viewform?embedded=true";
-const AVAILABILITY_FORM_BASE =
-  "https://docs.google.com/forms/d/e/1FAIpQLScSSWRDsJGOzX7k3EQbSt9-T8GRIsw4BV7OnWNJYIaY9nkTrw/viewform?embedded=true";
-
-const MORNINGS_ONLY_PLAN_NAME = "10 Minute Mornings only";
 
 type SetupData = {
   firstName: string;
@@ -24,17 +20,9 @@ type SetupData = {
   email: string;
   phone: string;
   address: string;
-  planName: string;
-  planType: string | null;
   waiverCompletedAt: string | null;
-  availabilityCompletedAt: string | null;
 };
 
-/**
- * Parses the multi-line shipping_address string stored by the shipping step.
- * Format:
- *   "{First} {Last}\nPhone: {phone}\n{line1}\n{line2?}\n{city}, {region} {postal}\n{country}"
- */
 function parseShipping(raw: string | null) {
   if (!raw) return { firstName: "", lastName: "", phone: "", address: "" };
   const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
@@ -64,68 +52,42 @@ function OnboardingSetupPage() {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [continuing, setContinuing] = useState(false);
-
-  // Local optimistic state for checkboxes
   const [waiverChecked, setWaiverChecked] = useState(false);
-  const [availabilityChecked, setAvailabilityChecked] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["onboarding-setup", user?.id],
     enabled: !!user?.id,
     queryFn: async (): Promise<SetupData> => {
-      const [userRes, shipRes, subRes, progRes] = await Promise.all([
+      const [userRes, shipRes, progRes] = await Promise.all([
         supabase.from("users").select("name, email").eq("id", user!.id).maybeSingle(),
         supabase.from("equipment_fulfillment").select("shipping_address").eq("user_id", user!.id).maybeSingle(),
         supabase
-          .from("subscriptions")
-          .select("plan:plans(display_name, type)")
-          .eq("user_id", user!.id)
-          .in("status", ["active", "trialing", "past_due"])
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        supabase
           .from("onboarding_progress")
-          .select("waiver_completed_at, availability_completed_at")
+          .select("waiver_completed_at")
           .eq("user_id", user!.id)
           .maybeSingle(),
       ]);
 
       const parsed = parseShipping(shipRes.data?.shipping_address ?? null);
-      // Fallback to users.name split if shipping didn't capture names
       if (!parsed.firstName && userRes.data?.name) {
         const parts = userRes.data.name.split(/\s+/);
         parsed.firstName = parts[0] ?? "";
         parsed.lastName = parts.slice(1).join(" ");
       }
-      const plan = (subRes.data?.plan as any) ?? null;
       return {
         firstName: parsed.firstName,
         lastName: parsed.lastName,
         email: userRes.data?.email ?? user!.email ?? "",
         phone: parsed.phone,
         address: parsed.address,
-        planName: plan?.display_name ?? "",
-        planType: plan?.type ?? null,
         waiverCompletedAt: progRes.data?.waiver_completed_at ?? null,
-        availabilityCompletedAt: progRes.data?.availability_completed_at ?? null,
       };
     },
   });
 
-  // Hydrate local checkbox state from DB
   useEffect(() => {
     if (!data) return;
     setWaiverChecked(!!data.waiverCompletedAt);
-    setAvailabilityChecked(!!data.availabilityCompletedAt);
-  }, [data]);
-
-  // Step 2 is hidden for mornings-only plans
-  const showAvailability = useMemo(() => {
-    if (!data) return false;
-    if (data.planType === "mornings") return false;
-    if (data.planName.trim().toLowerCase() === MORNINGS_ONLY_PLAN_NAME.toLowerCase()) return false;
-    return true;
   }, [data]);
 
   const waiverUrl = useMemo(() => {
@@ -139,18 +101,6 @@ function OnboardingSetupPage() {
       "entry.130104280": data.address,
     });
     return `${WAIVER_FORM_BASE}&${p.toString()}`;
-  }, [data]);
-
-  const availabilityUrl = useMemo(() => {
-    if (!data) return AVAILABILITY_FORM_BASE;
-    const p = new URLSearchParams({
-      usp: "pp_url",
-      "entry.1975683142": data.firstName,
-      "entry.428619510": data.lastName,
-      "entry.370732051": data.email,
-      "entry.817882999": data.planName,
-    });
-    return `${AVAILABILITY_FORM_BASE}&${p.toString()}`;
   }, [data]);
 
   async function toggleWaiver(checked: boolean) {
@@ -173,37 +123,12 @@ function OnboardingSetupPage() {
     qc.invalidateQueries({ queryKey: ["onboarding-setup", user.id] });
   }
 
-  async function toggleAvailability(checked: boolean) {
-    if (!user) return;
-    setAvailabilityChecked(checked);
-    setSaving(true);
-    const { error } = await supabase.from("onboarding_progress").upsert(
-      {
-        user_id: user.id,
-        availability_completed_at: checked ? new Date().toISOString() : null,
-      },
-      { onConflict: "user_id" },
-    );
-    setSaving(false);
-    if (error) {
-      setAvailabilityChecked(!checked);
-      toast.error(error.message);
-      return;
-    }
-    qc.invalidateQueries({ queryKey: ["onboarding-setup", user.id] });
-  }
-
-  const requiredMet = waiverChecked && (!showAvailability || availabilityChecked);
-
   async function handleContinue() {
-    if (!user || !requiredMet) return;
+    if (!user || !waiverChecked) return;
     setContinuing(true);
     const { error } = await supabase
       .from("users")
-      .update({
-        onboarding_complete: true,
-        needs_slot_assignment: showAvailability,
-      })
+      .update({ onboarding_complete: true })
       .eq("id", user.id);
     if (error) {
       toast.error(error.message);
@@ -228,39 +153,67 @@ function OnboardingSetupPage() {
         <h1 className="font-display text-3xl sm:text-4xl text-foreground">
           Welcome to Pilates with Jon{data.firstName ? `, ${data.firstName}` : ""}!
         </h1>
-        <p className="mt-2 text-muted-foreground">Two quick steps before you start.</p>
+        <p className="mt-2 text-muted-foreground">One last step before you start.</p>
       </header>
 
-      <StepCard
-        n={1}
-        title="Sign your liability waiver"
-        body="We've pre-filled your info to save you time. Review and sign below — Form Publisher will email you a PDF copy when you're done. Then check the box."
-        iframeTitle="Liability Waiver"
-        src={waiverUrl}
-        checked={waiverChecked}
-        onCheckedChange={toggleWaiver}
-        checkboxLabel="I've completed the waiver."
-        saving={saving}
-      />
+      <section className="rounded-xl border border-border bg-card p-6 space-y-4">
+        <div className="flex items-start gap-4">
+          <div
+            className={cn(
+              "h-9 w-9 shrink-0 rounded-full inline-flex items-center justify-center font-display text-lg",
+              waiverChecked ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary",
+            )}
+          >
+            {waiverChecked ? <Check size={18} /> : 1}
+          </div>
+          <div className="flex-1">
+            <h2 className="font-display text-xl text-foreground">Sign your liability waiver</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              We've pre-filled your info to save you time. Review and sign below — Form Publisher will email you a PDF copy when you're done. Then check the box.
+            </p>
+          </div>
+        </div>
 
-      {showAvailability && (
-        <StepCard
-          n={2}
-          title="Set your availability"
-          body="Tell us what days and times work for you so we can match you to the right class slot. Then check the box."
-          iframeTitle="Availability Form"
-          src={availabilityUrl}
-          checked={availabilityChecked}
-          onCheckedChange={toggleAvailability}
-          checkboxLabel="I've completed the availability form."
-          saving={saving}
-        />
-      )}
+        <div className="rounded-lg overflow-hidden border border-border bg-background">
+          <iframe
+            src={waiverUrl}
+            title="Liability Waiver"
+            className="w-full block"
+            style={{ height: "70vh", minHeight: 520 }}
+            frameBorder={0}
+            marginHeight={0}
+            marginWidth={0}
+          >
+            Loading…
+          </iframe>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 pt-2 border-t border-border flex-wrap">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={waiverChecked}
+              onChange={(e) => toggleWaiver(e.target.checked)}
+              disabled={saving}
+              className="mt-1 h-4 w-4 rounded border-input"
+            />
+            <span className="text-sm text-foreground">I've completed the waiver.</span>
+          </label>
+          <a
+            href={waiverUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+          >
+            Open in new tab <ExternalLink size={12} />
+          </a>
+        </div>
+      </section>
 
       <div className="flex justify-center pt-2">
         <button
           onClick={handleContinue}
-          disabled={!requiredMet || continuing}
+          disabled={!waiverChecked || continuing}
           className={cn(
             "w-full sm:w-auto rounded-md bg-primary text-primary-foreground px-8 py-3 text-base font-medium hover:opacity-90 disabled:opacity-50 inline-flex items-center justify-center gap-2",
           )}
@@ -270,81 +223,5 @@ function OnboardingSetupPage() {
         </button>
       </div>
     </div>
-  );
-}
-
-function StepCard({
-  n,
-  title,
-  body,
-  iframeTitle,
-  src,
-  checked,
-  onCheckedChange,
-  checkboxLabel,
-  saving,
-}: {
-  n: number;
-  title: string;
-  body: string;
-  iframeTitle: string;
-  src: string;
-  checked: boolean;
-  onCheckedChange: (v: boolean) => void;
-  checkboxLabel: string;
-  saving: boolean;
-}) {
-  return (
-    <section className="rounded-xl border border-border bg-card p-6 space-y-4">
-      <div className="flex items-start gap-4">
-        <div
-          className={cn(
-            "h-9 w-9 shrink-0 rounded-full inline-flex items-center justify-center font-display text-lg",
-            checked ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary",
-          )}
-        >
-          {checked ? <Check size={18} /> : n}
-        </div>
-        <div className="flex-1">
-          <h2 className="font-display text-xl text-foreground">{title}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-        </div>
-      </div>
-
-      <div className="rounded-lg overflow-hidden border border-border bg-background">
-        <iframe
-          src={src}
-          title={iframeTitle}
-          className="w-full block"
-          style={{ height: "70vh", minHeight: 520 }}
-          frameBorder={0}
-          marginHeight={0}
-          marginWidth={0}
-        >
-          Loading…
-        </iframe>
-      </div>
-
-      <div className="flex items-center justify-between gap-3 pt-2 border-t border-border flex-wrap">
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={checked}
-            onChange={(e) => onCheckedChange(e.target.checked)}
-            disabled={saving}
-            className="mt-1 h-4 w-4 rounded border-input"
-          />
-          <span className="text-sm text-foreground">{checkboxLabel}</span>
-        </label>
-        <a
-          href={src}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-        >
-          Open in new tab <ExternalLink size={12} />
-        </a>
-      </div>
-    </section>
   );
 }
