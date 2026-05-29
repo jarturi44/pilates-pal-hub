@@ -952,10 +952,14 @@ export type Database = {
       }
       users: {
         Row: {
+          availability_notes: string | null
           camera_ack_at: string | null
           created_at: string
           email: string
           id: string
+          intake_completed_at: string | null
+          intake_paid_at: string | null
+          intake_stripe_session_id: string | null
           last_onboarding_reminder_at: string | null
           name: string | null
           needs_slot_assignment: boolean
@@ -964,10 +968,14 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
         }
         Insert: {
+          availability_notes?: string | null
           camera_ack_at?: string | null
           created_at?: string
           email: string
           id: string
+          intake_completed_at?: string | null
+          intake_paid_at?: string | null
+          intake_stripe_session_id?: string | null
           last_onboarding_reminder_at?: string | null
           name?: string | null
           needs_slot_assignment?: boolean
@@ -976,10 +984,14 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
         }
         Update: {
+          availability_notes?: string | null
           camera_ack_at?: string | null
           created_at?: string
           email?: string
           id?: string
+          intake_completed_at?: string | null
+          intake_paid_at?: string | null
+          intake_stripe_session_id?: string | null
           last_onboarding_reminder_at?: string | null
           name?: string | null
           needs_slot_assignment?: boolean
@@ -1171,8 +1183,8 @@ export type Database = {
     Enums: {
       app_role: "admin" | "client"
       fulfillment_status: "pending" | "shipped"
-      plan_type: "mornings" | "semi_private" | "private" | "combo"
-      session_type: "semi_private" | "private"
+      plan_type: "mornings" | "small_group" | "one_on_one" | "combo"
+      session_type: "small_group" | "one_on_one"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1302,8 +1314,8 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "client"],
       fulfillment_status: ["pending", "shipped"],
-      plan_type: ["mornings", "semi_private", "private", "combo"],
-      session_type: ["semi_private", "private"],
+      plan_type: ["mornings", "small_group", "one_on_one", "combo"],
+      session_type: ["small_group", "one_on_one"],
     },
   },
 } as const
