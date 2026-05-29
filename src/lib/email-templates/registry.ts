@@ -20,6 +20,7 @@ import { template as paymentRecovered } from './payment-recovered'
 import { template as subscriptionCanceled } from './subscription-canceled'
 import { template as commitmentEnding } from './commitment-ending'
 import { template as adminBroadcast } from './admin-broadcast'
+import { template as intakeFinishSignup } from './intake-finish-signup'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'equipment-shipped': equipmentShipped,
@@ -34,4 +35,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'subscription-canceled': subscriptionCanceled,
   'commitment-ending': commitmentEnding,
   'admin-broadcast': adminBroadcast,
+  'intake-finish-signup': intakeFinishSignup,
 }
