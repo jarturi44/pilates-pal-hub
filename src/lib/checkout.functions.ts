@@ -1,7 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { createCheckoutSessionOnServer, syncCheckoutSessionOnServer, createBillingPortalSessionOnServer, recoverSubscriptionByEmailOnServer } from "./checkout.server";
+import {
+  createCheckoutSessionOnServer,
+  syncCheckoutSessionOnServer,
+  createBillingPortalSessionOnServer,
+  recoverSubscriptionByEmailOnServer,
+  createIntakeCheckoutOnServer,
+  syncIntakeCheckoutOnServer,
+} from "./checkout.server";
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
