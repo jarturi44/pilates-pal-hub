@@ -194,3 +194,123 @@ function StatusBadge({ status }: { status?: string }) {
     : "bg-muted text-muted-foreground";
   return <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide", cls)}>{status}</span>;
 }
+
+type PendingIntake = {
+  id: string;
+  email: string;
+  name: string | null;
+  paid_at: string;
+  intake_completed_at: string | null;
+  resume_token: string;
+  resume_email_sent_at: string | null;
+};
+
+function PendingIntakesSection() {
+  const qc = useQueryClient();
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const { data: pending } = useQuery({
+    queryKey: ["admin-pending-intakes"],
+    queryFn: async (): Promise<PendingIntake[]> => {
+      const { data, error } = await supabase
+        .from("pending_intakes")
+        .select("id, email, name, paid_at, intake_completed_at, resume_token, resume_email_sent_at")
+        .is("claimed_by_user_id", null)
+        .order("paid_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as PendingIntake[];
+    },
+  });
+
+  if (!pending || pending.length === 0) return null;
+
+  async function markIntakeComplete(row: PendingIntake) {
+    setBusyId(row.id);
+    try {
+      const { error } = await supabase
+        .from("pending_intakes")
+        .update({ intake_completed_at: new Date().toISOString() })
+        .eq("id", row.id);
+      if (error) throw error;
+      toast.success("Marked intake complete.");
+      qc.invalidateQueries({ queryKey: ["admin-pending-intakes"] });
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function sendFinishSignupEmail(row: PendingIntake) {
+    setBusyId(row.id);
+    try {
+      await sendTransactionalEmail({
+        templateName: "intake-finish-signup",
+        recipientEmail: row.email,
+        idempotencyKey: `intake-finish-${row.id}-${row.resume_email_sent_at ? Date.now() : "first"}`,
+        templateData: { name: row.name ?? undefined, resumeToken: row.resume_token },
+      });
+      await supabase
+        .from("pending_intakes")
+        .update({ resume_email_sent_at: new Date().toISOString() })
+        .eq("id", row.id);
+      toast.success("Email sent.");
+      qc.invalidateQueries({ queryKey: ["admin-pending-intakes"] });
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <section className="mb-6 rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <AlertCircle size={14} className="text-amber-600" />
+        <h2 className="text-sm font-semibold text-foreground">
+          Paid intakes — awaiting account creation ({pending.length})
+        </h2>
+      </div>
+      <ul className="divide-y divide-amber-500/20">
+        {pending.map((p) => (
+          <li key={p.id} className="py-3 flex flex-wrap items-center gap-3">
+            <div className="flex-1 min-w-[200px]">
+              <div className="text-sm font-medium text-foreground">{p.name || p.email}</div>
+              <div className="text-xs text-muted-foreground">
+                {p.email} · paid {new Date(p.paid_at).toLocaleDateString()}
+                {p.intake_completed_at && (
+                  <span className="ml-2 inline-flex items-center gap-1 text-primary">
+                    <CheckCircle2 size={11} /> intake done
+                  </span>
+                )}
+                {p.resume_email_sent_at && (
+                  <span className="ml-2 text-muted-foreground">
+                    · reminder sent {new Date(p.resume_email_sent_at).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+            </div>
+            {!p.intake_completed_at && (
+              <button
+                onClick={() => markIntakeComplete(p)}
+                disabled={busyId === p.id}
+                className="text-xs rounded-md border border-border bg-background px-3 py-1.5 hover:bg-secondary disabled:opacity-50 inline-flex items-center gap-1.5"
+              >
+                {busyId === p.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
+                Mark intake complete
+              </button>
+            )}
+            <button
+              onClick={() => sendFinishSignupEmail(p)}
+              disabled={busyId === p.id}
+              className="text-xs rounded-md bg-primary text-primary-foreground px-3 py-1.5 hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5"
+            >
+              {busyId === p.id ? <Loader2 size={12} className="animate-spin" /> : <Mail size={12} />}
+              {p.resume_email_sent_at ? "Resend finish-setup email" : "Send finish-setup email"}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
