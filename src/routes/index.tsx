@@ -204,7 +204,7 @@ function Programs() {
               <span className="rounded-lg bg-primary-foreground/15 p-2">
                 <Video className="h-5 w-5" />
               </span>
-              <h3 className="font-display text-2xl">Virtual Sessions with Jon</h3>
+              <h3 className="font-display text-2xl">Live Sessions with me</h3>
               <span className="ml-auto text-xs uppercase tracking-wider bg-action text-action-foreground px-2 py-1 rounded">
                 Most popular
               </span>
@@ -212,30 +212,31 @@ function Programs() {
             <p className="mt-4 text-primary-foreground/85 leading-relaxed">
               30‑minute live sessions, 1–3 times a week —{" "}
               <span className="text-primary-foreground font-medium">one‑on‑one or small group</span>
-              , programmed for you after a virtual intake and evaluation with me.
+              . After a virtual intake and evaluation, I build you a program around your
+              body and whatever you're working on. We adjust as you grow.
             </p>
             <ul className="mt-6 space-y-3 text-sm">
               <Bullet light>
-                <strong className="font-semibold">Home equipment kit</strong> shipped to your door
+                <strong className="font-semibold">An equipment kit shipped to your door</strong>
                 <span className="inline-flex items-center gap-1 ml-2 text-primary-foreground/70">
-                  <Package className="h-3.5 w-3.5" /> over $100 value
+                  <Package className="h-3.5 w-3.5" /> over $100 value, yours to keep
                 </span>
               </Bullet>
               <Bullet light>
-                <strong className="font-semibold">Warm‑up & cool‑down videos</strong> to do
-                independently before and after each live session
+                <strong className="font-semibold">Warm‑up & cool‑down videos</strong> to do on
+                your own before and after each live session
               </Bullet>
               <Bullet light>
-                <strong className="font-semibold">Complimentary 10 Minute Mornings</strong> to keep
-                the habit going between sessions
+                <strong className="font-semibold">10 Minute Mornings on the house</strong> — to
+                keep the habit alive between our sessions
               </Bullet>
-              <Bullet light>Programs that adapt as your body changes</Bullet>
+              <Bullet light>A program that grows with you, not against you</Bullet>
             </ul>
             <Link
               to="/signup"
               className="mt-8 inline-flex items-center justify-center gap-2 rounded-md bg-action text-action-foreground px-5 py-3 text-sm font-semibold hover:opacity-90"
             >
-              Book your intake <ArrowRight className="h-4 w-4" />
+              Let's do this <ArrowRight className="h-4 w-4" />
             </Link>
           </article>
         </div>
@@ -261,21 +262,20 @@ function DemoVideo() {
       <div className="mx-auto max-w-5xl px-6 py-20">
         <div className="text-center max-w-2xl mx-auto">
           <p className="text-sm uppercase tracking-[0.18em] text-accent font-medium">
-            See it in action
+            Take a look around
           </p>
           <h2 className="font-display text-4xl md:text-5xl mt-4 text-foreground">
-            A quick tour of your home base.
+            Here's what your home base looks like.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Watch how clients track sessions, follow programs, and stay on rhythm between
-            our live workouts.
+            A quick walkthrough of where you'll track your sessions, follow your
+            program, and stay on rhythm between our live workouts.
           </p>
         </div>
         <div className="mt-10 relative aspect-video rounded-2xl border border-border bg-card overflow-hidden flex items-center justify-center">
-          {/* Reserved demo slot — drop in a screen recording when ready */}
           <div className="text-center text-muted-foreground p-8">
             <PlayCircle className="h-14 w-14 mx-auto text-primary/60" />
-            <p className="mt-3 text-sm">Walkthrough video coming soon</p>
+            <p className="mt-3 text-sm">Walkthrough video dropping soon</p>
           </div>
         </div>
       </div>
@@ -309,10 +309,10 @@ function Testimonials() {
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="text-center max-w-2xl mx-auto">
           <p className="text-sm uppercase tracking-[0.18em] text-accent font-medium">
-            From the studio
+            From the crew
           </p>
           <h2 className="font-display text-4xl md:text-5xl mt-4 text-foreground">
-            Words from clients.
+            Don't just take my word for it.
           </h2>
         </div>
         <div className="mt-12 grid md:grid-cols-3 gap-6">
