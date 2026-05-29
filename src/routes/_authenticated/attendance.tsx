@@ -19,7 +19,7 @@ type Slot = {
   id: string;
   day_of_week: number;
   time: string;
-  session_type: "private" | "semi_private";
+  session_type: "one_on_one" | "small_group";
   capacity: number;
 };
 
@@ -165,7 +165,7 @@ function SlotCard({ slot, sessionDate }: { slot: Slot; sessionDate: string }) {
   }
 
   const time = slot.time.slice(0, 5);
-  const label = `${DAYS[slot.day_of_week]} ${time} · ${slot.session_type === "private" ? "Private" : "Semi-Private"}`;
+  const label = `${DAYS[slot.day_of_week]} ${time} · ${slot.session_type === "one_on_one" ? "One-On-One" : "Small Group"}`;
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">

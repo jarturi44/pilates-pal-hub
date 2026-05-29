@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/slots")({
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-type Slot = { id: string; day_of_week: number; time: string; session_type: "private" | "semi_private"; capacity: number; active: boolean };
+type Slot = { id: string; day_of_week: number; time: string; session_type: "one_on_one" | "small_group"; capacity: number; active: boolean };
 type Assignment = { id: string; slot_id: string; user_id: string };
 type ClientLite = { id: string; name: string | null; email: string };
 
@@ -96,7 +96,7 @@ function SlotsPage() {
                         <div className="flex items-center justify-between gap-3 mb-2">
                           <div>
                             <div className="font-medium text-foreground">
-                              {s.time.slice(0, 5)} · {s.session_type === "private" ? "Private" : "Semi-Private"}
+                              {s.time.slice(0, 5)} · {s.session_type === "one_on_one" ? "One-On-One" : "Small Group"}
                               {!s.active && <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground">(inactive)</span>}
                             </div>
                             <div className="text-xs text-muted-foreground">
@@ -163,7 +163,7 @@ function CreateSlotDialog({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient();
   const [day, setDay] = useState(1);
   const [time, setTime] = useState("09:00");
-  const [type, setType] = useState<"private" | "semi_private">("private");
+  const [type, setType] = useState<"one_on_one" | "small_group">("one_on_one");
   const [capacity, setCapacity] = useState(1);
   const [busy, setBusy] = useState(false);
 
@@ -190,8 +190,8 @@ function CreateSlotDialog({ onClose }: { onClose: () => void }) {
         </Field>
         <Field label="Session type">
           <select value={type} onChange={(e) => setType(e.target.value as any)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
-            <option value="private">Private</option>
-            <option value="semi_private">Semi-Private</option>
+            <option value="one_on_one">One-On-One</option>
+            <option value="small_group">Small Group</option>
           </select>
         </Field>
         <Field label="Capacity">

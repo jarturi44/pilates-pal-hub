@@ -193,7 +193,7 @@ function ClientProfilePage() {
             <ul className="space-y-1.5">
               {mySlotsExpanded.map(({ csId, slot }: any) => (
                 <li key={csId} className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm">
-                  <span className="text-foreground">{DAYS[slot.day_of_week]} {slot.time.slice(0, 5)} · {slot.session_type === "private" ? "Private" : "Semi-Private"}</span>
+                  <span className="text-foreground">{DAYS[slot.day_of_week]} {slot.time.slice(0, 5)} · {slot.session_type === "one_on_one" ? "One-On-One" : "Small Group"}</span>
                   <button onClick={() => removeSlot(csId)} className="text-muted-foreground hover:text-destructive"><X size={14} /></button>
                 </li>
               ))}
@@ -423,7 +423,7 @@ function AssignSlotDialog({ clientId, clientEmail, clientName, slots, assigned, 
         <div className="max-h-80 overflow-y-auto divide-y divide-border rounded-md border border-border">
           {available.map((s: any) => (
             <div key={s.id} className="flex items-center justify-between p-3 text-sm">
-              <span className="text-foreground">{DAYS[s.day_of_week]} {s.time.slice(0,5)} · {s.session_type === "private" ? "Private" : "Semi-Private"}</span>
+              <span className="text-foreground">{DAYS[s.day_of_week]} {s.time.slice(0,5)} · {s.session_type === "one_on_one" ? "One-On-One" : "Small Group"}</span>
               <button onClick={() => assign(s)} disabled={busy === s.id}
                 className="rounded-md bg-primary text-primary-foreground px-2.5 py-1 text-xs disabled:opacity-50">Assign</button>
             </div>

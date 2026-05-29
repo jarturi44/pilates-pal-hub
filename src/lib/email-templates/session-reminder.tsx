@@ -24,5 +24,5 @@ export const template = {
   component: Email,
   subject: "See you tomorrow!",
   displayName: "Session reminder (24h)",
-  previewData: { name: "Sam", day: "Monday", time: "9:00 AM", sessionType: "Private" },
+  previewData: { name: "Sam", day: "Monday", time: "9:00 AM", sessionType: "One-On-One" },
 } satisfies TemplateEntry;

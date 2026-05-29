@@ -39,5 +39,5 @@ export const template = {
   component: Email,
   subject: "You're in! Here's how to get set up",
   displayName: "Subscription confirmed",
-  previewData: { name: "Sam", planName: "Semi-Private 2x/week", price: 320, commitmentEnd: "August 15, 2026" },
+  previewData: { name: "Sam", planName: "Small Group 2x/week", price: 320, commitmentEnd: "August 15, 2026" },
 } satisfies TemplateEntry;
