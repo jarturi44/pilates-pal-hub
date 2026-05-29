@@ -1,10 +1,12 @@
 import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PagePrimitives";
-import { Search, AlertCircle } from "lucide-react";
+import { Search, AlertCircle, Mail, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sendTransactionalEmail } from "@/lib/email/send";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/clients")({
   component: ClientsRoute,
@@ -93,6 +95,10 @@ function ClientsPage() {
   return (
     <>
       <PageHeader title="Clients" subtitle="Search, filter, and manage clients." />
+
+      <PendingIntakesSection />
+
+
 
       <div className="space-y-3 mb-4">
         <div className="relative">
