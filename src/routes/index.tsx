@@ -36,8 +36,8 @@ function Landing() {
   const { loading, session, role } = useAuth();
   if (loading) return <LoadingScreen />;
 
-  const primaryHref = session ? (role === "admin" ? "/dashboard" : "/home") : "/signup";
-  const primaryLabel = session ? "Go to your home" : "Start your practice";
+  const primaryHref = session ? (role === "admin" ? "/dashboard" : "/home") : "/get-started";
+  const primaryLabel = session ? "Go to your home" : "Book your intake";
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
@@ -79,7 +79,7 @@ function Nav({ session, role }: { session: boolean; role: string | null }) {
                 Sign in
               </Link>
               <Link
-                to="/signup"
+                to="/get-started"
                 className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
               >
                 Get started
@@ -236,7 +236,7 @@ function Programs() {
               Live sessions require a 3‑month minimum commitment — that's how long it takes to really feel the change.
             </p>
             <Link
-              to="/signup"
+              to="/get-started"
               className="mt-8 inline-flex items-center justify-center gap-2 rounded-md bg-action text-action-foreground px-5 py-3 text-sm font-semibold hover:opacity-90"
             >
               Let's do this <ArrowRight className="h-4 w-4" />
@@ -361,10 +361,10 @@ function Contact() {
             <Mail className="h-4 w-4" /> jon@pilateswithjon.com
           </a>
           <Link
-            to="/signup"
+            to="/get-started"
             className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground hover:bg-secondary"
           >
-            Create an account
+            Book your intake
           </Link>
         </div>
       </div>
@@ -382,7 +382,7 @@ function Footer() {
         </div>
         <div className="flex items-center gap-6">
           <Link to="/login" className="hover:text-foreground">Sign in</Link>
-          <Link to="/signup" className="hover:text-foreground">Get started</Link>
+          <Link to="/get-started" className="hover:text-foreground">Get started</Link>
         </div>
       </div>
     </footer>

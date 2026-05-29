@@ -1,82 +1,49 @@
-## New client journey
+## New flow
 
 ```
-Landing → Signup → Pay $60 intake session → "Thanks, Jon will reach out" page
-                                              ↓
-                          (Jon conducts intake live, then in admin:
-                           marks intake_complete + sets times/dates)
-                                              ↓
-Next login → Plan selector (3 cards, qty boxes) → Stripe checkout
-          → Sign waiver → Home
+Landing
+  → /get-started   (name + email + 3-month acknowledgement + "Pay $60")
+  → Stripe Checkout (mode=payment, customer_email locked)
+  → /onboarding/create-account?session_id=...   (email locked, set password)
+  → /onboarding   (already logged in, lands on "Thanks, Jon will reach out")
 ```
 
-## 1. Rename plan types (DB + code)
+After Jon marks intake complete in admin, any paid client who hasn't created an account yet gets a "finish setting up your account" email with a one-time resume link.
 
-Migration:
-- Add `'one_on_one'` and `'small_group'` to the `session_type` and `plan_type` enums
-- Update existing `plans` rows: `private → one_on_one`, `semi_private → small_group`
-- Update existing `slots.session_type` rows the same way
-- Drop old enum values
+## Database
 
-Code: search/replace `"private"` / `"semi_private"` / `"Private"` / `"Semi-Private"` across `src/**` (slots, attendance, admin UIs, labels).
+New table `pending_intakes`:
+- `email` (text, unique), `name` (text)
+- `stripe_session_id`, `stripe_payment_intent_id`, `amount_paid`
+- `paid_at`, `intake_completed_at`, `claimed_by_user_id`
+- `resume_token` (uuid), `resume_email_sent_at`
 
-## 2. New intake purchase step
+Created on Stripe success. When a user signs up with that email, `claimed_by_user_id` is set and the matching `users` row gets `intake_paid_at` (+ `intake_completed_at` if Jon already marked it complete on the pending_intakes row).
 
-DB migration: add to `users`:
-- `intake_paid_at timestamptz`
-- `intake_completed_at timestamptz`
-- `availability_notes text` (admin-only field — replaces the client availability form)
+## New / changed files
 
-New Stripe checkout product: $60 one-time (not subscription). Add `create-intake-checkout` flow — reuse `create-checkout` edge fn with a new `mode: "payment"` branch, or simpler: a new server fn `createIntakeCheckout` that creates a `mode=payment` Stripe session for $60, redirects back with `?intake=success`. On success, write `intake_paid_at`.
+- **New public route** `src/routes/get-started.tsx` — name/email form, 3-month acknowledgement copy (moved from `IntakePaymentStep`), "Pay $60" button.
+- **New public server fn** `src/lib/intake-public.functions.ts`:
+  - `createPublicIntakeCheckout({ name, email, returnUrl })` — no auth, creates Stripe `mode=payment` session with `customer_email`, name in metadata, success URL `/onboarding/create-account?session_id={CHECKOUT_SESSION_ID}`.
+  - `getIntakeSessionInfo({ sessionId })` — verifies Stripe session is paid, returns `{ email, name }`, upserts `pending_intakes` row.
+  - `claimIntakeForUser` — called after signup, links auth user ↔ pending_intakes, sets `users.intake_paid_at`.
+- **New public route** `src/routes/onboarding_.create-account.tsx` — reads `session_id`, fetches info, renders signup form with email locked and pre-filled name, calls `supabase.auth.signUp` then `claimIntakeForUser`, redirects to `/onboarding`.
+- **Landing page** (`src/routes/index.tsx`) — CTA buttons point to `/get-started` instead of `/signup`.
+- **Onboarding** (`src/routes/_authenticated/onboarding.tsx`) — remove `IntakePaymentStep` (now public). State machine for logged-in users starts at "Thanks, Jon will reach out" if `intake_paid_at && !intake_completed_at`. Plan picker + waiver steps unchanged.
+- **Auth gate** (`src/routes/_authenticated.tsx`) — unchanged logic; signup flow ensures `intake_paid_at` is already set when the account is created.
+- **Admin client list** (`src/routes/_authenticated/clients.tsx` + `clients.$clientId.tsx`) — show paid-but-unclaimed `pending_intakes` rows alongside real clients so Jon can mark their intake complete. Marking complete on an unclaimed row triggers the "finish setup" email.
+- **Resume email**: new transactional template `intake-finish-signup.tsx` with a link `/onboarding/create-account?resume=<token>`. The create-account route accepts either `session_id` or `resume` token.
 
-## 3. Rebuild `/onboarding` flow
+## Stripe webhook
 
-Replace the existing onboarding wizard with linear states based on user fields:
+`supabase/functions/stripe-webhook` — on `checkout.session.completed` for `mode=payment` with metadata `flow=intake`, upsert `pending_intakes` (idempotent). Belt-and-suspenders so the success-page server fn isn't the only writer.
 
-| User state | Shows |
-|---|---|
-| `!intake_paid_at` | "Pay for your intake session — $60" (shipping form + Stripe checkout for $60 one-time) |
-| `intake_paid_at && !intake_completed_at` | "Thanks! Jon will reach out to schedule your intake." (no further action) |
-| `intake_completed_at && !subscription` | Plan picker (see §4) |
-| `subscription && !waiver_signed` | Waiver step |
-| All done | redirect `/home` |
+## What I will NOT touch
 
-Availability step is **removed** from this flow entirely.
+- Existing plan picker, waiver step, slot/availability admin UI.
+- Existing subscription / past-due / suspended logic.
+- Branding, colors, copy outside `/get-started` and the new account-create page.
 
-## 4. New plan picker (3 categories + qty)
+## Open question (one)
 
-Three cards:
-- **10 Minute Mornings** — flat $X/mo, single "Select" button
-- **Small Group** — qty stepper (1–7 sessions/week), price = $Y × qty
-- **One-On-One** — qty stepper (1–7 sessions/week), price = $Z × qty
-
-Add to `plans` table: `category text` ('mornings' | 'small_group' | 'one_on_one'), `price_per_session numeric`. Migration seeds three "template" plans. Checkout multiplies qty × price_per_session and passes to Stripe as a custom price.
-
-## 5. Admin: intake management
-
-On `clients/$clientId`:
-- "Intake paid" badge if `intake_paid_at`
-- "Mark intake complete" button → sets `intake_completed_at` (unlocks plan picker for client)
-- New "Availability notes" textarea (saves to `users.availability_notes`)
-- Existing slot-assignment UI stays (admin assigns times after intake)
-
-## 6. `_authenticated` gate update
-
-`src/routes/_authenticated.tsx` redirect logic updated to route to `/onboarding` until all of: `intake_paid_at`, `intake_completed_at`, active subscription, signed waiver. Waiver becomes the last step before `/home`.
-
-## 7. Files touched
-
-- migrations: enum rename, `users` columns, `plans` columns + seeded rows
-- `supabase/functions/create-checkout/index.ts` — support one-time intake mode + dynamic qty pricing
-- `src/routes/_authenticated/onboarding.tsx` — major rewrite (remove availability step, add intake-paid state, new plan picker)
-- `src/routes/_authenticated/onboarding_.setup.tsx` — strip availability step, leave waiver only
-- `src/routes/_authenticated.tsx` — new gate logic
-- `src/routes/_authenticated/clients.$clientId.tsx` — admin intake controls + availability notes
-- `src/routes/_authenticated/slots.tsx`, `attendance.tsx`, `dashboard.tsx`, etc. — rename labels
-- `src/routes/_authenticated/settings.tsx` — any plan/session labels
-- `src/lib/checkout.server.ts` / `checkout.functions.ts` — qty param
-
-## Open questions to confirm before I start
-
-1. **Plan pricing** — what's the $/session for Small Group and One-On-One, and $/mo for 10 Min Mornings? (I'll seed the new plan rows.)
-2. **What happens to existing test users mid-flow?** I'll set `intake_paid_at` + `intake_completed_at` to `now()` for anyone who already has a subscription, so they don't get bounced back to the intake step.
+For the resume email to actually send, I need the transactional email infra scaffolded (it isn't yet — only auth emails exist). I'll set that up as part of this work. Confirm or say "skip the email for now and I'll wire it later".
