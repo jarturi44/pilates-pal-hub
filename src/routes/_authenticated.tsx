@@ -35,7 +35,7 @@ function AuthLayout() {
           .maybeSingle(),
         supabase
           .from("users")
-          .select("onboarding_complete")
+          .select("onboarding_complete, intake_paid_at, intake_completed_at")
           .eq("id", user!.id)
           .maybeSingle(),
       ]);
@@ -64,6 +64,8 @@ function AuthLayout() {
       return {
         activeSub,
         onboardingComplete: !!userRes.data?.onboarding_complete,
+        intakePaid: !!userRes.data?.intake_paid_at,
+        intakeCompleted: !!userRes.data?.intake_completed_at,
       };
     },
   });
@@ -77,8 +79,9 @@ function AuthLayout() {
   }
 
   if (role === "client" && gate && !isOnOnboarding) {
-    if (!gate.activeSub) {
-      return <Navigate to="/onboarding" search={{ step: "plan" }} />;
+    // Must complete: intake payment → intake session → plan → waiver
+    if (!gate.intakePaid || !gate.intakeCompleted || !gate.activeSub) {
+      return <Navigate to="/onboarding" />;
     }
     if (!gate.onboardingComplete) {
       return <Navigate to="/onboarding/setup" />;

@@ -59,8 +59,8 @@ export async function createCheckoutSessionOnServer(args: {
 
   const checkoutPlan = plan as PlanForCheckout;
   const origin = args.returnUrl || "";
-  const successUrl = `${origin}/onboarding?step=success&plan_id=${encodeURIComponent(args.planId)}&session_id={CHECKOUT_SESSION_ID}`;
-  const cancelUrl = `${origin}/onboarding?step=commitment&plan_id=${encodeURIComponent(args.planId)}`;
+  const successUrl = `${origin}/onboarding?step=sub_success&plan_id=${encodeURIComponent(args.planId)}&session_id={CHECKOUT_SESSION_ID}`;
+  const cancelUrl = `${origin}/onboarding`;
   const body = new URLSearchParams({
     mode: "subscription",
     success_url: successUrl,
