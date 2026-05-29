@@ -68,3 +68,33 @@ export const recoverSubscription = createServerFn({ method: "POST" })
       userId: context.userId,
     });
   });
+export const createIntakeCheckout = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    returnUrl: z.string().url(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) throw new Error("Payments are not configured yet.");
+    return createIntakeCheckoutOnServer({
+      stripeSecretKey,
+      userId: context.userId,
+      userEmail: typeof context.claims.email === "string" ? context.claims.email : undefined,
+      returnUrl: data.returnUrl,
+    });
+  });
+
+export const syncIntakeCheckout = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    sessionId: z.string().min(8).max(255),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) throw new Error("Payments are not configured yet.");
+    return syncIntakeCheckoutOnServer({
+      stripeSecretKey,
+      userId: context.userId,
+      sessionId: data.sessionId,
+    });
+  });
