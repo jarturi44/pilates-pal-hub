@@ -33,7 +33,6 @@ import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedBroadcastsRouteImport } from './routes/_authenticated/broadcasts'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
-import { Route as ApiPublicKeepAliveRouteImport } from './routes/api/public/keep-alive'
 import { Route as AuthenticatedOnboardingSetupRouteImport } from './routes/_authenticated/onboarding_.setup'
 import { Route as AuthenticatedClientsClientIdRouteImport } from './routes/_authenticated/clients.$clientId'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -165,11 +164,6 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicKeepAliveRoute = ApiPublicKeepAliveRouteImport.update({
-  id: '/api/public/keep-alive',
-  path: '/api/public/keep-alive',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedOnboardingSetupRoute =
   AuthenticatedOnboardingSetupRouteImport.update({
     id: '/onboarding_/setup',
@@ -250,7 +244,6 @@ export interface FileRoutesByFullPath {
   '/onboarding/create-account': typeof OnboardingCreateAccountRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/onboarding/setup': typeof AuthenticatedOnboardingSetupRoute
-  '/api/public/keep-alive': typeof ApiPublicKeepAliveRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/billing-jobs': typeof ApiPublicHooksBillingJobsRoute
   '/api/public/hooks/send-mornings-reminders': typeof ApiPublicHooksSendMorningsRemindersRoute
@@ -285,7 +278,6 @@ export interface FileRoutesByTo {
   '/onboarding/create-account': typeof OnboardingCreateAccountRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/onboarding/setup': typeof AuthenticatedOnboardingSetupRoute
-  '/api/public/keep-alive': typeof ApiPublicKeepAliveRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/billing-jobs': typeof ApiPublicHooksBillingJobsRoute
   '/api/public/hooks/send-mornings-reminders': typeof ApiPublicHooksSendMorningsRemindersRoute
@@ -322,7 +314,6 @@ export interface FileRoutesById {
   '/onboarding_/create-account': typeof OnboardingCreateAccountRoute
   '/_authenticated/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/_authenticated/onboarding_/setup': typeof AuthenticatedOnboardingSetupRoute
-  '/api/public/keep-alive': typeof ApiPublicKeepAliveRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/billing-jobs': typeof ApiPublicHooksBillingJobsRoute
   '/api/public/hooks/send-mornings-reminders': typeof ApiPublicHooksSendMorningsRemindersRoute
@@ -359,7 +350,6 @@ export interface FileRouteTypes {
     | '/onboarding/create-account'
     | '/clients/$clientId'
     | '/onboarding/setup'
-    | '/api/public/keep-alive'
     | '/lovable/email/suppression'
     | '/api/public/hooks/billing-jobs'
     | '/api/public/hooks/send-mornings-reminders'
@@ -394,7 +384,6 @@ export interface FileRouteTypes {
     | '/onboarding/create-account'
     | '/clients/$clientId'
     | '/onboarding/setup'
-    | '/api/public/keep-alive'
     | '/lovable/email/suppression'
     | '/api/public/hooks/billing-jobs'
     | '/api/public/hooks/send-mornings-reminders'
@@ -430,7 +419,6 @@ export interface FileRouteTypes {
     | '/onboarding_/create-account'
     | '/_authenticated/clients/$clientId'
     | '/_authenticated/onboarding_/setup'
-    | '/api/public/keep-alive'
     | '/lovable/email/suppression'
     | '/api/public/hooks/billing-jobs'
     | '/api/public/hooks/send-mornings-reminders'
@@ -452,7 +440,6 @@ export interface RootRouteChildren {
   WaiverRoute: typeof WaiverRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   OnboardingCreateAccountRoute: typeof OnboardingCreateAccountRoute
-  ApiPublicKeepAliveRoute: typeof ApiPublicKeepAliveRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksBillingJobsRoute: typeof ApiPublicHooksBillingJobsRoute
   ApiPublicHooksSendMorningsRemindersRoute: typeof ApiPublicHooksSendMorningsRemindersRoute
@@ -633,13 +620,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/keep-alive': {
-      id: '/api/public/keep-alive'
-      path: '/api/public/keep-alive'
-      fullPath: '/api/public/keep-alive'
-      preLoaderRoute: typeof ApiPublicKeepAliveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/onboarding_/setup': {
       id: '/_authenticated/onboarding_/setup'
       path: '/onboarding/setup'
@@ -766,7 +746,6 @@ const rootRouteChildren: RootRouteChildren = {
   WaiverRoute: WaiverRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   OnboardingCreateAccountRoute: OnboardingCreateAccountRoute,
-  ApiPublicKeepAliveRoute: ApiPublicKeepAliveRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksBillingJobsRoute: ApiPublicHooksBillingJobsRoute,
   ApiPublicHooksSendMorningsRemindersRoute:
