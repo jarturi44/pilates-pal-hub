@@ -340,6 +340,12 @@ export const Route = createFileRoute('/api/public/hooks/stripe-webhook')({
           // Dedupe row was inserted up-front; nothing to do here.
         } catch (err: any) {
           console.error('[stripe-webhook] handler error', { type: event.type, id: event.id, error: err?.message });
+          // Drop the dedupe row so Stripe's automatic retry will be re-processed.
+          await supabase
+            .from('webhook_events')
+            .delete()
+            .eq('provider', 'stripe')
+            .eq('event_id', event.id);
           // Return 500 so Stripe retries.
           return Response.json({ error: err?.message ?? 'Handler failed' }, { status: 500 });
         }
