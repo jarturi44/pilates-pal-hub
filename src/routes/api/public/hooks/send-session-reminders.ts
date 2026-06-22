@@ -90,7 +90,7 @@ export const Route = createFileRoute('/api/public/hooks/send-session-reminders')
             type: 'session_reminder',
             title: 'Session tomorrow',
             message: `${day} at ${time} — ${sessionType}`,
-            link: '/home',
+            link: '/portal',
           });
 
           await enqueueTemplateEmail(supabase, {

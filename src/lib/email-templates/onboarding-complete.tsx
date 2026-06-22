@@ -13,7 +13,7 @@ const Email = ({ name, isLiveSession }: Props) => (
       <Text style={text}>You're all set up and ready to go. Your intake form is done, your waiver is signed, and you're officially part of the crew.</Text>
       {isLiveSession && <Text style={text}>I'll be reaching out soon to get you set up in your recurring slot.</Text>}
       <Text style={text}>In the meantime, poke around the app and get comfortable. I got you!</Text>
-      <Button href={`${APP_BASE_URL}/home`} style={button}>Open my account</Button>
+      <Button href={`${APP_BASE_URL}/portal`} style={button}>Open my account</Button>
       <Text style={footer}>— Jon</Text>
     </Container></Body></Html>
 );

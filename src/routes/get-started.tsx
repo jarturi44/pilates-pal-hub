@@ -30,7 +30,7 @@ function GetStartedPage() {
   // If somehow already logged in, send them to their app
   useEffect(() => {
     if (session) {
-      navigate({ to: role === "admin" ? "/dashboard" : "/home", replace: true });
+      navigate({ to: role === "admin" ? "/dashboard" : "/portal", replace: true });
     }
   }, [session, role, navigate]);
 
