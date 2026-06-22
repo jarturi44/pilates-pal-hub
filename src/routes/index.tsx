@@ -18,8 +18,8 @@ export const Route = createFileRoute("/")({
       { title: "Pilates with Jon — Get out of pain and feel strong again" },
       {
         name: "description",
-        content:
-          "Virtual pilates with Jon. One-on-one and small group sessions, 10 Minute Mornings, and a home equipment kit — built around you.",
+          content:
+            "Live virtual pilates with Jon. One-on-one and small group sessions built around your body — to get you out of pain, stronger, and more flexible.",
       },
       { property: "og:title", content: "Pilates with Jon" },
       {
