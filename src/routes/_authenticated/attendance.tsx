@@ -37,7 +37,7 @@ function AttendancePage() {
   const { role } = useAuth();
   const [date, setDate] = useState(todayStr());
 
-  if (role !== "admin") return <Navigate to="/home" />;
+  if (role !== "admin") return <Navigate to="/portal" />;
 
   const minDate = useMemo(() => {
     const d = new Date(); d.setDate(d.getDate() - 30);

@@ -104,7 +104,7 @@ function OnboardingPage() {
   // Once onboarding_complete is true, push them to /home
   useEffect(() => {
     if (userState?.onboarding_complete) {
-      navigate({ to: "/home", replace: true });
+      navigate({ to: "/portal", replace: true });
     }
   }, [userState?.onboarding_complete, navigate]);
 

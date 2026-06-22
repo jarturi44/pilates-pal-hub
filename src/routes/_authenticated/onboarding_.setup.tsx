@@ -136,7 +136,7 @@ function OnboardingSetupPage() {
       return;
     }
     qc.invalidateQueries({ queryKey: ["onboarding-gate"] });
-    navigate({ to: "/home" });
+    navigate({ to: "/portal" });
   }
 
   if (isLoading || !data) {

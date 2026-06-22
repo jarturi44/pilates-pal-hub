@@ -18,7 +18,7 @@ type Audience = { type: "all_active" | "plan_type" | "slot"; value?: string; lab
 function BroadcastsPage() {
   const { role, user } = useAuth();
   const qc = useQueryClient();
-  if (role !== "admin") return <Navigate to="/home" />;
+  if (role !== "admin") return <Navigate to="/portal" />;
 
   const [audType, setAudType] = useState<Audience["type"]>("all_active");
   const [audValue, setAudValue] = useState<string>("");
