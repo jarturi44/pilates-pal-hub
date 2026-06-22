@@ -101,9 +101,9 @@ function Hero({ primaryHref, primaryLabel }: { primaryHref: string; primaryLabel
             Pilates with Jon
           </p>
           <h1 className="font-display text-5xl md:text-6xl leading-[1.05] mt-4 text-foreground">
-            Let's get you <em className="italic text-primary">stronger</em>, more{" "}
-            <em className="italic text-primary">flexible</em>, and a whole lot more{" "}
-            <em className="italic text-primary">pain‑free</em>.
+            Let's get you <em className="italic text-primary">out of pain</em> — then{" "}
+            <em className="italic text-primary">stronger</em>,{" "}
+            <em className="italic text-primary">more flexible</em>, and more free in your body.
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-lg">
             Hey, I'm Jon. I teach live pilates online — one‑on‑one and in small groups —
