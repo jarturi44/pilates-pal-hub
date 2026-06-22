@@ -15,17 +15,17 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Pilates with Jon — Stronger, more flexible, more pain-free" },
+      { title: "Pilates with Jon — Get out of pain and feel strong again" },
       {
         name: "description",
-        content:
-          "Virtual pilates with Jon. One-on-one and small group sessions, 10 Minute Mornings, and a home equipment kit — built around you.",
+          content:
+            "Live virtual pilates with Jon. One-on-one and small group sessions built around your body — to get you out of pain, stronger, and more flexible.",
       },
       { property: "og:title", content: "Pilates with Jon" },
       {
         property: "og:description",
         content:
-          "Making you stronger, more flexible, and more pain-free. Virtual pilates programs built around you.",
+          "Get out of pain, get stronger, and feel more flexible. Virtual pilates programs built around your body.",
       },
     ],
   }),
@@ -101,9 +101,9 @@ function Hero({ primaryHref, primaryLabel }: { primaryHref: string; primaryLabel
             Pilates with Jon
           </p>
           <h1 className="font-display text-5xl md:text-6xl leading-[1.05] mt-4 text-foreground">
-            Let's get you <em className="italic text-primary">stronger</em>, more{" "}
-            <em className="italic text-primary">flexible</em>, and a whole lot more{" "}
-            <em className="italic text-primary">pain‑free</em>.
+            Let's get you <em className="italic text-primary">out of pain</em> — then{" "}
+            <em className="italic text-primary">stronger</em>,{" "}
+            <em className="italic text-primary">more flexible</em>, and more free in your body.
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-lg">
             Hey, I'm Jon. I teach live pilates online — one‑on‑one and in small groups —
