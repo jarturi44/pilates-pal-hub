@@ -172,12 +172,16 @@ export const Route = createFileRoute('/api/public/hooks/stripe-webhook')({
         const supabase: any = createClient(supabaseUrl, serviceKey);
 
         // Idempotency: skip events we've already processed.
-        const { data: seen } = await supabase
-          .from('notification_dedupe')
-          .select('id')
-          .eq('dedupe_key', `stripe-evt-${event.id}`)
-          .maybeSingle();
-        if (seen) return Response.json({ ok: true, duplicate: true });
+        const { error: dedupeErr } = await supabase
+          .from('webhook_events')
+          .insert({ provider: 'stripe', event_id: event.id });
+        if (dedupeErr) {
+          // Unique violation = already processed. Anything else = log and proceed.
+          if ((dedupeErr as any).code === '23505') {
+            return Response.json({ ok: true, duplicate: true });
+          }
+          console.warn('[stripe-webhook] dedupe insert error', dedupeErr);
+        }
 
         try {
           switch (event.type) {
