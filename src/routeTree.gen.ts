@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WelcomeBackRouteImport } from './routes/welcome-back'
 import { Route as WaiverRouteImport } from './routes/waiver'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as SignupRouteImport } from './routes/signup'
@@ -43,6 +44,11 @@ import { Route as ApiPublicHooksSendOnboardingRemindersRouteImport } from './rou
 import { Route as ApiPublicHooksSendMorningsRemindersRouteImport } from './routes/api/public/hooks/send-mornings-reminders'
 import { Route as ApiPublicHooksBillingJobsRouteImport } from './routes/api/public/hooks/billing-jobs'
 
+const WelcomeBackRoute = WelcomeBackRouteImport.update({
+  id: '/welcome-back',
+  path: '/welcome-back',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WaiverRoute = WaiverRouteImport.update({
   id: '/waiver',
   path: '/waiver',
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/waiver': typeof WaiverRoute
+  '/welcome-back': typeof WelcomeBackRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/broadcasts': typeof AuthenticatedBroadcastsRoute
   '/clients': typeof AuthenticatedClientsRouteWithChildren
@@ -261,6 +268,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/waiver': typeof WaiverRoute
+  '/welcome-back': typeof WelcomeBackRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/broadcasts': typeof AuthenticatedBroadcastsRoute
   '/clients': typeof AuthenticatedClientsRouteWithChildren
@@ -297,6 +305,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/waiver': typeof WaiverRoute
+  '/welcome-back': typeof WelcomeBackRoute
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
   '/_authenticated/broadcasts': typeof AuthenticatedBroadcastsRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRouteWithChildren
@@ -333,6 +342,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/unsubscribe'
     | '/waiver'
+    | '/welcome-back'
     | '/attendance'
     | '/broadcasts'
     | '/clients'
@@ -367,6 +377,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/unsubscribe'
     | '/waiver'
+    | '/welcome-back'
     | '/attendance'
     | '/broadcasts'
     | '/clients'
@@ -402,6 +413,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/unsubscribe'
     | '/waiver'
+    | '/welcome-back'
     | '/_authenticated/attendance'
     | '/_authenticated/broadcasts'
     | '/_authenticated/clients'
@@ -438,6 +450,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   WaiverRoute: typeof WaiverRoute
+  WelcomeBackRoute: typeof WelcomeBackRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   OnboardingCreateAccountRoute: typeof OnboardingCreateAccountRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -452,6 +465,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/welcome-back': {
+      id: '/welcome-back'
+      path: '/welcome-back'
+      fullPath: '/welcome-back'
+      preLoaderRoute: typeof WelcomeBackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/waiver': {
       id: '/waiver'
       path: '/waiver'
@@ -744,6 +764,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   WaiverRoute: WaiverRoute,
+  WelcomeBackRoute: WelcomeBackRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   OnboardingCreateAccountRoute: OnboardingCreateAccountRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
