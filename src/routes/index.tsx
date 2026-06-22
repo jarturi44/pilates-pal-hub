@@ -25,7 +25,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "Making you stronger, more flexible, and more pain-free. Virtual pilates programs built around you.",
+          "Get out of pain, get stronger, and feel more flexible. Virtual pilates programs built around your body.",
       },
     ],
   }),
