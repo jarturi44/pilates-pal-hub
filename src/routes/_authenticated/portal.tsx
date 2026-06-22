@@ -8,7 +8,7 @@ import { Check, Play, X, Video as VideoIcon, Calendar as CalendarIcon } from "lu
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/home")({
+export const Route = createFileRoute("/_authenticated/portal")({
   component: HomePage,
 });
 
