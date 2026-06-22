@@ -337,10 +337,7 @@ export const Route = createFileRoute('/api/public/hooks/stripe-webhook')({
               break;
           }
 
-          // Mark event processed (best-effort).
-          await supabase.from('notification_dedupe').insert({
-            dedupe_key: `stripe-evt-${event.id}`,
-          });
+          // Dedupe row was inserted up-front; nothing to do here.
         } catch (err: any) {
           console.error('[stripe-webhook] handler error', { type: event.type, id: event.id, error: err?.message });
           // Return 500 so Stripe retries.
