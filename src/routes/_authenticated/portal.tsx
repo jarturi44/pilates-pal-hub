@@ -207,54 +207,58 @@ function HomePage() {
         )}
       </section>
 
-      <section className="mb-12">
-        <h3 className="font-display text-2xl text-foreground">
-          Your Live Sessions{planName ? ` — ${planName}` : ""}
-        </h3>
-        <p className="mt-1 text-sm text-muted-foreground mb-5">
-          This week's sessions for your {planName ?? "current"} plan. Warm up before each one.
-        </p>
-        {upcoming.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-            No upcoming sessions this week.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {upcoming.map((s) => {
-              const d = new Date(s.scheduled_at);
-              const dayLabel = d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
-              const timeLabel = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-              return (
-                <div key={s.id} className="rounded-xl border border-border bg-card p-5 flex flex-col">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground mb-2">
-                    <CalendarIcon size={12} />
-                    <span>{dayLabel}</span>
+      {!isMorningsOnly && (
+        <section className="mb-12">
+          <h3 className="font-display text-2xl text-foreground">
+            Your Live Sessions{planName ? ` — ${planName}` : ""}
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground mb-5">
+            This week's sessions for your {planName ?? "current"} plan. Warm up before each one.
+          </p>
+          {upcoming.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+              No upcoming sessions this week.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {upcoming.map((s) => {
+                const d = new Date(s.scheduled_at);
+                const dayLabel = d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+                const timeLabel = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+                return (
+                  <div key={s.id} className="rounded-xl border border-border bg-card p-5 flex flex-col">
+                    <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground mb-2">
+                      <CalendarIcon size={12} />
+                      <span>{dayLabel}</span>
+                    </div>
+                    <div className="font-medium text-foreground">{s.title}</div>
+                    <div className="text-sm text-muted-foreground mt-0.5">
+                      {timeLabel}{s.duration_minutes ? ` · ${s.duration_minutes} min` : ""}
+                    </div>
+                    <button
+                      onClick={() => joinSession(s)}
+                      disabled={!s.meeting_url}
+                      className="mt-4 w-full rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
+                    >
+                      Join Live Session
+                    </button>
                   </div>
-                  <div className="font-medium text-foreground">{s.title}</div>
-                  <div className="text-sm text-muted-foreground mt-0.5">
-                    {timeLabel}{s.duration_minutes ? ` · ${s.duration_minutes} min` : ""}
-                  </div>
-                  <button
-                    onClick={() => joinSession(s)}
-                    disabled={!s.meeting_url}
-                    className="mt-4 w-full rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
-                  >
-                    Join Live Session
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
 
-      <VideoSection
-        heading="Warm-Up & Exercise Library"
-        intro="One library, organized by exercise. Pick the warm-up that matches what we're working on."
-        videos={library}
-        completedIds={completedVideoIds}
-        onOpen={setOpenVideo}
-      />
+      {!isMorningsOnly && (
+        <VideoSection
+          heading="Warm-Up & Exercise Library"
+          intro="One library, organized by exercise. Pick the warm-up that matches what we're working on."
+          videos={library}
+          completedIds={completedVideoIds}
+          onOpen={setOpenVideo}
+        />
+      )}
 
       <section className="mb-12">
         <h3 className="font-display text-2xl text-foreground">10 Minute Mornings</h3>
