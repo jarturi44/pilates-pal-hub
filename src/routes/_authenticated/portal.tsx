@@ -65,7 +65,7 @@ function HomePage() {
   const qc = useQueryClient();
   const [openVideo, setOpenVideo] = useState<VideoRow | null>(null);
 
-  const { data: sub } = useQuery({
+  const { data: sub, isLoading: isSubLoading } = useQuery({
     enabled: !!userId,
     queryKey: ["program-sub", userId],
     queryFn: async () => {
@@ -181,7 +181,20 @@ function HomePage() {
   }
 
   const planName = sub?.plan?.display_name ?? null;
-  const isMorningsOnly = sub?.plan?.type === "mornings";
+  const planType = sub?.plan?.type?.toLowerCase() ?? "";
+  const isMorningsOnly = planType === "mornings" || planName?.toLowerCase().includes("10 minute mornings") === true;
+  const showFullPortal = !!sub?.plan && !isMorningsOnly;
+
+  if (!userId || isSubLoading) {
+    return (
+      <>
+        <PageHeader title="Welcome back" subtitle="Making you Stronger, more Flexible, and more Pain Free" />
+        <section className="rounded-2xl border border-border bg-gradient-to-br from-card to-muted/40 p-8 md:p-12 text-center mb-10">
+          <div className="text-sm text-muted-foreground">Loading your portal…</div>
+        </section>
+      </>
+    );
+  }
 
   return (
     <>
@@ -207,7 +220,7 @@ function HomePage() {
         )}
       </section>
 
-      {!isMorningsOnly && (
+      {showFullPortal && (
         <section className="mb-12">
           <h3 className="font-display text-2xl text-foreground">
             Your Live Sessions{planName ? ` — ${planName}` : ""}
@@ -250,7 +263,7 @@ function HomePage() {
         </section>
       )}
 
-      {!isMorningsOnly && (
+      {showFullPortal && (
         <VideoSection
           heading="Warm-Up & Exercise Library"
           intro="One library, organized by exercise. Pick the warm-up that matches what we're working on."
@@ -325,7 +338,7 @@ function HomePage() {
         )}
       </section>
 
-      {!isMorningsOnly && (
+      {showFullPortal && (
         <VideoSection
           heading="Cool Down"
           intro="Wind down after your session. Pick a cool down to stretch and recover."
