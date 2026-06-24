@@ -181,6 +181,7 @@ function HomePage() {
   }
 
   const planName = sub?.plan?.display_name ?? null;
+  const isMorningsOnly = sub?.plan?.type === "mornings";
 
   return (
     <>
