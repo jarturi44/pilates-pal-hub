@@ -325,13 +325,15 @@ function HomePage() {
         )}
       </section>
 
-      <VideoSection
-        heading="Cool Down"
-        intro="Wind down after your session. Pick a cool down to stretch and recover."
-        videos={cooldowns}
-        completedIds={completedVideoIds}
-        onOpen={setOpenVideo}
-      />
+      {!isMorningsOnly && (
+        <VideoSection
+          heading="Cool Down"
+          intro="Wind down after your session. Pick a cool down to stretch and recover."
+          videos={cooldowns}
+          completedIds={completedVideoIds}
+          onOpen={setOpenVideo}
+        />
+      )}
 
 
 
