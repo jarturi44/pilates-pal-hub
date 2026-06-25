@@ -27,6 +27,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedMigrateRouteImport } from './routes/_authenticated/migrate'
 import { Route as AuthenticatedFulfillmentRouteImport } from './routes/_authenticated/fulfillment'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedContentRouteImport } from './routes/_authenticated/content'
@@ -136,6 +137,11 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedMigrateRoute = AuthenticatedMigrateRouteImport.update({
+  id: '/migrate',
+  path: '/migrate',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedFulfillmentRoute =
   AuthenticatedFulfillmentRouteImport.update({
     id: '/fulfillment',
@@ -253,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/content': typeof AuthenticatedContentRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fulfillment': typeof AuthenticatedFulfillmentRoute
+  '/migrate': typeof AuthenticatedMigrateRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/portal': typeof AuthenticatedPortalRoute
@@ -290,6 +297,7 @@ export interface FileRoutesByTo {
   '/content': typeof AuthenticatedContentRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fulfillment': typeof AuthenticatedFulfillmentRoute
+  '/migrate': typeof AuthenticatedMigrateRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/portal': typeof AuthenticatedPortalRoute
@@ -329,6 +337,7 @@ export interface FileRoutesById {
   '/_authenticated/content': typeof AuthenticatedContentRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/fulfillment': typeof AuthenticatedFulfillmentRoute
+  '/_authenticated/migrate': typeof AuthenticatedMigrateRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
@@ -368,6 +377,7 @@ export interface FileRouteTypes {
     | '/content'
     | '/dashboard'
     | '/fulfillment'
+    | '/migrate'
     | '/notifications'
     | '/onboarding'
     | '/portal'
@@ -405,6 +415,7 @@ export interface FileRouteTypes {
     | '/content'
     | '/dashboard'
     | '/fulfillment'
+    | '/migrate'
     | '/notifications'
     | '/onboarding'
     | '/portal'
@@ -443,6 +454,7 @@ export interface FileRouteTypes {
     | '/_authenticated/content'
     | '/_authenticated/dashboard'
     | '/_authenticated/fulfillment'
+    | '/_authenticated/migrate'
     | '/_authenticated/notifications'
     | '/_authenticated/onboarding'
     | '/_authenticated/portal'
@@ -618,6 +630,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/migrate': {
+      id: '/_authenticated/migrate'
+      path: '/migrate'
+      fullPath: '/migrate'
+      preLoaderRoute: typeof AuthenticatedMigrateRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/fulfillment': {
       id: '/_authenticated/fulfillment'
       path: '/fulfillment'
@@ -765,6 +784,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedContentRoute: typeof AuthenticatedContentRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFulfillmentRoute: typeof AuthenticatedFulfillmentRoute
+  AuthenticatedMigrateRoute: typeof AuthenticatedMigrateRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
@@ -782,6 +802,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedContentRoute: AuthenticatedContentRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFulfillmentRoute: AuthenticatedFulfillmentRoute,
+  AuthenticatedMigrateRoute: AuthenticatedMigrateRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
