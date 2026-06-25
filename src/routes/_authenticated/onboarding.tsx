@@ -30,8 +30,14 @@ type Plan = {
   display_name: string;
   sessions_per_week: number | null;
   price_per_month: number;
-  
   includes_mornings: boolean;
+};
+
+type ActiveSub = {
+  id: string;
+  status: string;
+  plan_id: string;
+  plan: { type: Plan["type"] } | null;
 };
 
 type UserState = {
