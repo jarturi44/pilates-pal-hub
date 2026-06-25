@@ -300,7 +300,7 @@ function HomePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {mornings.slice(0, 2).map((v) => {
+            {mornings.map((v) => {
               const done = completedVideoIds.has(v.id);
               return (
                 <div key={v.id} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
