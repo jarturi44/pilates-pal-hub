@@ -28,6 +28,7 @@ function WelcomeBackPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
   const [busy, setBusy] = useState(false);
 
   // If somehow already logged in, send them straight to onboarding
@@ -39,7 +40,7 @@ function WelcomeBackPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!acknowledged) return;
+    if (!acknowledged || !cameraReady) return;
     setBusy(true);
     try {
       const normalizedEmail = email.trim().toLowerCase();
@@ -94,14 +95,21 @@ function WelcomeBackPage() {
         </p>
 
         <section className="mt-8 rounded-xl border border-border bg-card p-6 space-y-4">
-          <h2 className="font-display text-2xl text-foreground">A quick reminder</h2>
-          <p className="text-sm text-foreground/90 leading-relaxed">
-            All live‑session plans (One‑On‑One and Small Group) require a{" "}
-            <strong className="text-foreground">3‑month minimum commitment</strong>, billed monthly. You
-            can't cancel from within the app before the 3‑month period ends, and cancellation must be
-            submitted in writing at least 3 weeks before the end of your billing cycle to avoid being
-            charged for the following month.
-          </p>
+          <h2 className="font-display text-2xl text-foreground">A couple of reminders</h2>
+          <div className="space-y-3 text-sm text-foreground/90 leading-relaxed">
+            <p>
+              <strong className="text-foreground">3‑month minimum commitment.</strong> All live‑session
+              plans (One‑On‑One and Small Group) are billed monthly with a 3‑month minimum. You can't
+              cancel from within the app before the 3 months end, and cancellation must be submitted in
+              writing at least 3 weeks before the end of your billing cycle to avoid being charged for
+              the following month.
+            </p>
+            <p>
+              <strong className="text-foreground">Camera & lighting setup.</strong> For live sessions, I
+              need to see your full body clearly. Please make sure you have a spot with good lighting
+              and enough room for your camera (phone, tablet, or laptop) to capture you head‑to‑toe.
+            </p>
+          </div>
         </section>
 
         <form onSubmit={onSubmit} className="mt-6 rounded-xl border border-border bg-card p-6 space-y-4">
@@ -146,8 +154,20 @@ function WelcomeBackPage() {
             </span>
           </label>
 
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox" checked={cameraReady}
+              onChange={(e) => setCameraReady(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-border accent-primary"
+            />
+            <span className="text-sm text-foreground">
+              I have a workout space with good lighting and room for my camera to capture my full body
+              head‑to‑toe.
+            </span>
+          </label>
+
           <button
-            type="submit" disabled={busy || !acknowledged || !name || !email || password.length < 8}
+            type="submit" disabled={busy || !acknowledged || !cameraReady || !name || !email || password.length < 8}
             className="mt-2 w-full sm:w-auto rounded-md bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-50 inline-flex items-center justify-center gap-2"
           >
             {busy && <Loader2 size={14} className="animate-spin" />}
