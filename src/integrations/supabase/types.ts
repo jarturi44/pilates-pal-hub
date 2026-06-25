@@ -328,28 +328,49 @@ export type Database = {
       }
       equipment_fulfillment: {
         Row: {
+          city: string | null
           created_at: string
+          first_name: string | null
           id: string
+          last_name: string | null
+          phone: string | null
           shipped_at: string | null
           shipping_address: string | null
+          state: string | null
           status: Database["public"]["Enums"]["fulfillment_status"]
+          street: string | null
           user_id: string
+          zip: string | null
         }
         Insert: {
+          city?: string | null
           created_at?: string
+          first_name?: string | null
           id?: string
+          last_name?: string | null
+          phone?: string | null
           shipped_at?: string | null
           shipping_address?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["fulfillment_status"]
+          street?: string | null
           user_id: string
+          zip?: string | null
         }
         Update: {
+          city?: string | null
           created_at?: string
+          first_name?: string | null
           id?: string
+          last_name?: string | null
+          phone?: string | null
           shipped_at?: string | null
           shipping_address?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["fulfillment_status"]
+          street?: string | null
           user_id?: string
+          zip?: string | null
         }
         Relationships: []
       }
@@ -561,6 +582,7 @@ export type Database = {
         Row: {
           availability_completed_at: string | null
           created_at: string
+          shipping_completed_at: string | null
           updated_at: string
           user_id: string
           waiver_completed_at: string | null
@@ -568,6 +590,7 @@ export type Database = {
         Insert: {
           availability_completed_at?: string | null
           created_at?: string
+          shipping_completed_at?: string | null
           updated_at?: string
           user_id: string
           waiver_completed_at?: string | null
@@ -575,6 +598,7 @@ export type Database = {
         Update: {
           availability_completed_at?: string | null
           created_at?: string
+          shipping_completed_at?: string | null
           updated_at?: string
           user_id?: string
           waiver_completed_at?: string | null
@@ -595,6 +619,7 @@ export type Database = {
           paid_at: string
           resume_email_sent_at: string | null
           resume_token: string
+          stripe_customer_id: string | null
           stripe_payment_intent_id: string | null
           stripe_session_id: string
           updated_at: string
@@ -612,6 +637,7 @@ export type Database = {
           paid_at?: string
           resume_email_sent_at?: string | null
           resume_token?: string
+          stripe_customer_id?: string | null
           stripe_payment_intent_id?: string | null
           stripe_session_id: string
           updated_at?: string
@@ -629,6 +655,7 @@ export type Database = {
           paid_at?: string
           resume_email_sent_at?: string | null
           resume_token?: string
+          stripe_customer_id?: string | null
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string
           updated_at?: string
@@ -1020,6 +1047,7 @@ export type Database = {
           onboarding_complete: boolean
           onboarding_reminder_count: number
           role: Database["public"]["Enums"]["app_role"]
+          stripe_customer_id: string | null
         }
         Insert: {
           availability_notes?: string | null
@@ -1036,6 +1064,7 @@ export type Database = {
           onboarding_complete?: boolean
           onboarding_reminder_count?: number
           role?: Database["public"]["Enums"]["app_role"]
+          stripe_customer_id?: string | null
         }
         Update: {
           availability_notes?: string | null
@@ -1052,6 +1081,7 @@ export type Database = {
           onboarding_complete?: boolean
           onboarding_reminder_count?: number
           role?: Database["public"]["Enums"]["app_role"]
+          stripe_customer_id?: string | null
         }
         Relationships: []
       }

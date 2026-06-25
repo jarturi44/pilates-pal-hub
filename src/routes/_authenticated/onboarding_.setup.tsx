@@ -60,7 +60,11 @@ function OnboardingSetupPage() {
     queryFn: async (): Promise<SetupData> => {
       const [userRes, shipRes, progRes] = await Promise.all([
         supabase.from("users").select("name, email").eq("id", user!.id).maybeSingle(),
-        supabase.from("equipment_fulfillment").select("shipping_address").eq("user_id", user!.id).maybeSingle(),
+        supabase
+          .from("equipment_fulfillment")
+          .select("first_name, last_name, phone, street, city, state, zip, shipping_address")
+          .eq("user_id", user!.id)
+          .maybeSingle(),
         supabase
           .from("onboarding_progress")
           .select("waiver_completed_at")
@@ -68,18 +72,20 @@ function OnboardingSetupPage() {
           .maybeSingle(),
       ]);
 
-      const parsed = parseShipping(shipRes.data?.shipping_address ?? null);
-      if (!parsed.firstName && userRes.data?.name) {
-        const parts = userRes.data.name.split(/\s+/);
-        parsed.firstName = parts[0] ?? "";
-        parsed.lastName = parts.slice(1).join(" ");
-      }
+      const ef = shipRes.data;
+      const nameParts = (userRes.data?.name ?? "").split(/\s+/);
+      const firstName = ef?.first_name ?? nameParts[0] ?? "";
+      const lastName = ef?.last_name ?? nameParts.slice(1).join(" ") ?? "";
+      const address = ef?.street
+        ? `${ef.street}, ${ef.city ?? ""}, ${ef.state ?? ""} ${ef.zip ?? ""}`.replace(/\s+,/g, ",").trim()
+        : ef?.shipping_address ?? "";
+
       return {
-        firstName: parsed.firstName,
-        lastName: parsed.lastName,
+        firstName,
+        lastName,
         email: userRes.data?.email ?? user!.email ?? "",
-        phone: parsed.phone,
-        address: parsed.address,
+        phone: ef?.phone ?? "",
+        address,
         waiverCompletedAt: progRes.data?.waiver_completed_at ?? null,
       };
     },

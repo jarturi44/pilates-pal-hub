@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 type StripeCheckoutSession = {
   id: string;
   url?: string;
+  customer?: string | { id?: string } | null;
   customer_email?: string | null;
   customer_details?: { email?: string | null; name?: string | null } | null;
   payment_status?: string;
@@ -37,6 +38,8 @@ export async function createPublicIntakeCheckoutOnServer(args: {
     success_url: `${origin}/onboarding/create-account?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/get-started`,
     customer_email: args.email,
+    customer_creation: "always",
+    "payment_intent_data[setup_future_usage]": "off_session",
     "metadata[flow]": "intake",
     "metadata[purpose]": "intake_session",
     "metadata[name]": args.name,
@@ -80,6 +83,7 @@ export async function getIntakeSessionInfoOnServer(args: {
   const name = session.customer_details?.name || session.metadata?.name || "";
   if (!email) throw new Error("Stripe session is missing an email.");
   const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null;
+  const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id ?? null;
 
   // Idempotent upsert keyed on stripe_session_id
   await supabaseAdmin
@@ -90,6 +94,7 @@ export async function getIntakeSessionInfoOnServer(args: {
         name,
         stripe_session_id: session.id,
         stripe_payment_intent_id: paymentIntentId,
+        stripe_customer_id: customerId,
         amount_paid: session.amount_total ?? 6000,
       },
       { onConflict: "stripe_session_id" },
@@ -133,7 +138,7 @@ export async function claimIntakeForUserOnServer(args: {
   // Find the pending_intakes row
   let pendingRowQuery = supabaseAdmin
     .from("pending_intakes")
-    .select("id, email, stripe_session_id, intake_completed_at")
+    .select("id, email, stripe_session_id, stripe_customer_id, intake_completed_at")
     .limit(1);
   if (args.sessionId) {
     pendingRowQuery = pendingRowQuery.eq("stripe_session_id", args.sessionId);
@@ -149,13 +154,16 @@ export async function claimIntakeForUserOnServer(args: {
     throw new Error("Email doesn't match the original payment.");
   }
 
-  // If a sessionId was provided, verify with Stripe one more time.
+  // If a sessionId was provided, verify with Stripe one more time and re-capture the customer.
+  let stripeCustomerId: string | null = pending.stripe_customer_id ?? null;
   if (args.sessionId) {
     const session = await stripeFetch<StripeCheckoutSession>(
       args.stripeSecretKey,
       `/checkout/sessions/${encodeURIComponent(args.sessionId)}`,
     );
     if (session.payment_status !== "paid") throw new Error("Payment not complete.");
+    const sessionCustomer = typeof session.customer === "string" ? session.customer : session.customer?.id ?? null;
+    if (sessionCustomer) stripeCustomerId = sessionCustomer;
   }
 
   // Find the auth user by email (admin)
@@ -170,6 +178,7 @@ export async function claimIntakeForUserOnServer(args: {
     .update({
       intake_paid_at: new Date().toISOString(),
       intake_stripe_session_id: pending.stripe_session_id,
+      ...(stripeCustomerId ? { stripe_customer_id: stripeCustomerId } : {}),
       ...(pending.intake_completed_at ? { intake_completed_at: pending.intake_completed_at } : {}),
     })
     .eq("id", authUser.id);

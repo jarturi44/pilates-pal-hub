@@ -8,9 +8,10 @@ import {
   createCheckoutSession,
   createIntakeCheckout,
   syncIntakeCheckout,
+  subscribeWithSavedCard,
 } from "@/lib/checkout.functions";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, Sparkles, Minus, Plus, ArrowRight } from "lucide-react";
+import { CheckCircle2, Loader2, Sparkles, Minus, Plus, ArrowRight, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Search = { intake?: string; session_id?: string };
@@ -29,8 +30,14 @@ type Plan = {
   display_name: string;
   sessions_per_week: number | null;
   price_per_month: number;
-  
   includes_mornings: boolean;
+};
+
+type ActiveSub = {
+  id: string;
+  status: string;
+  plan_id: string;
+  plan: { type: Plan["type"] } | null;
 };
 
 type UserState = {
@@ -48,6 +55,7 @@ function OnboardingPage() {
   const intakeCheckout = useServerFn(createIntakeCheckout);
   const intakeSync = useServerFn(syncIntakeCheckout);
   const planCheckout = useServerFn(createCheckoutSession);
+  const subscribeSaved = useServerFn(subscribeWithSavedCard);
 
   const { data: userState, refetch: refetchUser } = useQuery({
     queryKey: ["onboarding-user-state", user?.id],
@@ -69,14 +77,27 @@ function OnboardingPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("subscriptions")
-        .select("id, status")
+        .select("id, status, plan_id, plan:plans(type)")
         .eq("user_id", user!.id)
         .in("status", ["active", "trialing", "past_due"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data as ActiveSub | null;
+    },
+  });
+
+  const { data: shippingDone, refetch: refetchShipping } = useQuery({
+    queryKey: ["onboarding-shipping", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("onboarding_progress")
+        .select("shipping_completed_at")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return !!data?.shipping_completed_at;
     },
   });
 
@@ -117,10 +138,14 @@ function OnboardingPage() {
   }
 
   // Determine current step
+  const planType = activeSub?.plan?.type ?? null;
+  const planNeedsEquipment = planType === "small_group" || planType === "one_on_one" || planType === "combo";
+
   const needsIntakePayment = !userState.intake_paid_at;
   const awaitingIntakeSession = !!userState.intake_paid_at && !userState.intake_completed_at;
   const needsPlan = !!userState.intake_completed_at && !activeSub;
-  const needsWaiver = !!activeSub && !userState.onboarding_complete;
+  const needsShipping = !!activeSub && planNeedsEquipment && !shippingDone;
+  const needsWaiver = !!activeSub && !needsShipping && !userState.onboarding_complete;
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -129,7 +154,8 @@ function OnboardingPage() {
           needsIntakePayment ? 1 :
           awaitingIntakeSession ? 2 :
           needsPlan ? 3 :
-          needsWaiver ? 4 : 4
+          needsShipping ? 4 :
+          5
         }
       />
 
@@ -156,19 +182,37 @@ function OnboardingPage() {
         <PlanPickerStep
           onChoose={async (planId) => {
             try {
-              const { url } = await planCheckout({ data: { planId, returnUrl: window.location.origin } });
-              if (window.top && window.top !== window.self) {
-                (window.top as Window).location.href = url;
-              } else {
-                window.location.href = url;
+              // Try to charge the saved card from the intake payment.
+              const res = await subscribeSaved({ data: { planId } });
+              if (res.requiresCheckout) {
+                // Fallback: send to Stripe Checkout if no saved card on file.
+                const { url } = await planCheckout({ data: { planId, returnUrl: window.location.origin } });
+                if (window.top && window.top !== window.self) {
+                  (window.top as Window).location.href = url;
+                } else {
+                  window.location.href = url;
+                }
+                return;
               }
+              toast.success("You're enrolled! Let's get your equipment shipped.");
+              await refetchSub();
+              qc.invalidateQueries({ queryKey: ["onboarding-gate"] });
             } catch (err) {
-              toast.error((err as Error).message || "Couldn't start checkout");
+              toast.error((err as Error).message || "Couldn't start your plan");
             }
           }}
           onSubscribed={async () => {
             await refetchSub();
             qc.invalidateQueries({ queryKey: ["onboarding-gate"] });
+          }}
+        />
+      )}
+
+      {needsShipping && (
+        <ShippingStep
+          userId={user!.id}
+          onSaved={async () => {
+            await refetchShipping();
           }}
         />
       )}
@@ -185,7 +229,7 @@ function OnboardingPage() {
 /* -------------------- Step components -------------------- */
 
 function StepProgress({ current }: { current: number }) {
-  const steps = ["Intake payment", "Intake session", "Choose plan", "Sign waiver"];
+  const steps = ["Intake payment", "Intake session", "Choose plan", "Shipping info", "Sign waiver"];
   return (
     <ol className="flex items-center gap-2 mb-10 text-xs text-muted-foreground">
       {steps.map((label, i) => {
@@ -287,7 +331,7 @@ function AwaitingIntakeStep({ onRefresh }: { onRefresh: () => void }) {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 2 of 4</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 2 of 5</p>
         <h1 className="font-display text-4xl text-foreground mt-2">You're booked! 🎉</h1>
       </header>
 
@@ -366,7 +410,7 @@ function PlanPickerStep({
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 3 of 4</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 3 of 5</p>
         <h1 className="font-display text-4xl text-foreground mt-2">Choose your plan</h1>
         <p className="mt-2 text-muted-foreground">Pick what we discussed in your intake. You can change this later.</p>
       </header>
@@ -519,7 +563,7 @@ function ProceedToWaiverStep({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 4 of 4</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 5 of 5</p>
         <h1 className="font-display text-4xl text-foreground mt-2">One last thing — your waiver.</h1>
         <p className="mt-2 text-muted-foreground">Sign the liability waiver to unlock your home page.</p>
       </header>
@@ -530,5 +574,157 @@ function ProceedToWaiverStep({ onContinue }: { onContinue: () => void }) {
         Continue to waiver <ArrowRight size={14} />
       </button>
     </div>
+  );
+}
+
+function ShippingStep({ userId, onSaved }: { userId: string; onSaved: () => Promise<void> }) {
+  const [form, setForm] = useState({
+    first_name: "",
+    last_name: "",
+    phone: "",
+    street: "",
+    city: "",
+    state: "",
+    zip: "",
+  });
+  const [loaded, setLoaded] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const [efRes, uRes] = await Promise.all([
+        supabase
+          .from("equipment_fulfillment")
+          .select("first_name, last_name, phone, street, city, state, zip")
+          .eq("user_id", userId)
+          .maybeSingle(),
+        supabase.from("users").select("name").eq("id", userId).maybeSingle(),
+      ]);
+      const ef = efRes.data;
+      const nameParts = (uRes.data?.name ?? "").split(/\s+/);
+      setForm((f) => ({
+        first_name: ef?.first_name ?? nameParts[0] ?? f.first_name,
+        last_name: ef?.last_name ?? nameParts.slice(1).join(" ") ?? f.last_name,
+        phone: ef?.phone ?? f.phone,
+        street: ef?.street ?? f.street,
+        city: ef?.city ?? f.city,
+        state: ef?.state ?? f.state,
+        zip: ef?.zip ?? f.zip,
+      }));
+      setLoaded(true);
+    })();
+  }, [userId]);
+
+  function update<K extends keyof typeof form>(k: K, v: string) {
+    setForm((f) => ({ ...f, [k]: v }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+    const required: (keyof typeof form)[] = ["first_name", "last_name", "phone", "street", "city", "state", "zip"];
+    for (const k of required) {
+      if (!form[k].trim()) {
+        toast.error("Please fill in every field.");
+        return;
+      }
+    }
+    setBusy(true);
+    try {
+      const composed = `${form.first_name} ${form.last_name}\nPhone: ${form.phone}\n${form.street}\n${form.city}, ${form.state} ${form.zip}`;
+      const { error: efErr } = await supabase
+        .from("equipment_fulfillment")
+        .upsert(
+          {
+            user_id: userId,
+            first_name: form.first_name,
+            last_name: form.last_name,
+            phone: form.phone,
+            street: form.street,
+            city: form.city,
+            state: form.state,
+            zip: form.zip,
+            shipping_address: composed,
+          },
+          { onConflict: "user_id" },
+        );
+      if (efErr) throw efErr;
+      const { error: opErr } = await supabase
+        .from("onboarding_progress")
+        .upsert(
+          { user_id: userId, shipping_completed_at: new Date().toISOString() },
+          { onConflict: "user_id" },
+        );
+      if (opErr) throw opErr;
+      toast.success("Shipping info saved. We'll get your equipment out shortly.");
+      await onSaved();
+    } catch (err) {
+      toast.error((err as Error).message || "Couldn't save shipping info");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <header>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 4 of 5</p>
+        <h1 className="font-display text-4xl text-foreground mt-2">Where should we ship your equipment?</h1>
+        <p className="mt-2 text-muted-foreground">
+          Your plan includes a starter equipment kit. Enter the address you'd like it shipped to.
+        </p>
+      </header>
+
+      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+        <div className="flex items-center gap-2 text-sm text-foreground">
+          <Truck size={16} className="text-primary" />
+          <span className="font-medium">Shipping address</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Field label="First name" value={form.first_name} onChange={(v) => update("first_name", v)} disabled={!loaded || busy} />
+          <Field label="Last name" value={form.last_name} onChange={(v) => update("last_name", v)} disabled={!loaded || busy} />
+        </div>
+        <Field label="Phone" value={form.phone} onChange={(v) => update("phone", v)} disabled={!loaded || busy} type="tel" />
+        <Field label="Street address" value={form.street} onChange={(v) => update("street", v)} disabled={!loaded || busy} />
+        <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
+          <div className="col-span-2 sm:col-span-3">
+            <Field label="City" value={form.city} onChange={(v) => update("city", v)} disabled={!loaded || busy} />
+          </div>
+          <div className="col-span-1 sm:col-span-1">
+            <Field label="State" value={form.state} onChange={(v) => update("state", v)} disabled={!loaded || busy} />
+          </div>
+          <div className="col-span-1 sm:col-span-2">
+            <Field label="ZIP" value={form.zip} onChange={(v) => update("zip", v)} disabled={!loaded || busy} />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={busy || !loaded}
+          className="mt-2 w-full sm:w-auto rounded-md bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+        >
+          {busy && <Loader2 size={14} className="animate-spin" />}
+          Save and continue <ArrowRight size={14} />
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function Field({
+  label, value, onChange, disabled, type = "text",
+}: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean; type?: string }) {
+  return (
+    <label className="block">
+      <span className="block text-xs text-muted-foreground mb-1">{label}</span>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+      />
+    </label>
   );
 }

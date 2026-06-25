@@ -250,6 +250,8 @@ export async function createIntakeCheckoutOnServer(args: {
     mode: "payment",
     success_url: `${origin}/onboarding?intake=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/onboarding`,
+    customer_creation: "always",
+    "payment_intent_data[setup_future_usage]": "off_session",
     "metadata[user_id]": args.userId,
     "metadata[purpose]": "intake_session",
     "line_items[0][quantity]": "1",
@@ -289,13 +291,132 @@ export async function syncIntakeCheckoutOnServer(args: {
   if (session.payment_status !== "paid") {
     return { paid: false };
   }
+  const customerId = asId(session.customer);
   const { error } = await supabaseAdmin
     .from("users")
     .update({
       intake_paid_at: new Date().toISOString(),
       intake_stripe_session_id: session.id,
+      ...(customerId ? { stripe_customer_id: customerId } : {}),
     })
     .eq("id", args.userId);
   if (error) throw error;
   return { paid: true };
+}
+
+/**
+ * Charge the user's saved card (from intake checkout) for the chosen plan,
+ * creating a subscription server-side. Returns { requiresCheckout: true } if
+ * no saved payment method is available so the caller can fall back to Stripe Checkout.
+ */
+export async function subscribeWithSavedCardOnServer(args: {
+  stripeSecretKey: string;
+  userId: string;
+  planId: string;
+}) {
+  const { data: plan, error: planErr } = await supabaseAdmin
+    .from("plans")
+    .select("id, display_name, price_per_month, stripe_price_id")
+    .eq("id", args.planId)
+    .maybeSingle();
+  if (planErr) throw planErr;
+  if (!plan) throw new Error("Invalid plan");
+  const checkoutPlan = plan as PlanForCheckout;
+
+  const { data: user, error: userErr } = await supabaseAdmin
+    .from("users")
+    .select("stripe_customer_id, email")
+    .eq("id", args.userId)
+    .maybeSingle();
+  if (userErr) throw userErr;
+  let customerId = user?.stripe_customer_id ?? null;
+
+  // Fallback: look up by email if missing
+  if (!customerId && user?.email) {
+    const customers = await stripeFetch<StripeListResponse<StripeCustomer>>(
+      args.stripeSecretKey,
+      `/customers?email=${encodeURIComponent(user.email)}&limit=1`,
+    );
+    customerId = customers.data[0]?.id ?? null;
+    if (customerId) {
+      await supabaseAdmin.from("users").update({ stripe_customer_id: customerId }).eq("id", args.userId);
+    }
+  }
+
+  if (!customerId) return { requiresCheckout: true as const };
+
+  // Get the most recent saved card
+  const pms = await stripeFetch<StripeListResponse<{ id: string }>>(
+    args.stripeSecretKey,
+    `/customers/${encodeURIComponent(customerId)}/payment_methods?type=card&limit=1`,
+  );
+  const paymentMethodId = pms.data[0]?.id;
+  if (!paymentMethodId) return { requiresCheckout: true as const };
+
+  // Build subscription create payload
+  const subBody = new URLSearchParams({
+    customer: customerId,
+    default_payment_method: paymentMethodId,
+    "metadata[user_id]": args.userId,
+    "metadata[plan_id]": args.planId,
+    "expand[]": "latest_invoice.payment_intent",
+  });
+
+  if (!args.stripeSecretKey.startsWith("sk_test_") && checkoutPlan.stripe_price_id) {
+    subBody.set("items[0][price]", checkoutPlan.stripe_price_id);
+  } else {
+    // Inline price: need a product
+    const product = await stripeFetch<{ id: string }>(args.stripeSecretKey, "/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ name: checkoutPlan.display_name ?? "Pilates with Jon membership" }),
+    });
+    const price = await stripeFetch<{ id: string }>(args.stripeSecretKey, "/prices", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        currency: "usd",
+        unit_amount: String(Math.round(Number(checkoutPlan.price_per_month) * 100)),
+        "recurring[interval]": "month",
+        product: product.id,
+      }),
+    });
+    subBody.set("items[0][price]", price.id);
+  }
+
+  type CreatedSub = StripeSubscription & { latest_invoice?: { payment_intent?: { status?: string; client_secret?: string } | null } | null };
+  const newSub = await stripeFetch<CreatedSub>(args.stripeSecretKey, "/subscriptions", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: subBody,
+  });
+
+  const start = new Date((newSub.start_date ?? Math.floor(Date.now() / 1000)) * 1000);
+  const commitmentEnd = new Date(start);
+  commitmentEnd.setMonth(commitmentEnd.getMonth() + 3);
+  const periodEndSeconds = newSub.current_period_end ?? Math.floor(Date.now() / 1000);
+
+  const { data, error } = await supabaseAdmin
+    .from("subscriptions")
+    .upsert(
+      {
+        user_id: args.userId,
+        plan_id: args.planId,
+        stripe_subscription_id: newSub.id,
+        stripe_customer_id: customerId,
+        status: newSub.status ?? "active",
+        start_date: start.toISOString(),
+        commitment_end_date: commitmentEnd.toISOString(),
+        current_period_end: new Date(periodEndSeconds * 1000).toISOString(),
+        cancel_at_period_end: !!newSub.cancel_at_period_end,
+        past_due_since: null,
+        access_suspended: false,
+      },
+      { onConflict: "stripe_subscription_id" },
+    )
+    .select("*, plan:plans(*)")
+    .maybeSingle();
+  if (error) throw error;
+
+  return { requiresCheckout: false as const, subscription: data };
 }
