@@ -29,7 +29,7 @@ type Plan = {
   display_name: string;
   sessions_per_week: number | null;
   price_per_month: number;
-  stripe_price_id: string | null;
+  
   includes_mornings: boolean;
 };
 
@@ -323,7 +323,9 @@ function PlanPickerStep({
     queryKey: ["plans"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("plans").select("*").order("sessions_per_week", { ascending: true });
+        .from("plans")
+        .select("id, type, sessions_per_week, price_per_month, includes_mornings, display_name, created_at")
+        .order("sessions_per_week", { ascending: true });
       if (error) throw error;
       return data as Plan[];
     },

@@ -1230,6 +1230,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_studio_admin_email: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1254,6 +1255,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      set_studio_admin_email: { Args: { _email: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "client"
