@@ -140,6 +140,9 @@ function WelcomeBackPage() {
               autoComplete="new-password"
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
+            <p className="mt-1 text-xs text-muted-foreground">At least 8 characters.</p>
+          </div>
+
           <label className="flex items-start gap-3 cursor-pointer pt-2">
             <input
               type="checkbox" checked={acknowledged}
