@@ -21,7 +21,9 @@ function generateToken(): string {
 export const Route = createFileRoute('/api/public/hooks/send-mornings-reminders')({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const unauth = verifyCronSecret(request);
+        if (unauth) return unauth;
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
         if (!supabaseUrl || !serviceKey) {
