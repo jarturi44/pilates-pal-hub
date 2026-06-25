@@ -40,7 +40,7 @@ function WelcomeBackPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!acknowledged) return;
+    if (!acknowledged || !cameraReady) return;
     setBusy(true);
     try {
       const normalizedEmail = email.trim().toLowerCase();
