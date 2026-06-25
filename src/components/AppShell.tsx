@@ -20,6 +20,7 @@ const clientNav = [
 const adminNav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/clients", label: "Clients", icon: Users },
+  { to: "/migrate", label: "Migrate", icon: UserPlus },
   { to: "/slots", label: "Slots", icon: Clock },
   { to: "/attendance", label: "Attendance", icon: ClipboardCheck },
   { to: "/content", label: "Content", icon: Film },
