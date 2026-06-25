@@ -2,7 +2,7 @@ import { useState, useEffect, type ReactNode } from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   Home, Calendar, LineChart, Bell, User as UserIcon,
-  LayoutDashboard, Users, Clock, Film, Settings, Menu, X, LogOut, Package, ClipboardCheck, Megaphone,
+  LayoutDashboard, Users, Clock, Film, Settings, Menu, X, LogOut, Package, ClipboardCheck, Megaphone, UserPlus,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,7 @@ const clientNav = [
 const adminNav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/clients", label: "Clients", icon: Users },
+  { to: "/migrate", label: "Migrate", icon: UserPlus },
   { to: "/slots", label: "Slots", icon: Clock },
   { to: "/attendance", label: "Attendance", icon: ClipboardCheck },
   { to: "/content", label: "Content", icon: Film },
