@@ -38,6 +38,8 @@ export async function createPublicIntakeCheckoutOnServer(args: {
     success_url: `${origin}/onboarding/create-account?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/get-started`,
     customer_email: args.email,
+    customer_creation: "always",
+    "payment_intent_data[setup_future_usage]": "off_session",
     "metadata[flow]": "intake",
     "metadata[purpose]": "intake_session",
     "metadata[name]": args.name,
