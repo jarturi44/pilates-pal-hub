@@ -331,7 +331,7 @@ function AwaitingIntakeStep({ onRefresh }: { onRefresh: () => void }) {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 2 of 4</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 2 of 5</p>
         <h1 className="font-display text-4xl text-foreground mt-2">You're booked! 🎉</h1>
       </header>
 
@@ -410,7 +410,7 @@ function PlanPickerStep({
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 3 of 4</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 3 of 5</p>
         <h1 className="font-display text-4xl text-foreground mt-2">Choose your plan</h1>
         <p className="mt-2 text-muted-foreground">Pick what we discussed in your intake. You can change this later.</p>
       </header>
@@ -563,7 +563,7 @@ function ProceedToWaiverStep({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 4 of 4</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 5 of 5</p>
         <h1 className="font-display text-4xl text-foreground mt-2">One last thing — your waiver.</h1>
         <p className="mt-2 text-muted-foreground">Sign the liability waiver to unlock your home page.</p>
       </header>
