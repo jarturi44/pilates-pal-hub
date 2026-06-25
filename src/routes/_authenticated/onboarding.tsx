@@ -29,7 +29,7 @@ type Plan = {
   display_name: string;
   sessions_per_week: number | null;
   price_per_month: number;
-  stripe_price_id: string | null;
+  
   includes_mornings: boolean;
 };
 
