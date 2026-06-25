@@ -458,6 +458,27 @@ function PlanPickerStep({
             onSelect={() => choose(ooSelected.id)}
           />
         )}
+
+        {/* Combo */}
+        {comboPlans.length > 0 && (
+          <div className="space-y-3">
+            {comboPlans.map((p) => {
+              const [title, description] = p.display_name.includes(":")
+                ? [p.display_name.split(":")[0].trim(), p.display_name.split(":").slice(1).join(":").trim()]
+                : [p.display_name, "Mix of Small Group and One-On-One sessions. Includes equipment kit and Warm-Up library."];
+              return (
+                <PlanCard
+                  key={p.id}
+                  title={title}
+                  description={description}
+                  price={`$${Number(p.price_per_month)}/mo`}
+                  disabled={busy === p.id}
+                  onSelect={() => choose(p.id)}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <p className="text-xs text-muted-foreground text-center">
