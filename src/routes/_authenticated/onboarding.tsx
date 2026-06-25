@@ -138,10 +138,14 @@ function OnboardingPage() {
   }
 
   // Determine current step
+  const planType = activeSub?.plan?.type ?? null;
+  const planNeedsEquipment = planType === "small_group" || planType === "one_on_one" || planType === "combo";
+
   const needsIntakePayment = !userState.intake_paid_at;
   const awaitingIntakeSession = !!userState.intake_paid_at && !userState.intake_completed_at;
   const needsPlan = !!userState.intake_completed_at && !activeSub;
-  const needsWaiver = !!activeSub && !userState.onboarding_complete;
+  const needsShipping = !!activeSub && planNeedsEquipment && !shippingDone;
+  const needsWaiver = !!activeSub && !needsShipping && !userState.onboarding_complete;
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -150,7 +154,8 @@ function OnboardingPage() {
           needsIntakePayment ? 1 :
           awaitingIntakeSession ? 2 :
           needsPlan ? 3 :
-          needsWaiver ? 4 : 4
+          needsShipping ? 4 :
+          5
         }
       />
 
@@ -177,19 +182,37 @@ function OnboardingPage() {
         <PlanPickerStep
           onChoose={async (planId) => {
             try {
-              const { url } = await planCheckout({ data: { planId, returnUrl: window.location.origin } });
-              if (window.top && window.top !== window.self) {
-                (window.top as Window).location.href = url;
-              } else {
-                window.location.href = url;
+              // Try to charge the saved card from the intake payment.
+              const res = await subscribeSaved({ data: { planId } });
+              if (res.requiresCheckout) {
+                // Fallback: send to Stripe Checkout if no saved card on file.
+                const { url } = await planCheckout({ data: { planId, returnUrl: window.location.origin } });
+                if (window.top && window.top !== window.self) {
+                  (window.top as Window).location.href = url;
+                } else {
+                  window.location.href = url;
+                }
+                return;
               }
+              toast.success("You're enrolled! Let's get your equipment shipped.");
+              await refetchSub();
+              qc.invalidateQueries({ queryKey: ["onboarding-gate"] });
             } catch (err) {
-              toast.error((err as Error).message || "Couldn't start checkout");
+              toast.error((err as Error).message || "Couldn't start your plan");
             }
           }}
           onSubscribed={async () => {
             await refetchSub();
             qc.invalidateQueries({ queryKey: ["onboarding-gate"] });
+          }}
+        />
+      )}
+
+      {needsShipping && (
+        <ShippingStep
+          userId={user!.id}
+          onSaved={async () => {
+            await refetchShipping();
           }}
         />
       )}
