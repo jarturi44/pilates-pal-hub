@@ -376,11 +376,12 @@ function PlanPickerStep({
   });
 
   const grouped = useMemo(() => {
-    const out: Record<"mornings" | "small_group" | "one_on_one", Plan[]> = { mornings: [], small_group: [], one_on_one: [] };
+    const out: Record<"mornings" | "small_group" | "one_on_one" | "combo", Plan[]> = { mornings: [], small_group: [], one_on_one: [], combo: [] };
     (plans ?? []).forEach((p) => {
       if (p.type === "mornings") out.mornings.push(p);
       else if (p.type === "small_group") out.small_group.push(p);
       else if (p.type === "one_on_one") out.one_on_one.push(p);
+      else if (p.type === "combo") out.combo.push(p);
     });
     return out;
   }, [plans]);
@@ -388,6 +389,7 @@ function PlanPickerStep({
   const morningsPlan = grouped.mornings[0] ?? null;
   const sgPlans = grouped.small_group.sort((a, b) => (a.sessions_per_week ?? 0) - (b.sessions_per_week ?? 0));
   const ooPlans = grouped.one_on_one.sort((a, b) => (a.sessions_per_week ?? 0) - (b.sessions_per_week ?? 0));
+  const comboPlans = grouped.combo.sort((a, b) => Number(a.price_per_month) - Number(b.price_per_month));
 
   const [sgQty, setSgQty] = useState(1);
   const [ooQty, setOoQty] = useState(1);
