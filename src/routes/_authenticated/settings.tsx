@@ -43,16 +43,13 @@ function GeneralTab() {
   const { data, isLoading } = useQuery({
     queryKey: ["studio-settings"],
     queryFn: async () => {
-      const [base, emailRpc] = await Promise.all([
-        supabase
-          .from("studio_settings")
-          .select("id, studio_name, grace_period_days, commitment_months, current_waiver_version_id, updated_at, shop_url")
-          .eq("id", 1)
-          .maybeSingle(),
-        supabase.rpc("get_studio_admin_email"),
-      ]);
+      const base = await supabase
+        .from("studio_settings")
+        .select("id, studio_name, admin_email, grace_period_days, commitment_months, current_waiver_version_id, updated_at, shop_url")
+        .eq("id", 1)
+        .maybeSingle();
       if (!base.data) return null;
-      return { ...base.data, admin_email: (emailRpc.data as string | null) ?? "" };
+      return { ...base.data, admin_email: base.data.admin_email ?? "" };
     },
   });
   const [form, setForm] = useState<any>(null);
@@ -63,16 +60,16 @@ function GeneralTab() {
   async function save() {
     const { error } = await supabase.from("studio_settings").update({
       studio_name: form.studio_name,
+      admin_email: form.admin_email ?? null,
       grace_period_days: form.grace_period_days,
       commitment_months: form.commitment_months,
       updated_at: new Date().toISOString(),
     }).eq("id", 1);
     if (error) return toast.error(error.message);
-    const { error: emailErr } = await supabase.rpc("set_studio_admin_email", { _email: form.admin_email ?? "" });
-    if (emailErr) return toast.error(emailErr.message);
     toast.success("Saved");
     qc.invalidateQueries({ queryKey: ["studio-settings"] });
   }
+
 
   return (
     <div className="max-w-lg space-y-4">
