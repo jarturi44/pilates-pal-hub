@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 type StripeCheckoutSession = {
   id: string;
   url?: string;
+  customer?: string | { id?: string } | null;
   customer_email?: string | null;
   customer_details?: { email?: string | null; name?: string | null } | null;
   payment_status?: string;
