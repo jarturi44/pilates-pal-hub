@@ -108,6 +108,7 @@ function WelcomeBackPage() {
               <strong className="text-foreground">Camera & lighting setup.</strong> For live sessions, I
               need to see your full body clearly. Please make sure you have a spot with good lighting
               and enough room for your camera (phone, tablet, or laptop) to capture you head‑to‑toe.
+              <em className="block mt-1 text-xs">(Not required if you're signing up for 10 Minute Mornings only.)</em>
             </p>
           </div>
         </section>
@@ -162,7 +163,7 @@ function WelcomeBackPage() {
             />
             <span className="text-sm text-foreground">
               I have a workout space with good lighting and room for my camera to capture my full body
-              head‑to‑toe.
+              head‑to‑toe <span className="text-muted-foreground">(or I'm signing up for 10 Minute Mornings only)</span>.
             </span>
           </label>
 
