@@ -92,13 +92,13 @@ function OnboardingSetupPage() {
 
   const waiverUrl = useMemo(() => {
     if (!data) return WAIVER_FORM_BASE;
+    const fullName = `${data.firstName} ${data.lastName}`.trim();
     const p = new URLSearchParams({
       usp: "pp_url",
-      "entry.2111295948": data.firstName,
-      "entry.1659344374": data.lastName,
-      "entry.813858213": data.email,
-      "entry.289220116": data.phone,
-      "entry.130104280": data.address,
+      "entry.1194278959": fullName,
+      "entry.313783969": data.address,
+      "entry.589536988": data.email,
+      "entry.1378650077": data.phone,
     });
     return `${WAIVER_FORM_BASE}&${p.toString()}`;
   }, [data]);
