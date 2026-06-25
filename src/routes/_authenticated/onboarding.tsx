@@ -229,7 +229,7 @@ function OnboardingPage() {
 /* -------------------- Step components -------------------- */
 
 function StepProgress({ current }: { current: number }) {
-  const steps = ["Intake payment", "Intake session", "Choose plan", "Sign waiver"];
+  const steps = ["Intake payment", "Intake session", "Choose plan", "Shipping info", "Sign waiver"];
   return (
     <ol className="flex items-center gap-2 mb-10 text-xs text-muted-foreground">
       {steps.map((label, i) => {
