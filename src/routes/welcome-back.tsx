@@ -140,9 +140,6 @@ function WelcomeBackPage() {
               autoComplete="new-password"
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
-            <p className="mt-1 text-xs text-muted-foreground">At least 8 characters.</p>
-          </div>
-
           <label className="flex items-start gap-3 cursor-pointer pt-2">
             <input
               type="checkbox" checked={acknowledged}
@@ -154,8 +151,20 @@ function WelcomeBackPage() {
             </span>
           </label>
 
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox" checked={cameraReady}
+              onChange={(e) => setCameraReady(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-border accent-primary"
+            />
+            <span className="text-sm text-foreground">
+              I have a workout space with good lighting and room for my camera to capture my full body
+              head‑to‑toe.
+            </span>
+          </label>
+
           <button
-            type="submit" disabled={busy || !acknowledged || !name || !email || password.length < 8}
+            type="submit" disabled={busy || !acknowledged || !cameraReady || !name || !email || password.length < 8}
             className="mt-2 w-full sm:w-auto rounded-md bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-50 inline-flex items-center justify-center gap-2"
           >
             {busy && <Loader2 size={14} className="animate-spin" />}
