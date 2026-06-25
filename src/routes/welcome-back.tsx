@@ -115,9 +115,6 @@ function WelcomeBackPage() {
         <form onSubmit={onSubmit} className="mt-6 rounded-xl border border-border bg-card p-6 space-y-4">
           <h2 className="font-display text-2xl text-foreground">Create your account</h2>
 
-        <form onSubmit={onSubmit} className="mt-6 rounded-xl border border-border bg-card p-6 space-y-4">
-          <h2 className="font-display text-2xl text-foreground">Create your account</h2>
-
           <div>
             <label className="text-sm font-medium text-foreground">Name</label>
             <input
