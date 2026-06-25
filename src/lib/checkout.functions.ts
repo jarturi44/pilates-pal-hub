@@ -8,6 +8,7 @@ import {
   recoverSubscriptionByEmailOnServer,
   createIntakeCheckoutOnServer,
   syncIntakeCheckoutOnServer,
+  subscribeWithSavedCardOnServer,
 } from "./checkout.server";
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
