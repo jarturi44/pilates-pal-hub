@@ -55,6 +55,7 @@ function OnboardingPage() {
   const intakeCheckout = useServerFn(createIntakeCheckout);
   const intakeSync = useServerFn(syncIntakeCheckout);
   const planCheckout = useServerFn(createCheckoutSession);
+  const subscribeSaved = useServerFn(subscribeWithSavedCard);
 
   const { data: userState, refetch: refetchUser } = useQuery({
     queryKey: ["onboarding-user-state", user?.id],
@@ -76,14 +77,27 @@ function OnboardingPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("subscriptions")
-        .select("id, status")
+        .select("id, status, plan_id, plan:plans(type)")
         .eq("user_id", user!.id)
         .in("status", ["active", "trialing", "past_due"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data as ActiveSub | null;
+    },
+  });
+
+  const { data: shippingDone, refetch: refetchShipping } = useQuery({
+    queryKey: ["onboarding-shipping", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("onboarding_progress")
+        .select("shipping_completed_at")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return !!data?.shipping_completed_at;
     },
   });
 
