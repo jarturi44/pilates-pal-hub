@@ -3,6 +3,7 @@ import { render } from '@react-email/components';
 import { createClient } from '@supabase/supabase-js';
 import { createFileRoute } from '@tanstack/react-router';
 import { TEMPLATES } from '@/lib/email-templates/registry';
+import { verifyCronSecret } from '@/lib/cron-auth.server';
 
 const SITE_NAME = 'Pilates with Jon';
 const SENDER_DOMAIN = 'notify.pilateswithjon.com';
