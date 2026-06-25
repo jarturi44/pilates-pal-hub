@@ -83,6 +83,7 @@ export async function getIntakeSessionInfoOnServer(args: {
   const name = session.customer_details?.name || session.metadata?.name || "";
   if (!email) throw new Error("Stripe session is missing an email.");
   const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null;
+  const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id ?? null;
 
   // Idempotent upsert keyed on stripe_session_id
   await supabaseAdmin
@@ -93,6 +94,7 @@ export async function getIntakeSessionInfoOnServer(args: {
         name,
         stripe_session_id: session.id,
         stripe_payment_intent_id: paymentIntentId,
+        stripe_customer_id: customerId,
         amount_paid: session.amount_total ?? 6000,
       },
       { onConflict: "stripe_session_id" },
