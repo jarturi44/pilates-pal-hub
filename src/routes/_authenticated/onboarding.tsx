@@ -8,9 +8,10 @@ import {
   createCheckoutSession,
   createIntakeCheckout,
   syncIntakeCheckout,
+  subscribeWithSavedCard,
 } from "@/lib/checkout.functions";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, Sparkles, Minus, Plus, ArrowRight } from "lucide-react";
+import { CheckCircle2, Loader2, Sparkles, Minus, Plus, ArrowRight, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Search = { intake?: string; session_id?: string };
