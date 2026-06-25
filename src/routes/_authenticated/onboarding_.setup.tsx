@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/onboarding_/setup")({
 });
 
 const WAIVER_FORM_BASE =
-  "https://docs.google.com/forms/d/e/1FAIpQLSehzGlygRHXHP3aan7baRPN2bwrRtHDHvNb5Oq56uBKqUOh7w/viewform?embedded=true";
+  "https://docs.google.com/forms/d/e/1FAIpQLSc4bMNu-atN09MP3LB7Clr3hyYv0VoFCVl5SOZTngMac94K2g/viewform?embedded=true";
 
 type SetupData = {
   firstName: string;
