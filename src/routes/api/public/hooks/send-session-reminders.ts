@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { createFileRoute } from '@tanstack/react-router';
 import { enqueueTemplateEmail, notifyUser } from '@/lib/email/enqueue.server';
+import { verifyCronSecret } from '@/lib/cron-auth.server';
 
 const APP_BASE_URL = 'https://pilateswithjon.com';
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
