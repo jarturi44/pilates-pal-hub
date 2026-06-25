@@ -17,15 +17,20 @@ export const Route = createFileRoute("/welcome-back")({
     ],
   }),
   component: WelcomeBackPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    name: typeof search.name === "string" ? search.name : undefined,
+    email: typeof search.email === "string" ? search.email : undefined,
+  }),
 });
 
 function WelcomeBackPage() {
   const { session, role } = useAuth();
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const skipIntakeFn = useServerFn(markIntakeSkipped);
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState(search.name ?? "");
+  const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
