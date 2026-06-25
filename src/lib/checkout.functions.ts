@@ -99,3 +99,18 @@ export const syncIntakeCheckout = createServerFn({ method: "POST" })
       sessionId: data.sessionId,
     });
   });
+
+export const subscribeWithSavedCard = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    planId: z.string().uuid(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) throw new Error("Payments are not configured yet.");
+    return subscribeWithSavedCardOnServer({
+      stripeSecretKey,
+      userId: context.userId,
+      planId: data.planId,
+    });
+  });
