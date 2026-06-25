@@ -163,7 +163,7 @@ function WelcomeBackPage() {
             />
             <span className="text-sm text-foreground">
               I have a workout space with good lighting and room for my camera to capture my full body
-              head‑to‑toe.
+              head‑to‑toe <span className="text-muted-foreground">(or I'm signing up for 10 Minute Mornings only)</span>.
             </span>
           </label>
 
