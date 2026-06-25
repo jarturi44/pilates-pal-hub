@@ -28,6 +28,7 @@ function WelcomeBackPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
   const [busy, setBusy] = useState(false);
 
   // If somehow already logged in, send them straight to onboarding
