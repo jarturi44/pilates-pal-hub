@@ -95,15 +95,25 @@ function WelcomeBackPage() {
         </p>
 
         <section className="mt-8 rounded-xl border border-border bg-card p-6 space-y-4">
-          <h2 className="font-display text-2xl text-foreground">A quick reminder</h2>
-          <p className="text-sm text-foreground/90 leading-relaxed">
-            All live‑session plans (One‑On‑One and Small Group) require a{" "}
-            <strong className="text-foreground">3‑month minimum commitment</strong>, billed monthly. You
-            can't cancel from within the app before the 3‑month period ends, and cancellation must be
-            submitted in writing at least 3 weeks before the end of your billing cycle to avoid being
-            charged for the following month.
-          </p>
+          <h2 className="font-display text-2xl text-foreground">A couple of reminders</h2>
+          <div className="space-y-3 text-sm text-foreground/90 leading-relaxed">
+            <p>
+              <strong className="text-foreground">3‑month minimum commitment.</strong> All live‑session
+              plans (One‑On‑One and Small Group) are billed monthly with a 3‑month minimum. You can't
+              cancel from within the app before the 3 months end, and cancellation must be submitted in
+              writing at least 3 weeks before the end of your billing cycle to avoid being charged for
+              the following month.
+            </p>
+            <p>
+              <strong className="text-foreground">Camera & lighting setup.</strong> For live sessions, I
+              need to see your full body clearly. Please make sure you have a spot with good lighting
+              and enough room for your camera (phone, tablet, or laptop) to capture you head‑to‑toe.
+            </p>
+          </div>
         </section>
+
+        <form onSubmit={onSubmit} className="mt-6 rounded-xl border border-border bg-card p-6 space-y-4">
+          <h2 className="font-display text-2xl text-foreground">Create your account</h2>
 
         <form onSubmit={onSubmit} className="mt-6 rounded-xl border border-border bg-card p-6 space-y-4">
           <h2 className="font-display text-2xl text-foreground">Create your account</h2>
