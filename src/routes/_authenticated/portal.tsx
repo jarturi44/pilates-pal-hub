@@ -278,6 +278,16 @@ function HomePage() {
         />
       )}
 
+      {showFullPortal && (
+        <VideoSection
+          heading="Cool Down"
+          intro="Wind down after your session. Pick a cool down to stretch and recover."
+          videos={cooldowns}
+          completedIds={completedVideoIds}
+          onOpen={setOpenVideo}
+        />
+      )}
+
       <section className="mb-12">
         <h3 className="font-display text-2xl text-foreground">10 Minute Mornings</h3>
         <p className="mt-1 text-sm text-muted-foreground mb-5 max-w-3xl">
@@ -343,15 +353,6 @@ function HomePage() {
         )}
       </section>
 
-      {showFullPortal && (
-        <VideoSection
-          heading="Cool Down"
-          intro="Wind down after your session. Pick a cool down to stretch and recover."
-          videos={cooldowns}
-          completedIds={completedVideoIds}
-          onOpen={setOpenVideo}
-        />
-      )}
 
 
 
