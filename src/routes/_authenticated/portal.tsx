@@ -140,7 +140,12 @@ function HomePage() {
   }
 
   const library = sortByOrder((videos ?? []).filter((v) => v.category === "warmup"), WARMUP_ORDER);
-  const mornings = (videos ?? []).filter((v) => v.category === "10_min_morning");
+  const TUTORIAL_ORDER = ["Welcome", "The 100", "The Roll Up", "Rolling Like a Ball", "Single Leg Circle", "Spine Stretch"];
+  const TUTORIAL_SET = new Set(TUTORIAL_ORDER.map((t) => t.toLowerCase()));
+  const morningsAll = (videos ?? []).filter((v) => v.category === "10_min_morning");
+  const morningsRegular = morningsAll.filter((v) => !TUTORIAL_SET.has(v.title.toLowerCase()));
+  const morningsTutorials = sortByOrder(morningsAll.filter((v) => TUTORIAL_SET.has(v.title.toLowerCase())), TUTORIAL_ORDER);
+  const mornings = [...morningsRegular, ...morningsTutorials];
   const cooldowns = sortByOrder((videos ?? []).filter((v) => v.category === "cool_down"), COOLDOWN_ORDER);
 
   const morningIds = useMemo(() => new Set(mornings.map((m) => m.id)), [mornings]);
