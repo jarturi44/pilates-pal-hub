@@ -145,10 +145,9 @@ function HomePage() {
   const morningsAll = (videos ?? []).filter((v) => v.category === "10_min_morning");
   const morningsRegular = morningsAll.filter((v) => !TUTORIAL_SET.has(v.title.toLowerCase()));
   const morningsTutorials = sortByOrder(morningsAll.filter((v) => TUTORIAL_SET.has(v.title.toLowerCase())), TUTORIAL_ORDER);
-  const mornings = [...morningsRegular, ...morningsTutorials];
   const cooldowns = sortByOrder((videos ?? []).filter((v) => v.category === "cool_down"), COOLDOWN_ORDER);
 
-  const morningIds = useMemo(() => new Set(mornings.map((m) => m.id)), [mornings]);
+  const morningIds = useMemo(() => new Set(morningsRegular.map((m) => m.id)), [morningsRegular]);
   const morningsThisWeek = useMemo(() => {
     const start = startOfWeek();
     return (activity ?? []).filter(
