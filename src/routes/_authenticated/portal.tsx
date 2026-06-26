@@ -308,13 +308,63 @@ function HomePage() {
           </div>
         </div>
 
-        {mornings.length === 0 ? (
+        {morningsRegular.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
             No videos yet.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {mornings.map((v) => {
+            {morningsRegular.map((v) => {
+              const done = completedVideoIds.has(v.id);
+              return (
+                <div key={v.id} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
+                  <div className="relative aspect-video bg-muted">
+                    {(() => { const t = videoThumb(v); return t ? (
+                      <img src={t} alt={v.title} className="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <VideoIcon size={28} />
+                      </div>
+                    ); })()}
+                    {done && (
+                      <span className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-1">
+                        <Check size={12} /> Completed
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-4 flex-1 flex flex-col">
+                    <div className="font-medium text-foreground">{v.title}</div>
+                    {v.description && <div className="mt-1 text-sm text-muted-foreground line-clamp-2">{v.description}</div>}
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      {v.duration_minutes ? `${v.duration_minutes} min` : ""}
+                    </div>
+                    <button
+                      onClick={() => setOpenVideo(v)}
+                      className="mt-4 w-full rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm font-medium inline-flex items-center justify-center gap-1.5 hover:opacity-90"
+                    >
+                      <Play size={14} /> Watch
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <section className="mb-12">
+        <h3 className="font-display text-2xl text-foreground">Tutorials</h3>
+        <p className="mt-1 text-sm text-muted-foreground mb-5 max-w-3xl">
+          Reference videos for form and technique.
+        </p>
+
+        {morningsTutorials.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            No tutorials yet.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {morningsTutorials.map((v) => {
               const done = completedVideoIds.has(v.id);
               return (
                 <div key={v.id} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
