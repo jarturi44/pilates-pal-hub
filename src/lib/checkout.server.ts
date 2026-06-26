@@ -65,6 +65,7 @@ export async function createCheckoutSessionOnServer(args: {
     mode: "subscription",
     success_url: successUrl,
     cancel_url: cancelUrl,
+    allow_promotion_codes: "true",
     "metadata[user_id]": args.userId,
     "metadata[plan_id]": args.planId,
     "subscription_data[metadata][user_id]": args.userId,
