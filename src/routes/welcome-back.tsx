@@ -73,8 +73,24 @@ function WelcomeBackPage() {
 
       await skipIntakeFn({});
 
-      toast.success("Account created! Let's pick your plan.");
-      navigate({ to: "/onboarding", replace: true });
+      // Try to import their existing Stripe subscription (e.g. 10MM)
+      // so the portal recognizes them as active without re-charging.
+      let linkedExisting = false;
+      try {
+        const result = await linkStripeFn({});
+        linkedExisting = result.linked;
+      } catch (linkErr) {
+        // Non-fatal — they'll just need to pick a plan manually.
+        console.warn("Stripe link skipped:", linkErr);
+      }
+
+      if (linkedExisting) {
+        toast.success("Welcome back! We found your existing subscription.");
+        navigate({ to: "/waiver", replace: true });
+      } else {
+        toast.success("Account created! Let's pick your plan.");
+        navigate({ to: "/onboarding", replace: true });
+      }
     } catch (err) {
       toast.error((err as Error).message || "Couldn't create your account.");
       setBusy(false);
