@@ -3,7 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { markIntakeSkipped } from "@/lib/existing-client.functions";
+import { markIntakeSkipped, linkExistingStripeSubscription } from "@/lib/existing-client.functions";
 import { Wordmark } from "@/components/Wordmark";
 import { toast } from "sonner";
 import { Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
