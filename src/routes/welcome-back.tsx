@@ -28,6 +28,7 @@ function WelcomeBackPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
   const skipIntakeFn = useServerFn(markIntakeSkipped);
+  const linkStripeFn = useServerFn(linkExistingStripeSubscription);
 
   const [name, setName] = useState(search.name ?? "");
   const [email, setEmail] = useState(search.email ?? "");
