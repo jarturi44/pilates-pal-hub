@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +8,7 @@ import { PageHeader } from "@/components/PagePrimitives";
 import { Check, Play, X, Video as VideoIcon, Calendar as CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getDefaultMeetingUrl } from "@/lib/studio.functions";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   component: HomePage,
@@ -158,10 +160,18 @@ function HomePage() {
   const morningPct = Math.min(100, (morningsThisWeek / MORNING_GOAL) * 100);
   const morningExtra = Math.max(0, morningsThisWeek - MORNING_GOAL);
 
+  const fetchDefaultUrl = useServerFn(getDefaultMeetingUrl);
+  const { data: defaultMeetingUrl } = useQuery({
+    queryKey: ["default-meeting-url"],
+    queryFn: () => fetchDefaultUrl(),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const upcoming = (sessions ?? []).filter((s) => new Date(s.scheduled_at) >= new Date());
 
   async function joinSession(s: LiveSession) {
-    if (s.meeting_url) window.open(s.meeting_url, "_blank", "noopener,noreferrer");
+    const url = s.meeting_url || defaultMeetingUrl || null;
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
     if (!userId) return;
     const { error } = await supabase.from("client_activity").insert({
       user_id: userId,
@@ -254,7 +264,7 @@ function HomePage() {
                     </div>
                     <button
                       onClick={() => joinSession(s)}
-                      disabled={!s.meeting_url}
+                      disabled={!(s.meeting_url || defaultMeetingUrl)}
                       className="mt-4 w-full rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
                     >
                       Join Live Session

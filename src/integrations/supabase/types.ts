@@ -902,6 +902,7 @@ export type Database = {
           admin_email: string | null
           commitment_months: number
           current_waiver_version_id: string | null
+          default_meeting_url: string | null
           grace_period_days: number
           id: number
           shop_url: string | null
@@ -912,6 +913,7 @@ export type Database = {
           admin_email?: string | null
           commitment_months?: number
           current_waiver_version_id?: string | null
+          default_meeting_url?: string | null
           grace_period_days?: number
           id?: number
           shop_url?: string | null
@@ -922,6 +924,7 @@ export type Database = {
           admin_email?: string | null
           commitment_months?: number
           current_waiver_version_id?: string | null
+          default_meeting_url?: string | null
           grace_period_days?: number
           id?: number
           shop_url?: string | null

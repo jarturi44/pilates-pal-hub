@@ -45,7 +45,7 @@ function GeneralTab() {
     queryFn: async () => {
       const base = await supabase
         .from("studio_settings")
-        .select("id, studio_name, admin_email, grace_period_days, commitment_months, current_waiver_version_id, updated_at, shop_url")
+        .select("id, studio_name, admin_email, grace_period_days, commitment_months, current_waiver_version_id, updated_at, shop_url, default_meeting_url")
         .eq("id", 1)
         .maybeSingle();
       if (!base.data) return null;
@@ -63,6 +63,7 @@ function GeneralTab() {
       admin_email: form.admin_email ?? null,
       grace_period_days: form.grace_period_days,
       commitment_months: form.commitment_months,
+      default_meeting_url: form.default_meeting_url?.trim() || null,
       updated_at: new Date().toISOString(),
     }).eq("id", 1);
     if (error) return toast.error(error.message);
@@ -90,6 +91,12 @@ function GeneralTab() {
         <input type="number" min={1} max={24} value={form.commitment_months}
           onChange={(e) => setForm({ ...form, commitment_months: Math.min(24, Math.max(1, +e.target.value)) })}
           className="w-32 rounded-md border border-border bg-background px-3 py-2 text-sm" />
+      </Field>
+      <Field label="Default live session room URL">
+        <input type="url" value={form.default_meeting_url ?? ""}
+          onChange={(e) => setForm({ ...form, default_meeting_url: e.target.value })}
+          placeholder="https://zoom.us/j/..."
+          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
       </Field>
       <button onClick={save} className="rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs">Save changes</button>
     </div>
