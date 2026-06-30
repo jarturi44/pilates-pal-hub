@@ -147,18 +147,19 @@ function OnboardingPage() {
   const needsPlan = !!userState.intake_completed_at && !activeSub;
   const needsShipping = !!activeSub && planNeedsEquipment && !shippingDone;
   const needsWaiver = !!activeSub && !needsShipping && !userState.onboarding_complete;
+  const isWelcomeBack = search.welcomeBack === "1";
+
+  const steps = isWelcomeBack
+    ? ["Choose plan", "Shipping info", "Sign waiver"]
+    : ["Intake payment", "Intake session", "Choose plan", "Shipping info", "Sign waiver"];
+
+  const current = isWelcomeBack
+    ? (needsPlan ? 0 : needsShipping ? 1 : 2)
+    : (needsIntakePayment ? 0 : awaitingIntakeSession ? 1 : needsPlan ? 2 : needsShipping ? 3 : 4);
 
   return (
     <div className="max-w-3xl mx-auto">
-      <StepProgress
-        current={
-          needsIntakePayment ? 1 :
-          awaitingIntakeSession ? 2 :
-          needsPlan ? 3 :
-          needsShipping ? 4 :
-          5
-        }
-      />
+      <StepProgress steps={steps} current={current} />
 
       {needsIntakePayment && (
         <IntakePaymentStep
