@@ -359,9 +359,11 @@ function AwaitingIntakeStep({ onRefresh, stepLabel = "Step 2 of 5" }: { onRefres
 function PlanPickerStep({
   onChoose,
   onSubscribed,
+  stepLabel = "Step 3 of 5",
 }: {
   onChoose: (planId: string) => Promise<void>;
   onSubscribed: () => void;
+  stepLabel?: string;
 }) {
   const { data: plans } = useQuery({
     queryKey: ["plans"],
