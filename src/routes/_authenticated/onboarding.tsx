@@ -693,7 +693,7 @@ function ShippingStep({ userId, onSaved, stepLabel = "Step 4 of 5" }: { userId: 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 4 of 5</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">{stepLabel}</p>
         <h1 className="font-display text-4xl text-foreground mt-2">Where should we ship your equipment?</h1>
         <p className="mt-2 text-muted-foreground">
           Your plan includes a starter equipment kit. Enter the address you'd like it shipped to.
