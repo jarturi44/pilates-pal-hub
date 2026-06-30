@@ -127,12 +127,8 @@ export const Route = createFileRoute('/api/public/hooks/send-portal-launch')({
           sent++;
         }
 
-        // Self-unschedule so the cron only fires once
-        try {
-          await supabase.rpc('exec_sql', { sql: "SELECT cron.unschedule('portal-launch-oneshot')" });
-        } catch { /* ignore — handled out of band if needed */ }
-
         return Response.json({ sent, skipped, total_candidates: users?.length ?? 0 });
+
       },
     },
   },
