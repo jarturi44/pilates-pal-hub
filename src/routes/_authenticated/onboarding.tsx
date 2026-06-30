@@ -584,11 +584,11 @@ function Bullet({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ProceedToWaiverStep({ onContinue }: { onContinue: () => void }) {
+function ProceedToWaiverStep({ onContinue, stepLabel = "Step 5 of 5" }: { onContinue: () => void; stepLabel?: string }) {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 5 of 5</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">{stepLabel}</p>
         <h1 className="font-display text-4xl text-foreground mt-2">One last thing — your waiver.</h1>
         <p className="mt-2 text-muted-foreground">Sign the liability waiver to unlock your home page.</p>
       </header>
