@@ -89,7 +89,7 @@ function WelcomeBackPage() {
         navigate({ to: "/waiver", replace: true });
       } else {
         toast.success("Account created! Let's pick your plan.");
-        navigate({ to: "/onboarding", replace: true });
+        navigate({ to: "/onboarding", search: { welcomeBack: "1" }, replace: true });
       }
     } catch (err) {
       toast.error((err as Error).message || "Couldn't create your account.");

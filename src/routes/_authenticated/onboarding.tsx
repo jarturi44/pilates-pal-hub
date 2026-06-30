@@ -14,12 +14,13 @@ import { toast } from "sonner";
 import { CheckCircle2, Loader2, Sparkles, Minus, Plus, ArrowRight, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Search = { intake?: string; session_id?: string };
+type Search = { intake?: string; session_id?: string; welcomeBack?: string };
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     intake: typeof s.intake === "string" ? s.intake : undefined,
     session_id: typeof s.session_id === "string" ? s.session_id : undefined,
+    welcomeBack: typeof s.welcomeBack === "string" ? s.welcomeBack : undefined,
   }),
   component: OnboardingPage,
 });
@@ -146,18 +147,19 @@ function OnboardingPage() {
   const needsPlan = !!userState.intake_completed_at && !activeSub;
   const needsShipping = !!activeSub && planNeedsEquipment && !shippingDone;
   const needsWaiver = !!activeSub && !needsShipping && !userState.onboarding_complete;
+  const isWelcomeBack = search.welcomeBack === "1";
+
+  const steps = isWelcomeBack
+    ? ["Choose plan", "Shipping info", "Sign waiver"]
+    : ["Intake payment", "Intake session", "Choose plan", "Shipping info", "Sign waiver"];
+
+  const current = isWelcomeBack
+    ? (needsPlan ? 0 : needsShipping ? 1 : 2)
+    : (needsIntakePayment ? 0 : awaitingIntakeSession ? 1 : needsPlan ? 2 : needsShipping ? 3 : 4);
 
   return (
     <div className="max-w-3xl mx-auto">
-      <StepProgress
-        current={
-          needsIntakePayment ? 1 :
-          awaitingIntakeSession ? 2 :
-          needsPlan ? 3 :
-          needsShipping ? 4 :
-          5
-        }
-      />
+      <StepProgress steps={steps} current={current} />
 
       {needsIntakePayment && (
         <IntakePaymentStep
@@ -180,6 +182,7 @@ function OnboardingPage() {
 
       {needsPlan && (
         <PlanPickerStep
+          stepLabel={isWelcomeBack ? "Step 1 of 3" : "Step 3 of 5"}
           onChoose={async (planId) => {
             try {
               // Try to charge the saved card from the intake payment.
@@ -211,6 +214,7 @@ function OnboardingPage() {
       {needsShipping && (
         <ShippingStep
           userId={user!.id}
+          stepLabel={isWelcomeBack ? "Step 2 of 3" : "Step 4 of 5"}
           onSaved={async () => {
             await refetchShipping();
           }}
@@ -219,6 +223,7 @@ function OnboardingPage() {
 
       {needsWaiver && (
         <ProceedToWaiverStep
+          stepLabel={isWelcomeBack ? "Step 3 of 3" : "Step 5 of 5"}
           onContinue={() => navigate({ to: "/onboarding/setup" })}
         />
       )}
@@ -228,14 +233,12 @@ function OnboardingPage() {
 
 /* -------------------- Step components -------------------- */
 
-function StepProgress({ current }: { current: number }) {
-  const steps = ["Intake payment", "Intake session", "Choose plan", "Shipping info", "Sign waiver"];
+function StepProgress({ steps, current }: { steps: string[]; current: number }) {
   return (
     <ol className="flex items-center gap-2 mb-10 text-xs text-muted-foreground">
       {steps.map((label, i) => {
-        const n = i + 1;
-        const done = n < current;
-        const active = n === current;
+        const done = i < current;
+        const active = i === current;
         return (
           <li key={label} className="flex items-center gap-2">
             <span className={cn(
@@ -244,7 +247,7 @@ function StepProgress({ current }: { current: number }) {
               active ? "bg-primary/15 text-primary border border-primary/40" :
               "bg-muted text-muted-foreground border border-border",
             )}>
-              {done ? <CheckCircle2 size={12} /> : n}
+              {done ? <CheckCircle2 size={12} /> : i + 1}
             </span>
             <span className={cn(active ? "text-foreground font-medium" : "")}>{label}</span>
             {i < steps.length - 1 && <span className="mx-1 text-border">›</span>}
@@ -327,11 +330,11 @@ function IntakePaymentStep({ onCheckout }: { onCheckout: () => Promise<void> }) 
   );
 }
 
-function AwaitingIntakeStep({ onRefresh }: { onRefresh: () => void }) {
+function AwaitingIntakeStep({ onRefresh, stepLabel = "Step 2 of 5" }: { onRefresh: () => void; stepLabel?: string }) {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 2 of 5</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">{stepLabel}</p>
         <h1 className="font-display text-4xl text-foreground mt-2">You're booked! 🎉</h1>
       </header>
 
@@ -359,9 +362,11 @@ function AwaitingIntakeStep({ onRefresh }: { onRefresh: () => void }) {
 function PlanPickerStep({
   onChoose,
   onSubscribed,
+  stepLabel = "Step 3 of 5",
 }: {
   onChoose: (planId: string) => Promise<void>;
   onSubscribed: () => void;
+  stepLabel?: string;
 }) {
   const { data: plans } = useQuery({
     queryKey: ["plans"],
@@ -412,7 +417,7 @@ function PlanPickerStep({
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 3 of 5</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">{stepLabel}</p>
         <h1 className="font-display text-4xl text-foreground mt-2">Choose your plan</h1>
         <p className="mt-2 text-muted-foreground">Pick what we discussed in your intake. You can change this later.</p>
       </header>
@@ -582,11 +587,11 @@ function Bullet({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ProceedToWaiverStep({ onContinue }: { onContinue: () => void }) {
+function ProceedToWaiverStep({ onContinue, stepLabel = "Step 5 of 5" }: { onContinue: () => void; stepLabel?: string }) {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 5 of 5</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">{stepLabel}</p>
         <h1 className="font-display text-4xl text-foreground mt-2">One last thing — your waiver.</h1>
         <p className="mt-2 text-muted-foreground">Sign the liability waiver to unlock your home page.</p>
       </header>
@@ -600,7 +605,7 @@ function ProceedToWaiverStep({ onContinue }: { onContinue: () => void }) {
   );
 }
 
-function ShippingStep({ userId, onSaved }: { userId: string; onSaved: () => Promise<void> }) {
+function ShippingStep({ userId, onSaved, stepLabel = "Step 4 of 5" }: { userId: string; onSaved: () => Promise<void>; stepLabel?: string }) {
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
@@ -691,7 +696,7 @@ function ShippingStep({ userId, onSaved }: { userId: string; onSaved: () => Prom
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 4 of 5</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">{stepLabel}</p>
         <h1 className="font-display text-4xl text-foreground mt-2">Where should we ship your equipment?</h1>
         <p className="mt-2 text-muted-foreground">
           Your plan includes a starter equipment kit. Enter the address you'd like it shipped to.
