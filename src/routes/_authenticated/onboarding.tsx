@@ -414,7 +414,7 @@ function PlanPickerStep({
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 3 of 5</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">{stepLabel}</p>
         <h1 className="font-display text-4xl text-foreground mt-2">Choose your plan</h1>
         <p className="mt-2 text-muted-foreground">Pick what we discussed in your intake. You can change this later.</p>
       </header>
