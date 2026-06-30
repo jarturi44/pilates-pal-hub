@@ -63,6 +63,7 @@ function GeneralTab() {
       admin_email: form.admin_email ?? null,
       grace_period_days: form.grace_period_days,
       commitment_months: form.commitment_months,
+      default_meeting_url: form.default_meeting_url?.trim() || null,
       updated_at: new Date().toISOString(),
     }).eq("id", 1);
     if (error) return toast.error(error.message);
