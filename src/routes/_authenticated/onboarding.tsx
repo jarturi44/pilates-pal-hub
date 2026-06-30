@@ -327,11 +327,11 @@ function IntakePaymentStep({ onCheckout }: { onCheckout: () => Promise<void> }) 
   );
 }
 
-function AwaitingIntakeStep({ onRefresh }: { onRefresh: () => void }) {
+function AwaitingIntakeStep({ onRefresh, stepLabel = "Step 2 of 5" }: { onRefresh: () => void; stepLabel?: string }) {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Step 2 of 5</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">{stepLabel}</p>
         <h1 className="font-display text-4xl text-foreground mt-2">You're booked! 🎉</h1>
       </header>
 
