@@ -230,14 +230,12 @@ function OnboardingPage() {
 
 /* -------------------- Step components -------------------- */
 
-function StepProgress({ current }: { current: number }) {
-  const steps = ["Intake payment", "Intake session", "Choose plan", "Shipping info", "Sign waiver"];
+function StepProgress({ steps, current }: { steps: string[]; current: number }) {
   return (
     <ol className="flex items-center gap-2 mb-10 text-xs text-muted-foreground">
       {steps.map((label, i) => {
-        const n = i + 1;
-        const done = n < current;
-        const active = n === current;
+        const done = i < current;
+        const active = i === current;
         return (
           <li key={label} className="flex items-center gap-2">
             <span className={cn(
@@ -246,7 +244,7 @@ function StepProgress({ current }: { current: number }) {
               active ? "bg-primary/15 text-primary border border-primary/40" :
               "bg-muted text-muted-foreground border border-border",
             )}>
-              {done ? <CheckCircle2 size={12} /> : n}
+              {done ? <CheckCircle2 size={12} /> : i + 1}
             </span>
             <span className={cn(active ? "text-foreground font-medium" : "")}>{label}</span>
             {i < steps.length - 1 && <span className="mx-1 text-border">›</span>}
