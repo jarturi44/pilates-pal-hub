@@ -22,6 +22,9 @@ import { template as commitmentEnding } from './commitment-ending'
 import { template as adminBroadcast } from './admin-broadcast'
 import { template as intakeFinishSignup } from './intake-finish-signup'
 import { template as welcomeBackInvite } from './welcome-back-invite'
+import { template as portalLaunch } from './portal-launch'
+
+
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'equipment-shipped': equipmentShipped,
