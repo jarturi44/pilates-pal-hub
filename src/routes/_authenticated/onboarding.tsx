@@ -182,6 +182,7 @@ function OnboardingPage() {
 
       {needsPlan && (
         <PlanPickerStep
+          stepLabel={isWelcomeBack ? "Step 1 of 3" : "Step 3 of 5"}
           onChoose={async (planId) => {
             try {
               // Try to charge the saved card from the intake payment.
