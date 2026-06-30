@@ -41,4 +41,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'admin-broadcast': adminBroadcast,
   'intake-finish-signup': intakeFinishSignup,
   'welcome-back-invite': welcomeBackInvite,
+  'portal-launch': portalLaunch,
 }
+
