@@ -264,7 +264,7 @@ function HomePage() {
                     </div>
                     <button
                       onClick={() => joinSession(s)}
-                      disabled={!s.meeting_url}
+                      disabled={!(s.meeting_url || defaultMeetingUrl)}
                       className="mt-4 w-full rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
                     >
                       Join Live Session
