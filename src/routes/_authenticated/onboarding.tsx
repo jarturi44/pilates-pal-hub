@@ -214,6 +214,7 @@ function OnboardingPage() {
       {needsShipping && (
         <ShippingStep
           userId={user!.id}
+          stepLabel={isWelcomeBack ? "Step 2 of 3" : "Step 4 of 5"}
           onSaved={async () => {
             await refetchShipping();
           }}
@@ -222,6 +223,7 @@ function OnboardingPage() {
 
       {needsWaiver && (
         <ProceedToWaiverStep
+          stepLabel={isWelcomeBack ? "Step 3 of 3" : "Step 5 of 5"}
           onContinue={() => navigate({ to: "/onboarding/setup" })}
         />
       )}
