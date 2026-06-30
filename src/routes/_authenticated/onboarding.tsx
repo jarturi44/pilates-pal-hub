@@ -14,12 +14,13 @@ import { toast } from "sonner";
 import { CheckCircle2, Loader2, Sparkles, Minus, Plus, ArrowRight, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Search = { intake?: string; session_id?: string };
+type Search = { intake?: string; session_id?: string; welcomeBack?: string };
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     intake: typeof s.intake === "string" ? s.intake : undefined,
     session_id: typeof s.session_id === "string" ? s.session_id : undefined,
+    welcomeBack: typeof s.welcomeBack === "string" ? s.welcomeBack : undefined,
   }),
   component: OnboardingPage,
 });
