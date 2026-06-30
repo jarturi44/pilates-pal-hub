@@ -137,7 +137,50 @@ export const Route = createFileRoute('/api/public/hooks/send-mornings-reminders'
           sent++;
         }
 
+        // Send an admin copy to Jon for monitoring (once per send date)
+        try {
+          const adminEmail = 'jon.arturi@gmail.com';
+          const adminMessageId = `mornings-admin-copy-${sendDate}`;
+          const { data: alreadyCopy } = await supabase
+            .from('email_send_log').select('id')
+            .eq('message_id', adminMessageId).maybeSingle();
+          if (!alreadyCopy) {
+            const adminEl = React.createElement(template.component, {
+              name: 'Jon',
+              appUrl: `${APP_BASE_URL}/my-program`,
+            });
+            const adminHtml = await render(adminEl);
+            const adminText = await render(adminEl, { plainText: true });
+            const baseSubject = typeof template.subject === 'function' ? template.subject({}) : template.subject;
+            await supabase.from('email_send_log').insert({
+              message_id: adminMessageId,
+              template_name: 'mornings-reminder',
+              recipient_email: adminEmail,
+              status: 'pending',
+            });
+            await supabase.rpc('enqueue_email', {
+              queue_name: 'transactional_emails',
+              payload: {
+                message_id: adminMessageId,
+                to: adminEmail,
+                from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+                sender_domain: SENDER_DOMAIN,
+                subject: `[Copy] ${baseSubject}`,
+                html: adminHtml,
+                text: adminText,
+                purpose: 'transactional',
+                label: 'mornings-reminder-admin-copy',
+                idempotency_key: adminMessageId,
+                queued_at: new Date().toISOString(),
+              },
+            });
+          }
+        } catch (e) {
+          // non-fatal
+        }
+
         return Response.json({ sent, skipped, total_candidates: users?.length ?? 0, send_date: sendDate });
+
       },
     },
   },
