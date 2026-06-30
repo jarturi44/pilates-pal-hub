@@ -602,7 +602,7 @@ function ProceedToWaiverStep({ onContinue, stepLabel = "Step 5 of 5" }: { onCont
   );
 }
 
-function ShippingStep({ userId, onSaved }: { userId: string; onSaved: () => Promise<void> }) {
+function ShippingStep({ userId, onSaved, stepLabel = "Step 4 of 5" }: { userId: string; onSaved: () => Promise<void>; stepLabel?: string }) {
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
