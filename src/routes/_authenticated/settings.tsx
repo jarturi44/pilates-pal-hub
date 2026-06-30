@@ -45,7 +45,7 @@ function GeneralTab() {
     queryFn: async () => {
       const base = await supabase
         .from("studio_settings")
-        .select("id, studio_name, admin_email, grace_period_days, commitment_months, current_waiver_version_id, updated_at, shop_url")
+        .select("id, studio_name, admin_email, grace_period_days, commitment_months, current_waiver_version_id, updated_at, shop_url, default_meeting_url")
         .eq("id", 1)
         .maybeSingle();
       if (!base.data) return null;
