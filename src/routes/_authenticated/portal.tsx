@@ -160,10 +160,18 @@ function HomePage() {
   const morningPct = Math.min(100, (morningsThisWeek / MORNING_GOAL) * 100);
   const morningExtra = Math.max(0, morningsThisWeek - MORNING_GOAL);
 
+  const fetchDefaultUrl = useServerFn(getDefaultMeetingUrl);
+  const { data: defaultMeetingUrl } = useQuery({
+    queryKey: ["default-meeting-url"],
+    queryFn: () => fetchDefaultUrl(),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const upcoming = (sessions ?? []).filter((s) => new Date(s.scheduled_at) >= new Date());
 
   async function joinSession(s: LiveSession) {
-    if (s.meeting_url) window.open(s.meeting_url, "_blank", "noopener,noreferrer");
+    const url = s.meeting_url || defaultMeetingUrl || null;
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
     if (!userId) return;
     const { error } = await supabase.from("client_activity").insert({
       user_id: userId,
