@@ -494,6 +494,21 @@ function PlanPickerStep({
       <p className="text-xs text-muted-foreground text-center">
         All plans require a 3-month minimum commitment. You'll be billed monthly.
       </p>
+      <div className="rounded-xl border border-border bg-card p-5">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={acknowledged}
+            onChange={(e) => setAcknowledged(e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-border accent-primary"
+          />
+          <span className="text-sm text-foreground leading-relaxed">
+            I understand and acknowledge the <strong>3‑month minimum commitment</strong> for live‑session
+            plans (One‑On‑One and Small Group), billed monthly. Cancellation must be submitted in writing
+            at least 3 weeks before the end of my billing cycle to avoid being charged for the following month.
+          </span>
+        </label>
+      </div>
     </div>
   );
 }
