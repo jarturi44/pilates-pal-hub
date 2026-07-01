@@ -7,6 +7,14 @@ import { TEMPLATES } from '@/lib/email-templates/registry';
 const SITE_NAME = 'Pilates with Jon';
 const SENDER_DOMAIN = 'mail.pilateswithjon.com';
 const FROM_DOMAIN = 'mail.pilateswithjon.com';
+const ADMIN_COPY_EMAIL = 'jon.arturi@gmail.com';
+// Templates that should NOT be BCC'd to the admin (already handled elsewhere, or admin-targeted).
+const ADMIN_COPY_SKIP = new Set<string>([
+  'admin-intake-request',
+  'admin-broadcast',
+  'mornings-reminder',
+  'portal-launch',
+]);
 
 function generateToken(): string {
   const bytes = new Uint8Array(32);
