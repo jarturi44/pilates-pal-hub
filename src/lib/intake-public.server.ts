@@ -136,8 +136,14 @@ export async function getIntakeSessionInfoOnServer(args: {
         },
         idempotencyKey: `admin-intake-${session.id}`,
       });
+      await enqueueTemplateEmail(supabaseAdmin, {
+        templateName: "intake-received",
+        recipientEmail: email,
+        templateData: { name: name || undefined },
+        idempotencyKey: `intake-received-${session.id}`,
+      });
     } catch (err) {
-      console.error("[intake] admin notification failed", err);
+      console.error("[intake] notification failed", err);
     }
   }
 
