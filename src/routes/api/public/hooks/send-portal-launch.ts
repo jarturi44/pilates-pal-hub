@@ -6,8 +6,8 @@ import { TEMPLATES } from '@/lib/email-templates/registry';
 import { verifyCronSecret } from '@/lib/cron-auth.server';
 
 const SITE_NAME = 'Pilates with Jon';
-const SENDER_DOMAIN = 'notify.pilateswithjon.com';
-const FROM_DOMAIN = 'notify.pilateswithjon.com';
+const SENDER_DOMAIN = 'mail.pilateswithjon.com';
+const FROM_DOMAIN = 'mail.pilateswithjon.com';
 const APP_BASE_URL = 'https://pilateswithjon.com';
 const IDEMPOTENCY_TAG = 'portal-launch-2026-07-01';
 const ACTIVE_SUB_STATUSES = ['active', 'trialing'];
