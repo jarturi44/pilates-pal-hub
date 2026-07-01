@@ -147,6 +147,72 @@ export const Route = createFileRoute('/api/public/hooks/send-mornings-reminders'
           sent++;
         }
 
+        // Extra recipients (no account yet) — dedupe by message_id
+        for (const extra of EXTRA_RECIPIENTS) {
+          const recipient = extra.email.toLowerCase();
+          const extraMessageId = `mornings-extra-${recipient}-${sendDate}`;
+          const { data: alreadyExtra } = await supabase
+            .from('email_send_log').select('id').eq('message_id', extraMessageId).maybeSingle();
+          if (alreadyExtra) { skipped++; continue; }
+
+          const { data: suppressed } = await supabase
+            .from('suppressed_emails').select('id').eq('email', recipient).maybeSingle();
+          if (suppressed) { skipped++; continue; }
+
+          let unsubscribeToken: string;
+          const { data: existing } = await supabase
+            .from('email_unsubscribe_tokens').select('token, used_at').eq('email', recipient).maybeSingle();
+          if (existing && !existing.used_at) {
+            unsubscribeToken = existing.token;
+          } else if (!existing) {
+            unsubscribeToken = generateToken();
+            await supabase.from('email_unsubscribe_tokens')
+              .upsert({ token: unsubscribeToken, email: recipient }, { onConflict: 'email', ignoreDuplicates: true });
+            const { data: stored } = await supabase
+              .from('email_unsubscribe_tokens').select('token').eq('email', recipient).maybeSingle();
+            unsubscribeToken = stored?.token ?? unsubscribeToken;
+          } else {
+            skipped++;
+            continue;
+          }
+
+          const extraEl = React.createElement(template.component, {
+            name: extra.name,
+            appUrl: `${APP_BASE_URL}/my-program`,
+          });
+          const extraHtml = await render(extraEl);
+          const extraText = await render(extraEl, { plainText: true });
+          const extraSubject = typeof template.subject === 'function' ? template.subject({}) : template.subject;
+
+          await supabase.from('email_send_log').insert({
+            message_id: extraMessageId,
+            template_name: 'mornings-reminder',
+            recipient_email: recipient,
+            status: 'pending',
+          });
+
+          const { error: extraErr } = await supabase.rpc('enqueue_email', {
+            queue_name: 'transactional_emails',
+            payload: {
+              message_id: extraMessageId,
+              to: recipient,
+              from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+              sender_domain: SENDER_DOMAIN,
+              subject: extraSubject,
+              html: extraHtml,
+              text: extraText,
+              purpose: 'transactional',
+              label: 'mornings-reminder-extra',
+              idempotency_key: extraMessageId,
+              unsubscribe_token: unsubscribeToken,
+              queued_at: new Date().toISOString(),
+            },
+          });
+
+          if (extraErr) continue;
+          sent++;
+        }
+
         // Send an admin copy to Jon for monitoring (once per send date)
         try {
           const adminEmail = 'jon.arturi@gmail.com';
