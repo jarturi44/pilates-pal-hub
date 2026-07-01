@@ -12,6 +12,16 @@ const APP_BASE_URL = 'https://pilateswithjon.com';
 
 const ACTIVE_SUB_STATUSES = ['active', 'trialing'];
 
+// Extra recipients that should receive the mornings reminder even if they
+// don't have an account/subscription in the DB yet (e.g. migrated clients
+// who haven't claimed their welcome-back invite).
+const EXTRA_RECIPIENTS: Array<{ email: string; name?: string }> = [
+  { email: 'tomshimandle12@gmail.com' },
+  { email: 'marybwynn@gmail.com' },
+  { email: 'gregvanhorn@sbcglobal.net' },
+  { email: 'dianaperez1630@gmail.com' },
+];
+
 function generateToken(): string {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
