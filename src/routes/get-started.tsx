@@ -24,7 +24,6 @@ function GetStartedPage() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [acknowledged, setAcknowledged] = useState(false);
   const [busy, setBusy] = useState(false);
 
   // If somehow already logged in, send them to their app
