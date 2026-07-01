@@ -23,6 +23,7 @@ import { template as adminBroadcast } from './admin-broadcast'
 import { template as intakeFinishSignup } from './intake-finish-signup'
 import { template as welcomeBackInvite } from './welcome-back-invite'
 import { template as portalLaunch } from './portal-launch'
+import { template as adminIntakeRequest } from './admin-intake-request'
 
 
 
@@ -42,5 +43,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'intake-finish-signup': intakeFinishSignup,
   'welcome-back-invite': welcomeBackInvite,
   'portal-launch': portalLaunch,
+  'admin-intake-request': adminIntakeRequest,
 }
 

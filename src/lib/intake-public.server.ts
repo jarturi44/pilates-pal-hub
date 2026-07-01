@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { enqueueTemplateEmail } from "@/lib/email/enqueue.server";
 
 type StripeCheckoutSession = {
   id: string;
@@ -92,6 +93,16 @@ export async function getIntakeSessionInfoOnServer(args: {
   const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null;
   const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id ?? null;
 
+  // Detect whether this is the first time we're seeing this session (so we
+  // only fire the admin notification once, not on every refresh of the
+  // create-account page).
+  const { data: existing } = await supabaseAdmin
+    .from("pending_intakes")
+    .select("id, claimed_by_user_id")
+    .eq("stripe_session_id", session.id)
+    .maybeSingle();
+  const isNewIntake = !existing;
+
   // Idempotent upsert keyed on stripe_session_id
   await supabaseAdmin
     .from("pending_intakes")
@@ -107,14 +118,30 @@ export async function getIntakeSessionInfoOnServer(args: {
       { onConflict: "stripe_session_id" },
     );
 
-  // If somebody already claimed this session, surface that.
-  const { data: pi } = await supabaseAdmin
-    .from("pending_intakes")
-    .select("claimed_by_user_id")
-    .eq("stripe_session_id", session.id)
-    .maybeSingle();
+  if (isNewIntake) {
+    try {
+      const { data: settings } = await supabaseAdmin
+        .from("studio_settings")
+        .select("admin_email")
+        .maybeSingle();
+      const adminEmail = settings?.admin_email || "jon@pilateswithjon.com";
+      const amountCents = session.amount_total ?? 6000;
+      await enqueueTemplateEmail(supabaseAdmin, {
+        templateName: "admin-intake-request",
+        recipientEmail: adminEmail,
+        templateData: {
+          name: name || undefined,
+          email,
+          amount: `$${(amountCents / 100).toFixed(2)}`,
+        },
+        idempotencyKey: `admin-intake-${session.id}`,
+      });
+    } catch (err) {
+      console.error("[intake] admin notification failed", err);
+    }
+  }
 
-  return { email, name, alreadyClaimed: !!pi?.claimed_by_user_id };
+  return { email, name, alreadyClaimed: !!existing?.claimed_by_user_id };
 }
 
 /** Same as above but resolves a pending_intakes row from a resume token. */
