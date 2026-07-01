@@ -265,7 +265,7 @@ export async function createIntakeCheckoutOnServer(args: {
     body.set("line_items[0][price_data][product_data][name]", "Pilates with Jon — Initial Intake Session");
     body.set(
       "line_items[0][price_data][product_data][description]",
-      "60-minute virtual intake. We'll discuss your goals, frequency, and availability.",
+      "45-minute virtual intake. We'll discuss your goals, frequency, and availability.",
     );
   }
   if (args.userEmail) body.set("customer_email", args.userEmail);

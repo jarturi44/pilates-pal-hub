@@ -68,7 +68,7 @@ function GetStartedPage() {
           Let's start with your intake session.
         </h1>
         <p className="mt-3 text-muted-foreground">
-          Before we build your program, we'll meet virtually for a 60‑minute intake. We'll talk through your
+          Before we build your program, we'll meet virtually for a 45‑minute intake. We'll talk through your
           goals, how often you want to train, your availability, and any history I should know about.
         </p>
 
@@ -76,7 +76,7 @@ function GetStartedPage() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="font-display text-2xl text-foreground">Initial intake session</h2>
-              <p className="mt-1 text-sm text-muted-foreground">One‑time payment · 60 minutes · virtual</p>
+              <p className="mt-1 text-sm text-muted-foreground">One‑time payment · 45 minutes · virtual</p>
               <ul className="mt-4 space-y-2 text-sm text-foreground">
                 <Bullet>Goals + frequency assessment</Bullet>
                 <Bullet>Movement evaluation</Bullet>
