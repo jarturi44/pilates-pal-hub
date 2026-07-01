@@ -399,12 +399,17 @@ function PlanPickerStep({
   const [sgQty, setSgQty] = useState(1);
   const [ooQty, setOoQty] = useState(1);
   const [busy, setBusy] = useState<string | null>(null);
+  const [acknowledged, setAcknowledged] = useState(false);
 
   const sgSelected = sgPlans.find((p) => p.sessions_per_week === sgQty) ?? sgPlans[0];
   const ooSelected = ooPlans.find((p) => p.sessions_per_week === ooQty) ?? ooPlans[0];
 
   async function choose(planId: string | undefined) {
     if (!planId) return;
+    if (!acknowledged) {
+      toast.error("Please acknowledge the 3-month commitment below to continue.");
+      return;
+    }
     setBusy(planId);
     try {
       await onChoose(planId);
