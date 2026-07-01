@@ -491,9 +491,6 @@ function PlanPickerStep({
         )}
       </div>
 
-      <p className="text-xs text-muted-foreground text-center">
-        All plans require a 3-month minimum commitment. You'll be billed monthly.
-      </p>
       <div className="rounded-xl border border-border bg-card p-5">
         <label className="flex items-start gap-3 cursor-pointer">
           <input
