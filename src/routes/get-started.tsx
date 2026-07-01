@@ -35,7 +35,6 @@ function GetStartedPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!acknowledged) return;
     setBusy(true);
     try {
       const { url } = await checkoutFn({
