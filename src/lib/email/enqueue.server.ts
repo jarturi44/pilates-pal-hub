@@ -5,8 +5,8 @@ import { render } from '@react-email/components';
 import { TEMPLATES } from '@/lib/email-templates/registry';
 
 const SITE_NAME = 'Pilates with Jon';
-const SENDER_DOMAIN = 'notify.pilateswithjon.com';
-const FROM_DOMAIN = 'notify.pilateswithjon.com';
+const SENDER_DOMAIN = 'mail.pilateswithjon.com';
+const FROM_DOMAIN = 'mail.pilateswithjon.com';
 
 function generateToken(): string {
   const bytes = new Uint8Array(32);
