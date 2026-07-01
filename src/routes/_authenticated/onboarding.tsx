@@ -260,7 +260,6 @@ function StepProgress({ steps, current }: { steps: string[]; current: number }) 
 
 function IntakePaymentStep({ onCheckout }: { onCheckout: () => Promise<void> }) {
   const [busy, setBusy] = useState(false);
-  const [acknowledged, setAcknowledged] = useState(false);
   return (
     <div className="space-y-6">
       <header>
@@ -288,39 +287,11 @@ function IntakePaymentStep({ onCheckout }: { onCheckout: () => Promise<void> }) 
             <div className="text-xs text-muted-foreground">one-time</div>
           </div>
         </div>
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-        <h2 className="font-display text-2xl text-foreground">Before you book</h2>
-        <p className="text-sm text-foreground/90 leading-relaxed">
-          Real change — feeling stronger, moving better, getting out of pain — doesn't happen in a session
-          or two. It happens when you show up consistently over time. That's why I ask new clients to plan
-          on at least 3 months together. We follow through on the things we commit to, and committing to
-          yourself for 3 months is what makes this actually work. I'll be in your corner the whole way.
-        </p>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          If you decide to move forward after your intake, all live‑session plans (One‑On‑One and Small Group)
-          require a <strong className="text-foreground">3‑month minimum commitment</strong>, billed monthly.
-          You can't cancel from within the app before the 3‑month period ends, and cancellation must be
-          submitted in writing at least 3 weeks before the end of your billing cycle to avoid being charged
-          for the following month.
-        </p>
-        <label className="flex items-start gap-3 cursor-pointer pt-2">
-          <input
-            type="checkbox"
-            checked={acknowledged}
-            onChange={(e) => setAcknowledged(e.target.checked)}
-            className="mt-1 h-4 w-4 rounded border-border accent-primary"
-          />
-          <span className="text-sm text-foreground">
-            I understand and acknowledge the 3‑month minimum commitment for live‑session plans.
-          </span>
-        </label>
 
         <button
           onClick={async () => { setBusy(true); try { await onCheckout(); } finally { setBusy(false); } }}
-          disabled={busy || !acknowledged}
-          className="mt-2 w-full sm:w-auto rounded-md bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+          disabled={busy}
+          className="mt-6 w-full sm:w-auto rounded-md bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-50 inline-flex items-center justify-center gap-2"
         >
           {busy && <Loader2 size={14} className="animate-spin" />}
           Pay $60 and book my intake <ArrowRight size={14} />
