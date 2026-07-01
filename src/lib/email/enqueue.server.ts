@@ -7,6 +7,14 @@ import { TEMPLATES } from '@/lib/email-templates/registry';
 const SITE_NAME = 'Pilates with Jon';
 const SENDER_DOMAIN = 'mail.pilateswithjon.com';
 const FROM_DOMAIN = 'mail.pilateswithjon.com';
+const ADMIN_COPY_EMAIL = 'jon.arturi@gmail.com';
+// Templates that should NOT be BCC'd to the admin (already handled elsewhere, or admin-targeted).
+const ADMIN_COPY_SKIP = new Set<string>([
+  'admin-intake-request',
+  'admin-broadcast',
+  'mornings-reminder',
+  'portal-launch',
+]);
 
 function generateToken(): string {
   const bytes = new Uint8Array(32);
@@ -88,6 +96,47 @@ export async function enqueueTemplateEmail(
     });
     return { ok: false, error: error.message };
   }
+
+  // Admin BCC copy — send a separate email to the admin so it shows up in
+  // Jon's inbox without affecting the recipient. Deduped by message_id.
+  if (
+    !ADMIN_COPY_SKIP.has(args.templateName) &&
+    recipient !== ADMIN_COPY_EMAIL.toLowerCase()
+  ) {
+    try {
+      const adminMessageId = `${messageId}-admin-copy`;
+      const { data: alreadyCopied } = await supabase
+        .from('email_send_log').select('id')
+        .eq('message_id', adminMessageId).maybeSingle();
+      if (!alreadyCopied) {
+        await supabase.from('email_send_log').insert({
+          message_id: adminMessageId,
+          template_name: args.templateName,
+          recipient_email: ADMIN_COPY_EMAIL,
+          status: 'pending',
+        });
+        await supabase.rpc('enqueue_email', {
+          queue_name: 'transactional_emails',
+          payload: {
+            message_id: adminMessageId,
+            to: ADMIN_COPY_EMAIL,
+            from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+            sender_domain: SENDER_DOMAIN,
+            subject: `[Copy → ${recipient}] ${subject}`,
+            html,
+            text,
+            purpose: 'transactional',
+            label: `${args.templateName}-admin-copy`,
+            idempotency_key: `${args.idempotencyKey}-admin-copy`,
+            queued_at: new Date().toISOString(),
+          },
+        });
+      }
+    } catch {
+      // non-fatal — never let admin copy failure break the primary send
+    }
+  }
+
   return { ok: true };
 }
 
