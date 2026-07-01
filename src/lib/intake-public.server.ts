@@ -46,12 +46,18 @@ export async function createPublicIntakeCheckoutOnServer(args: {
     "metadata[name]": args.name,
     "metadata[email]": args.email,
     "line_items[0][quantity]": "1",
-    "line_items[0][price_data][currency]": "usd",
-    "line_items[0][price_data][unit_amount]": "6000",
-    "line_items[0][price_data][product_data][name]": "Pilates with Jon — Initial Intake Session",
-    "line_items[0][price_data][product_data][description]":
-      "60-minute virtual intake. We'll discuss your goals, frequency, and availability.",
   });
+  if (!args.stripeSecretKey.startsWith("sk_test_")) {
+    body.set("line_items[0][price]", "price_1ToQe2GcIsRXsqWIqEk5nK51");
+  } else {
+    body.set("line_items[0][price_data][currency]", "usd");
+    body.set("line_items[0][price_data][unit_amount]", "6000");
+    body.set("line_items[0][price_data][product_data][name]", "Pilates with Jon — Initial Intake Session");
+    body.set(
+      "line_items[0][price_data][product_data][description]",
+      "60-minute virtual intake. We'll discuss your goals, frequency, and availability.",
+    );
+  }
 
   const session = await stripeFetch<StripeCheckoutSession>(args.stripeSecretKey, "/checkout/sessions", {
     method: "POST",
