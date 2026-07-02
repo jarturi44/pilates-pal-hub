@@ -201,25 +201,45 @@ function OnboardingSetupPage() {
           </iframe>
         </div>
 
-        <div className="flex items-center justify-between gap-3 pt-2 border-t border-border flex-wrap">
-          <label className="flex items-start gap-3 cursor-pointer">
+        <div className="pt-2 border-t border-border space-y-3">
+          <p className="text-sm text-foreground">
+            After submitting the waiver above, type your full name (<span className="font-medium">{data.firstName} {data.lastName}</span>) below to confirm.
+          </p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <input
+              type="text"
+              value={attestName}
+              onChange={(e) => setAttestName(e.target.value)}
+              placeholder="Type your full name"
+              disabled={waiverChecked}
+              className="flex-1 min-w-[200px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+            <a
+              href={waiverUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Open in new tab <ExternalLink size={12} />
+            </a>
+          </div>
+          <label
+            className={cn(
+              "flex items-start gap-3",
+              attestationValid ? "cursor-pointer" : "cursor-not-allowed opacity-60",
+            )}
+          >
             <input
               type="checkbox"
               checked={waiverChecked}
               onChange={(e) => toggleWaiver(e.target.checked)}
-              disabled={saving}
+              disabled={saving || !attestationValid}
               className="mt-1 h-4 w-4 rounded border-input"
             />
-            <span className="text-sm text-foreground">I've completed the waiver.</span>
+            <span className="text-sm text-foreground">
+              I've submitted the waiver above and the name I typed is my legal signature.
+            </span>
           </label>
-          <a
-            href={waiverUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-          >
-            Open in new tab <ExternalLink size={12} />
-          </a>
         </div>
       </section>
 
