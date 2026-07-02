@@ -41,11 +41,20 @@ export const Route = createFileRoute('/api/public/hooks/send-onboarding-reminder
           return Response.json({ sent: 0, reason: 'no_active_subs' });
         }
 
-        const { data: users } = await supabase
+        const { data: allUsers } = await supabase
           .from('users')
-          .select('id, email, name, created_at, onboarding_complete, onboarding_reminder_count, last_onboarding_reminder_at')
-          .in('id', userIds)
-          .eq('onboarding_complete', false);
+          .select('id, email, name, created_at, onboarding_reminder_count, last_onboarding_reminder_at')
+          .in('id', userIds);
+
+        // Nudge anyone missing a shipping address OR a signed waiver,
+        // regardless of the onboarding_complete flag.
+        const [{ data: shipRows }, { data: progressRows }] = await Promise.all([
+          supabase.from('equipment_fulfillment').select('user_id, street').in('user_id', userIds),
+          supabase.from('onboarding_progress').select('user_id, waiver_completed_at').in('user_id', userIds),
+        ]);
+        const hasShipping = new Set((shipRows ?? []).filter((r: any) => r.street && r.street.trim()).map((r: any) => r.user_id));
+        const hasWaiver = new Set((progressRows ?? []).filter((r: any) => r.waiver_completed_at).map((r: any) => r.user_id));
+        const users = (allUsers ?? []).filter((u: any) => !hasShipping.has(u.id) || !hasWaiver.has(u.id));
 
         const template = TEMPLATES['onboarding-reminder'];
         const now = Date.now();
