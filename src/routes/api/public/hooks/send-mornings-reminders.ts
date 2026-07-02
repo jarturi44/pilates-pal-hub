@@ -102,7 +102,7 @@ export const Route = createFileRoute('/api/public/hooks/send-mornings-reminders'
           const messageId = crypto.randomUUID();
           const element = React.createElement(template.component, {
             name: u.name ?? undefined,
-            appUrl: `${APP_BASE_URL}/my-program`,
+            appUrl: `${APP_BASE_URL}/portal`,
           });
           const html = await render(element);
           const text = await render(element, { plainText: true });
@@ -178,7 +178,7 @@ export const Route = createFileRoute('/api/public/hooks/send-mornings-reminders'
 
           const extraEl = React.createElement(template.component, {
             name: extra.name,
-            appUrl: `${APP_BASE_URL}/my-program`,
+            appUrl: `${APP_BASE_URL}/portal`,
           });
           const extraHtml = await render(extraEl);
           const extraText = await render(extraEl, { plainText: true });
@@ -223,7 +223,7 @@ export const Route = createFileRoute('/api/public/hooks/send-mornings-reminders'
           if (!alreadyCopy) {
             const adminEl = React.createElement(template.component, {
               name: 'Jon',
-              appUrl: `${APP_BASE_URL}/my-program`,
+              appUrl: `${APP_BASE_URL}/portal`,
             });
             const adminHtml = await render(adminEl);
             const adminText = await render(adminEl, { plainText: true });
