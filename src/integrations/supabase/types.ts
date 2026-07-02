@@ -1121,6 +1121,21 @@ export type Database = {
         }
         Relationships: []
       }
+      waiver_completions: {
+        Row: {
+          completed_at: string
+          email: string
+        }
+        Insert: {
+          completed_at?: string
+          email: string
+        }
+        Update: {
+          completed_at?: string
+          email?: string
+        }
+        Relationships: []
+      }
       waiver_versions: {
         Row: {
           content: string
