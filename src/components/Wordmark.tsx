@@ -5,10 +5,10 @@ export const STUDIO_NAME = "Pilates with Jon";
 export const LOGO_URL = logoUrl;
 
 const sizeMap = {
-  sm: "h-7 w-7",
-  md: "h-9 w-9",
-  lg: "h-12 w-12",
-  xl: "h-16 w-16",
+  sm: "h-14 w-14",
+  md: "h-[4.5rem] w-[4.5rem]",
+  lg: "h-24 w-24",
+  xl: "h-32 w-32",
 } as const;
 
 export function Wordmark({
