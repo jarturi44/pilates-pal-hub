@@ -129,6 +129,29 @@ function OnboardingPage() {
     })();
   }, [search.intake, search.session_id, intakeSync, navigate, refetchUser]);
 
+  // On return from Stripe subscription checkout
+  const handledSub = useRef(false);
+  useEffect(() => {
+    if (search.step !== "sub_success" || !search.session_id) return;
+    if (handledSub.current) return;
+    handledSub.current = true;
+    (async () => {
+      try {
+        const res = await planSync({ data: { sessionId: search.session_id! } });
+        if (res?.subscription) {
+          toast.success("You're enrolled! Let's get your equipment shipped.");
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        await refetchSub();
+        qc.invalidateQueries({ queryKey: ["onboarding-gate"] });
+        navigate({ to: "/onboarding", replace: true });
+      }
+    })();
+  }, [search.step, search.session_id, planSync, navigate, refetchSub, qc]);
+
+
   // Once onboarding_complete is true, push them to /home
   useEffect(() => {
     if (userState?.onboarding_complete) {
