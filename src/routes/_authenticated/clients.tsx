@@ -317,3 +317,41 @@ function PendingIntakesSection() {
     </section>
   );
 }
+
+function MarkIntakeCompleteButton({ userId, email, name }: { userId: string; email: string; name: string | null }) {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  async function markComplete(e: React.MouseEvent) {
+    e.stopPropagation();
+    setBusy(true);
+    const { error } = await supabase
+      .from("users")
+      .update({ intake_completed_at: new Date().toISOString() })
+      .eq("id", userId);
+    if (error) { setBusy(false); return toast.error(error.message); }
+    try {
+      await sendTransactionalEmail({
+        templateName: "intake-complete",
+        recipientEmail: email,
+        idempotencyKey: `intake-complete-${userId}`,
+        templateData: { name: name ?? undefined, loginUrl: `${window.location.origin}/login` },
+      });
+      toast.success("Intake marked complete — email sent.");
+    } catch {
+      toast.success("Intake marked complete (email failed).");
+    }
+    setBusy(false);
+    qc.invalidateQueries({ queryKey: ["admin-clients-v2"] });
+  }
+  return (
+    <button
+      onClick={markComplete}
+      disabled={busy}
+      className="text-[10px] rounded-md border border-primary/40 bg-primary/10 text-primary px-2 py-0.5 hover:bg-primary/20 disabled:opacity-50 inline-flex items-center gap-1"
+      title="Mark intake session complete"
+    >
+      {busy ? <Loader2 size={10} className="animate-spin" /> : <CheckCircle2 size={10} />}
+      Mark intake complete
+    </button>
+  );
+}
