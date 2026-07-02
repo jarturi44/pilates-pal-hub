@@ -8,22 +8,26 @@ import {
   createCheckoutSession,
   createIntakeCheckout,
   syncIntakeCheckout,
+  syncCheckoutSession,
   subscribeWithSavedCard,
 } from "@/lib/checkout.functions";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2, Sparkles, Minus, Plus, ArrowRight, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Search = { intake?: string; session_id?: string; welcomeBack?: string };
+type Search = { intake?: string; session_id?: string; welcomeBack?: string; step?: string; plan_id?: string };
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     intake: typeof s.intake === "string" ? s.intake : undefined,
     session_id: typeof s.session_id === "string" ? s.session_id : undefined,
     welcomeBack: typeof s.welcomeBack === "string" ? s.welcomeBack : undefined,
+    step: typeof s.step === "string" ? s.step : undefined,
+    plan_id: typeof s.plan_id === "string" ? s.plan_id : undefined,
   }),
   component: OnboardingPage,
 });
+
 
 type Plan = {
   id: string;
