@@ -35,7 +35,7 @@ function ClientsPage() {
     queryKey: ["admin-clients-v2"],
     queryFn: async () => {
       const [users, subs, slots, cs, fulfill, attendance, completions] = await Promise.all([
-        supabase.from("users").select("id, email, name, needs_slot_assignment, onboarding_complete, created_at").eq("role", "client").order("created_at", { ascending: false }),
+        supabase.from("users").select("id, email, name, needs_slot_assignment, onboarding_complete, created_at, intake_paid_at, intake_completed_at").eq("role", "client").order("created_at", { ascending: false }),
         supabase.from("subscriptions").select("user_id, status, plan:plans(id, display_name, type, sessions_per_week, includes_mornings)").order("created_at", { ascending: false }),
         supabase.from("slots").select("id, day_of_week, time, session_type"),
         supabase.from("client_slots").select("user_id, slot_id"),
@@ -145,9 +145,12 @@ function ClientsPage() {
                 return (
                   <tr key={u.id} onClick={() => navigate({ to: "/clients/$clientId", params: { clientId: u.id } })} className="hover:bg-muted/30 cursor-pointer">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-foreground inline-flex items-center gap-2">
+                      <div className="font-medium text-foreground inline-flex items-center gap-2 flex-wrap">
                         {u.name || u.email}
                         {u.needs_slot_assignment && <AlertCircle size={12} className="text-primary" />}
+                        {u.intake_paid_at && !u.intake_completed_at && (
+                          <MarkIntakeCompleteButton userId={u.id} email={u.email} name={u.name} />
+                        )}
                       </div>
                       <div className="text-xs text-muted-foreground">{u.email}</div>
                     </td>
@@ -312,5 +315,43 @@ function PendingIntakesSection() {
         ))}
       </ul>
     </section>
+  );
+}
+
+function MarkIntakeCompleteButton({ userId, email, name }: { userId: string; email: string; name: string | null }) {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  async function markComplete(e: React.MouseEvent) {
+    e.stopPropagation();
+    setBusy(true);
+    const { error } = await supabase
+      .from("users")
+      .update({ intake_completed_at: new Date().toISOString() })
+      .eq("id", userId);
+    if (error) { setBusy(false); return toast.error(error.message); }
+    try {
+      await sendTransactionalEmail({
+        templateName: "intake-complete",
+        recipientEmail: email,
+        idempotencyKey: `intake-complete-${userId}`,
+        templateData: { name: name ?? undefined, loginUrl: `${window.location.origin}/login` },
+      });
+      toast.success("Intake marked complete — email sent.");
+    } catch {
+      toast.success("Intake marked complete (email failed).");
+    }
+    setBusy(false);
+    qc.invalidateQueries({ queryKey: ["admin-clients-v2"] });
+  }
+  return (
+    <button
+      onClick={markComplete}
+      disabled={busy}
+      className="text-[10px] rounded-md border border-primary/40 bg-primary/10 text-primary px-2 py-0.5 hover:bg-primary/20 disabled:opacity-50 inline-flex items-center gap-1"
+      title="Mark intake session complete"
+    >
+      {busy ? <Loader2 size={10} className="animate-spin" /> : <CheckCircle2 size={10} />}
+      Mark intake complete
+    </button>
   );
 }

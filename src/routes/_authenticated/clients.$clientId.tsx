@@ -462,9 +462,20 @@ function IntakeSection({ user, onChanged }: { user: any; onChanged: () => void }
       .from("users")
       .update({ intake_completed_at: new Date().toISOString() })
       .eq("id", user.id);
+    if (error) { setBusy(false); return toast.error(error.message); }
+    try {
+      await sendTransactionalEmail({
+        templateName: "intake-complete",
+        recipientEmail: user.email,
+        idempotencyKey: `intake-complete-${user.id}`,
+        templateData: { name: user.name ?? undefined, loginUrl: `${window.location.origin}/login` },
+      });
+      toast.success("Intake marked complete — email sent.");
+    } catch (e) {
+      console.error(e);
+      toast.success("Intake marked complete (email failed to send).");
+    }
     setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Intake marked complete");
     onChanged();
   }
   async function clearComplete() {

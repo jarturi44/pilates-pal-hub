@@ -142,12 +142,15 @@ function OnboardingPage() {
   const planType = activeSub?.plan?.type ?? null;
   const planNeedsEquipment = planType === "small_group" || planType === "one_on_one" || planType === "combo";
 
-  const needsIntakePayment = !userState.intake_paid_at;
-  const awaitingIntakeSession = !!userState.intake_paid_at && !userState.intake_completed_at;
-  const needsPlan = !!userState.intake_completed_at && !activeSub;
+  const isWelcomeBack = search.welcomeBack === "1";
+
+  // Existing-client "welcome back" flow skips intake payment + session entirely,
+  // regardless of what user_state reports (avoids race with the skip-intake RPC).
+  const needsIntakePayment = !isWelcomeBack && !userState.intake_paid_at;
+  const awaitingIntakeSession = !isWelcomeBack && !!userState.intake_paid_at && !userState.intake_completed_at;
+  const needsPlan = (isWelcomeBack || !!userState.intake_completed_at) && !activeSub;
   const needsShipping = !!activeSub && planNeedsEquipment && !shippingDone;
   const needsWaiver = !!activeSub && !needsShipping && !userState.onboarding_complete;
-  const isWelcomeBack = search.welcomeBack === "1";
 
   const steps = isWelcomeBack
     ? ["Choose plan", "Shipping info", "Sign waiver"]
