@@ -205,7 +205,7 @@ function Programs() {
                 <Video className="h-5 w-5" />
               </span>
               <h3 className="font-display text-2xl">Live Sessions with me</h3>
-              <span className="ml-auto text-xs uppercase tracking-wider bg-action text-action-foreground px-2 py-1 rounded">
+              <span className="ml-auto text-xs uppercase tracking-wider bg-highlight text-highlight-foreground px-2 py-1 rounded">
                 Most popular
               </span>
             </div>
