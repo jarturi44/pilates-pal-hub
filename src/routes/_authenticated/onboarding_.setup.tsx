@@ -117,6 +117,11 @@ function OnboardingSetupPage() {
     return `${WAIVER_FORM_BASE}&${p.toString()}`;
   }, [data]);
 
+  const expectedName = `${data?.firstName ?? ""} ${data?.lastName ?? ""}`.trim().toLowerCase();
+  const attestationValid =
+    expectedName.length > 0 && attestName.trim().toLowerCase() === expectedName;
+
+
   async function toggleWaiver(checked: boolean) {
     if (!user) return;
     setWaiverChecked(checked);
