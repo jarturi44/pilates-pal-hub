@@ -222,42 +222,53 @@ function OnboardingSetupPage() {
         </div>
 
         <div className="pt-2 border-t border-border space-y-3">
-          <p className="text-sm text-foreground">
-            After submitting the waiver above, type your full name (<span className="font-medium">{data.firstName} {data.lastName}</span>) below to confirm.
-          </p>
-          <div className="flex items-center gap-3 flex-wrap">
-            <input
-              type="text"
-              value={attestName}
-              onChange={(e) => setAttestName(e.target.value)}
-              placeholder="Type your full name"
-              disabled={waiverChecked}
-              className="flex-1 min-w-[200px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-            />
-            <a
-              href={waiverUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-            >
-              Open in new tab <ExternalLink size={12} />
-            </a>
-          </div>
+          {waiverSubmitted ? (
+            <div className="rounded-md bg-primary/5 border border-primary/20 px-3 py-2 text-sm text-foreground flex items-center gap-2">
+              <Check size={14} className="text-primary" />
+              We received your waiver submission for <span className="font-medium">{data.email}</span>.
+            </div>
+          ) : (
+            <div className="rounded-md bg-muted border border-border px-3 py-3 text-sm text-foreground space-y-2">
+              <p>
+                Please complete your waiver first. If you don't see the form above, check your
+                email for the link — it takes about 2 minutes.
+              </p>
+              <div className="flex items-center gap-3 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => waiverCheckQuery.refetch()}
+                  disabled={waiverCheckQuery.isFetching}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium rounded-md border border-border bg-background px-3 py-1.5 hover:bg-accent/10 disabled:opacity-50"
+                >
+                  <RefreshCw size={12} className={waiverCheckQuery.isFetching ? "animate-spin" : ""} />
+                  I just completed it
+                </button>
+                <a
+                  href={waiverUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Open waiver in new tab <ExternalLink size={12} />
+                </a>
+              </div>
+            </div>
+          )}
           <label
             className={cn(
               "flex items-start gap-3",
-              attestationValid ? "cursor-pointer" : "cursor-not-allowed opacity-60",
+              waiverSubmitted ? "cursor-pointer" : "cursor-not-allowed opacity-60",
             )}
           >
             <input
               type="checkbox"
               checked={waiverChecked}
               onChange={(e) => toggleWaiver(e.target.checked)}
-              disabled={saving || !attestationValid}
+              disabled={saving || !waiverSubmitted}
               className="mt-1 h-4 w-4 rounded border-input"
             />
             <span className="text-sm text-foreground">
-              I've submitted the waiver above and the name I typed is my legal signature.
+              I've submitted the waiver above.
             </span>
           </label>
         </div>
