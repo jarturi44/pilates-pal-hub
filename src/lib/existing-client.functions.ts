@@ -14,6 +14,14 @@ export const markIntakeSkipped = createServerFn({ method: "POST" })
     const now = new Date().toISOString();
     const { supabase, userId } = context;
 
+    // Only admins may bypass the intake payment for existing clients.
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Forbidden: admin only");
+
+
     // Only set the columns that aren't already set
     const { data: existing, error: readErr } = await supabase
       .from("users")
