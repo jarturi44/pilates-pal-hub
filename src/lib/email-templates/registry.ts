@@ -25,6 +25,7 @@ import { template as welcomeBackInvite } from './welcome-back-invite'
 import { template as portalLaunch } from './portal-launch'
 import { template as adminIntakeRequest } from './admin-intake-request'
 import { template as intakeReceived } from './intake-received'
+import { template as intakeComplete } from './intake-complete'
 
 
 
