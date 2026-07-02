@@ -20,6 +20,9 @@ type SetupData = {
   email: string;
   phone: string;
   address: string;
+  city: string;
+  state: string;
+  zip: string;
   waiverCompletedAt: string | null;
 };
 
