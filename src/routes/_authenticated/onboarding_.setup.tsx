@@ -116,9 +116,24 @@ function OnboardingSetupPage() {
     return `${WAIVER_FORM_BASE}&${p.toString()}`;
   }, [data]);
 
-  const expectedName = `${data?.firstName ?? ""} ${data?.lastName ?? ""}`.trim().toLowerCase();
-  const attestationValid =
-    expectedName.length > 0 && attestName.trim().toLowerCase() === expectedName;
+  const waiverCheckQuery = useQuery({
+    queryKey: ["waiver-completion", data?.email],
+    enabled: !!data?.email,
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    queryFn: async () => {
+      const { data: row, error } = await supabase
+        .from("waiver_completions")
+        .select("email")
+        .ilike("email", data!.email)
+        .maybeSingle();
+      if (error) throw error;
+      return !!row;
+    },
+  });
+  const waiverSubmitted = !!waiverCheckQuery.data;
+
+
 
 
   async function toggleWaiver(checked: boolean) {
