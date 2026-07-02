@@ -162,7 +162,7 @@ function MeetJon() {
 
 function Programs() {
   return (
-    <section id="programs" className="border-b border-border bg-card">
+    <section id="programs" className="border-b border-border bg-secondary">
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="text-center max-w-2xl mx-auto">
           <p className="text-sm uppercase tracking-[0.18em] text-accent font-medium">How we'll work together</p>
@@ -173,7 +173,7 @@ function Programs() {
 
         <div className="mt-14 grid md:grid-cols-2 gap-8">
           {/* 10 Minute Mornings */}
-          <article className="rounded-2xl border border-border bg-background p-8 flex flex-col">
+          <article className="rounded-2xl border border-border bg-card p-8 flex flex-col">
             <div className="flex items-center gap-3">
               <span className="rounded-lg bg-highlight/20 text-highlight-foreground p-2">
                 <Sunrise className="h-5 w-5" />
@@ -205,7 +205,7 @@ function Programs() {
                 <Video className="h-5 w-5" />
               </span>
               <h3 className="font-display text-2xl">Live Sessions with me</h3>
-              <span className="ml-auto text-xs uppercase tracking-wider bg-action text-action-foreground px-2 py-1 rounded">
+              <span className="ml-auto text-xs uppercase tracking-wider bg-highlight text-highlight-foreground px-2 py-1 rounded">
                 Most popular
               </span>
             </div>
@@ -308,7 +308,7 @@ function Testimonials() {
     },
   ];
   return (
-    <section id="testimonials" className="border-b border-border bg-card">
+    <section id="testimonials" className="border-b border-border bg-secondary">
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="text-center max-w-2xl mx-auto">
           <p className="text-sm uppercase tracking-[0.18em] text-accent font-medium">
@@ -322,7 +322,7 @@ function Testimonials() {
           {quotes.map((q) => (
             <figure
               key={q.name}
-              className="rounded-2xl border border-border bg-background p-6 flex flex-col"
+              className="rounded-2xl border border-border bg-card p-6 flex flex-col"
             >
               <blockquote className="font-display text-xl text-foreground leading-snug">
                 <span className="text-primary">“</span>
