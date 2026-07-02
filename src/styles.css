@@ -45,55 +45,57 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.375rem;
 
-  /* Studio brand palette */
-  --background: #f5efe1;             /* page background — cream */
-  --foreground: #0f1f3a;              /* primary text on light */
+  /* Studio brand palette — Deep RAD No Red */
+  --background: #F5F0E8;              /* page background — warm white */
+  --foreground: #1C3158;              /* primary text on light — deep navy */
 
-  --card: #fbf6e8;
-  --card-foreground: #0f1f3a;
+  --card: #ffffff;
+  --card-foreground: #1C3158;
 
-  --popover: #fbf6e8;
-  --popover-foreground: #0f1f3a;
+  --popover: #ffffff;
+  --popover-foreground: #1C3158;
 
-  /* Navy primary — main buttons, active nav, headings, hero */
-  --primary: #1a3a6b;
-  --primary-foreground: #ffffff;
+  /* Navy primary — navbar, headings, button text */
+  --primary: #1C3158;
+  --primary-foreground: #F5F0E8;
 
-  --secondary: #e9eef7;
-  --secondary-foreground: #1a3a6b;
+  /* Sand — alternating section background */
+  --secondary: #E8E0D0;
+  --secondary-foreground: #1C3158;
 
-  --muted: #eef1f7;
-  --muted-foreground: #4a5a78;
+  --muted: #E8E0D0;
+  --muted-foreground: #555555;
 
-  /* Electric blue accent — links, secondary buttons, icon highlights */
-  --accent: #0066cc;
-  --accent-foreground: #ffffff;
+  /* Gold accent — eyebrow, checkmarks, button borders */
+  --accent: #D4952E;
+  --accent-foreground: #1C3158;
 
-  /* Red — primary CTAs, alerts, badges */
-  --action: #cc1a1a;
-  --action-foreground: #ffffff;
-  --destructive: #cc1a1a;
+  /* Buttons default to white fill / gold outline / navy text (see button.tsx) */
+  --action: #ffffff;
+  --action-foreground: #1C3158;
+  --destructive: #b23a3a;
   --destructive-foreground: #ffffff;
 
   /* Gold — streaks, milestones, accent text */
-  --highlight: #e6a800;
-  --highlight-foreground: #1a3a6b;
+  --highlight: #D4952E;
+  --highlight-foreground: #1C3158;
 
-  --border: #d0d8ec;                  /* subtle card border */
-  --input: #d0d8ec;
-  --ring: #0066cc;
+  --border: #ddd8ce;
+  --input: #ddd8ce;
+  --ring: #D4952E;
 
-  --sidebar: #fbf6e8;
-  --sidebar-foreground: #0f1f3a;
-  --sidebar-primary: #1a3a6b;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e9eef7;
-  --sidebar-accent-foreground: #1a3a6b;
-  --sidebar-border: #d0d8ec;
-  --sidebar-ring: #0066cc;
+  --sidebar: #1C3158;
+  --sidebar-foreground: #F5F0E8;
+  --sidebar-primary: #D4952E;
+  --sidebar-primary-foreground: #1C3158;
+  --sidebar-accent: #8aaac8;
+  --sidebar-accent-foreground: #F5F0E8;
+  --sidebar-border: rgba(245, 240, 232, 0.15);
+  --sidebar-ring: #D4952E;
 }
+
 
 .dark {
   --background: #0b1426;
