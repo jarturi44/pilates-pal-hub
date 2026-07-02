@@ -56,6 +56,7 @@ function OnboardingSetupPage() {
   const [saving, setSaving] = useState(false);
   const [continuing, setContinuing] = useState(false);
   const [waiverChecked, setWaiverChecked] = useState(false);
+  const [attestName, setAttestName] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["onboarding-setup", user?.id],
