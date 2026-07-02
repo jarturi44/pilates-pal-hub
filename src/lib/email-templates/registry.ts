@@ -47,5 +47,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'portal-launch': portalLaunch,
   'admin-intake-request': adminIntakeRequest,
   'intake-received': intakeReceived,
+  'intake-complete': intakeComplete,
 }
 
