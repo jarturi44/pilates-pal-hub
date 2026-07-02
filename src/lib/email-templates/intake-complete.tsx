@@ -1,6 +1,6 @@
 import { Body, Button, Container, Head, Heading, Html, Preview, Text } from "@react-email/components";
 import type { TemplateEntry } from "./registry";
-import { SITE_NAME, main, container, header, h1, text, footer, buttonPrimary } from "./_styles";
+import { SITE_NAME, main, container, header, h1, text, footer, button } from "./_styles";
 import { EmailHeader } from "./_header";
 
 interface Props { name?: string; loginUrl?: string }
