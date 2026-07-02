@@ -18,7 +18,7 @@ const Email = ({ name, loginUrl = "https://pilateswithjon.com/login" }: Props) =
         Just log back in and you'll be taken straight to the plan picker,
         shipping details, and waiver.
       </Text>
-      <Button href={loginUrl} style={buttonPrimary}>Finish setting up my account</Button>
+      <Button href={loginUrl} style={button}>Finish setting up my account</Button>
       <Text style={footer}>— Jon</Text>
     </Container></Body></Html>
 );
