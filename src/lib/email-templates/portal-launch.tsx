@@ -6,7 +6,7 @@ import { EmailHeader } from "./_header";
 interface Props { name?: string; appUrl?: string; }
 
 const Email = ({ name, appUrl }: Props) => {
-  const url = appUrl || `${APP_BASE_URL}/my-program`;
+  const url = appUrl || `${APP_BASE_URL}/portal`;
   return (
     <Html lang="en"><Head /><Preview>Your new portal is live — let's get moving this morning.</Preview>
       <Body style={main}><Container style={container}>

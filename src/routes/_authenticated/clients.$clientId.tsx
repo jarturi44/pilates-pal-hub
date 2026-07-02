@@ -408,7 +408,7 @@ function AssignSlotDialog({ clientId, clientEmail, clientName, slots, assigned, 
     await supabase.from("users").update({ needs_slot_assignment: false }).eq("id", clientId);
     await supabase.from("notifications").insert({
       user_id: clientId, type: "slot", title: "Your slot is assigned",
-      message: `You're booked for ${DAYS[slot.day_of_week]} ${slot.time.slice(0,5)}.`, link: "/my-program",
+      message: `You're booked for ${DAYS[slot.day_of_week]} ${slot.time.slice(0,5)}.`, link: "/portal",
     });
     try {
       await sendTransactionalEmail({

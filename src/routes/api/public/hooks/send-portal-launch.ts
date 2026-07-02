@@ -84,7 +84,7 @@ export const Route = createFileRoute('/api/public/hooks/send-portal-launch')({
           const messageId = crypto.randomUUID();
           const element = React.createElement(template.component, {
             name: u.name ?? undefined,
-            appUrl: `${APP_BASE_URL}/my-program`,
+            appUrl: `${APP_BASE_URL}/portal`,
           });
           const html = await render(element);
           const text = await render(element, { plainText: true });
@@ -137,7 +137,7 @@ export const Route = createFileRoute('/api/public/hooks/send-portal-launch')({
           if (!alreadyCopy) {
             const adminEl = React.createElement(template.component, {
               name: 'Jon',
-              appUrl: `${APP_BASE_URL}/my-program`,
+              appUrl: `${APP_BASE_URL}/portal`,
             });
             const adminHtml = await render(adminEl);
             const adminText = await render(adminEl, { plainText: true });

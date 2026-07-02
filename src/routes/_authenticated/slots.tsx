@@ -228,7 +228,7 @@ function AssignClientDialog({ slot, assigned, clients, onClose }: { slot: Slot; 
     await supabase.from("notifications").insert({
       user_id: c.id, type: "slot", title: "Your slot is assigned",
       message: `You're booked for ${DAYS[slot.day_of_week]} ${slot.time.slice(0, 5)} (${slot.session_type === "one_on_one" ? "One-On-One" : "Small Group"}).`,
-      link: "/my-program",
+      link: "/portal",
     });
     try {
       await sendTransactionalEmail({
