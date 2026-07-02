@@ -66,8 +66,7 @@ function GetStartedPage() {
           Let's start with your intake session.
         </h1>
         <p className="mt-3 text-muted-foreground">
-          Before we build your program, we'll meet virtually for a 45‑minute intake. We'll talk through your
-          goals, how often you want to train, your availability, and any history I should know about.
+          We'll meet virtually for a 45 minute intake. I'll listen intently to your history, areas of focus, and goals. We'll pick a plan that's right for your life, health and best future you!
         </p>
 
         <section className="mt-8 rounded-xl border border-border bg-card p-6">
