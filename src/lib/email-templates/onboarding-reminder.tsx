@@ -11,7 +11,7 @@ const Email = ({ name }: Props) => (
       <EmailHeader /><Text style={header}>{SITE_NAME}</Text>
       <Heading style={h1}>{name ? `Hey ${name}, just a nudge` : "Just a nudge"}</Heading>
       <Text style={text}>You're almost there! Remember to finish your onboarding so we can sign you up for a time slot and get you moving.</Text>
-      <Text style={text}>It only takes a couple of minutes — a quick intake form, the liability waiver, and your availability.</Text>
+      <Text style={text}>All that's left is a shipping address for your equipment and a waiver!</Text>
       <Button href={`${APP_BASE_URL}/onboarding?step=welcome`} style={button}>Finish my onboarding</Button>
       <Text style={footer}>— Jon</Text>
     </Container></Body></Html>
