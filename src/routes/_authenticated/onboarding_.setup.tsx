@@ -20,6 +20,9 @@ type SetupData = {
   email: string;
   phone: string;
   address: string;
+  city: string;
+  state: string;
+  zip: string;
   waiverCompletedAt: string | null;
 };
 
@@ -76,9 +79,7 @@ function OnboardingSetupPage() {
       const nameParts = (userRes.data?.name ?? "").split(/\s+/);
       const firstName = ef?.first_name ?? nameParts[0] ?? "";
       const lastName = ef?.last_name ?? nameParts.slice(1).join(" ") ?? "";
-      const address = ef?.street
-        ? `${ef.street}, ${ef.city ?? ""}, ${ef.state ?? ""} ${ef.zip ?? ""}`.replace(/\s+,/g, ",").trim()
-        : ef?.shipping_address ?? "";
+      const address = ef?.street ?? (ef?.shipping_address ? ef.shipping_address.split("\n")[1] ?? "" : "");
 
       return {
         firstName,
@@ -86,6 +87,9 @@ function OnboardingSetupPage() {
         email: userRes.data?.email ?? user!.email ?? "",
         phone: ef?.phone ?? "",
         address,
+        city: ef?.city ?? "",
+        state: ef?.state ?? "",
+        zip: ef?.zip ?? "",
         waiverCompletedAt: progRes.data?.waiver_completed_at ?? null,
       };
     },
@@ -98,13 +102,16 @@ function OnboardingSetupPage() {
 
   const waiverUrl = useMemo(() => {
     if (!data) return WAIVER_FORM_BASE;
-    const fullName = `${data.firstName} ${data.lastName}`.trim();
     const p = new URLSearchParams({
       usp: "pp_url",
-      "entry.1194278959": fullName,
-      "entry.313783969": data.address,
-      "entry.589536988": data.email,
-      "entry.1378650077": data.phone,
+      "entry.1918456924": data.firstName,
+      "entry.1607294814": data.lastName,
+      "entry.1430114323": data.phone,
+      "entry.1873751175": data.address,
+      "entry.1984171968": data.city,
+      "entry.1584918641": data.state,
+      "entry.777565140": data.zip,
+      "entry.1098094088": data.email,
     });
     return `${WAIVER_FORM_BASE}&${p.toString()}`;
   }, [data]);
