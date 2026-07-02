@@ -60,7 +60,9 @@ function OnboardingPage() {
   const intakeCheckout = useServerFn(createIntakeCheckout);
   const intakeSync = useServerFn(syncIntakeCheckout);
   const planCheckout = useServerFn(createCheckoutSession);
+  const planSync = useServerFn(syncCheckoutSession);
   const subscribeSaved = useServerFn(subscribeWithSavedCard);
+
 
   const { data: userState, refetch: refetchUser } = useQuery({
     queryKey: ["onboarding-user-state", user?.id],
