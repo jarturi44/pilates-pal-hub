@@ -145,9 +145,12 @@ function ClientsPage() {
                 return (
                   <tr key={u.id} onClick={() => navigate({ to: "/clients/$clientId", params: { clientId: u.id } })} className="hover:bg-muted/30 cursor-pointer">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-foreground inline-flex items-center gap-2">
+                      <div className="font-medium text-foreground inline-flex items-center gap-2 flex-wrap">
                         {u.name || u.email}
                         {u.needs_slot_assignment && <AlertCircle size={12} className="text-primary" />}
+                        {u.intake_paid_at && !u.intake_completed_at && (
+                          <MarkIntakeCompleteButton userId={u.id} email={u.email} name={u.name} />
+                        )}
                       </div>
                       <div className="text-xs text-muted-foreground">{u.email}</div>
                     </td>
