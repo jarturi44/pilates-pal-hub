@@ -35,7 +35,7 @@ function ClientsPage() {
     queryKey: ["admin-clients-v2"],
     queryFn: async () => {
       const [users, subs, slots, cs, fulfill, attendance, completions] = await Promise.all([
-        supabase.from("users").select("id, email, name, needs_slot_assignment, onboarding_complete, created_at").eq("role", "client").order("created_at", { ascending: false }),
+        supabase.from("users").select("id, email, name, needs_slot_assignment, onboarding_complete, created_at, intake_paid_at, intake_completed_at").eq("role", "client").order("created_at", { ascending: false }),
         supabase.from("subscriptions").select("user_id, status, plan:plans(id, display_name, type, sessions_per_week, includes_mornings)").order("created_at", { ascending: false }),
         supabase.from("slots").select("id, day_of_week, time, session_type"),
         supabase.from("client_slots").select("user_id, slot_id"),
