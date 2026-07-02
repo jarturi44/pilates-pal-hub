@@ -95,7 +95,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           "pt-14 md:pt-0",
         )}
       >
-        <div className="hidden md:flex items-center px-6 h-16 border-b border-sidebar-border">
+        <div className="hidden md:flex items-center justify-center px-6 h-28 border-b border-sidebar-border">
           <Wordmark size="md" className="text-sidebar-foreground" />
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
@@ -126,7 +126,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
         <div className="p-3 border-t border-sidebar-border">
-          <div className="px-3 py-2 text-xs text-muted-foreground truncate">{user?.email}</div>
+          <div className="px-3 py-1 text-[10px] text-muted-foreground truncate">{user?.email}</div>
           <button
             onClick={handleSignOut}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
