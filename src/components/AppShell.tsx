@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Wordmark } from "@/components/Wordmark";
 
 const clientNav = [
+  { to: "/", label: "Homepage", icon: Globe },
   { to: "/portal", label: "Portal", icon: Home },
   { to: "/progress", label: "Progress", icon: LineChart },
   { to: "/notifications", label: "Notifications", icon: Bell },
@@ -18,6 +19,7 @@ const clientNav = [
 ] as const;
 
 const adminNav = [
+  { to: "/", label: "Homepage", icon: Globe },
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/clients", label: "Clients", icon: Users },
   { to: "/migrate", label: "Migrate", icon: UserPlus },
