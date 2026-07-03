@@ -212,9 +212,11 @@ function ClientProfilePage() {
               ))}
             </ul>
           )}
-          <button onClick={() => setShowAssign(true)} className="mt-3 rounded-md border border-border px-2.5 py-1 text-xs hover:bg-muted inline-flex items-center gap-1">
+          <button onClick={() => { if (!canAssignSlot) { toast.error(assignBlockedReason); return; } setShowAssign(true); }} disabled={!canAssignSlot} title={canAssignSlot ? undefined : assignBlockedReason}
+            className="mt-3 rounded-md border border-border px-2.5 py-1 text-xs hover:bg-muted inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
             <CalendarPlus size={12} /> Assign slot
           </button>
+          {!canAssignSlot && <p className="mt-2 text-xs text-amber-600">{assignBlockedReason}.</p>}
         </Section>
 
         <Section title="Fulfillment">
