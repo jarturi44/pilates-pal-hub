@@ -467,13 +467,15 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
 
 function IntakeSection({ user, onChanged }: { user: any; onChanged: () => void }) {
   const [busy, setBusy] = useState(false);
+  const setCompleted = useServerFn(adminSetIntakeCompleted);
   async function markComplete() {
     setBusy(true);
-    const { error } = await supabase
-      .from("users")
-      .update({ intake_completed_at: new Date().toISOString() })
-      .eq("id", user.id);
-    if (error) { setBusy(false); return toast.error(error.message); }
+    try {
+      await setCompleted({ data: { userId: user.id, completed: true } });
+    } catch (err) {
+      setBusy(false);
+      return toast.error((err as Error).message);
+    }
     try {
       await sendTransactionalEmail({
         templateName: "intake-complete",
@@ -492,12 +494,13 @@ function IntakeSection({ user, onChanged }: { user: any; onChanged: () => void }
   async function clearComplete() {
     if (!confirm("Mark intake as not yet completed?")) return;
     setBusy(true);
-    const { error } = await supabase
-      .from("users")
-      .update({ intake_completed_at: null })
-      .eq("id", user.id);
+    try {
+      await setCompleted({ data: { userId: user.id, completed: false } });
+    } catch (err) {
+      setBusy(false);
+      return toast.error((err as Error).message);
+    }
     setBusy(false);
-    if (error) return toast.error(error.message);
     toast.success("Reset");
     onChanged();
   }
