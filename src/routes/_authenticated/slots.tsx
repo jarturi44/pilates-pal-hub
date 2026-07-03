@@ -229,6 +229,10 @@ function AssignClientDialog({ slot, assigned, clients, onClose }: { slot: Slot; 
     .slice(0, 30);
 
   async function assign(c: ClientLite) {
+    if (!c.hasWaiver || !c.hasShipping) {
+      const missing = [!c.hasWaiver && "waiver", !c.hasShipping && "shipping address"].filter(Boolean).join(" and ");
+      return toast.error(`Can't assign — client is missing ${missing}.`);
+    }
     setBusy(c.id);
     const { error } = await supabase.from("client_slots").insert({ slot_id: slot.id, user_id: c.id });
     if (error) { setBusy(null); return toast.error(error.message); }
