@@ -35,7 +35,8 @@ export const markIntakeSkipped = createServerFn({ method: "POST" })
     if (!existing?.intake_completed_at) patch.intake_completed_at = now;
 
     if (Object.keys(patch).length > 0) {
-      const { error: updErr } = await supabase.from("users").update(patch).eq("id", userId);
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error: updErr } = await supabaseAdmin.from("users").update(patch).eq("id", userId);
       if (updErr) throw updErr;
     }
 
