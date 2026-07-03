@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { sendTransactionalEmail } from "@/lib/email/send";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteClient } from "@/lib/admin.functions";
+import { adminSetIntakeCompleted } from "@/lib/user-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   component: ClientProfilePage,
