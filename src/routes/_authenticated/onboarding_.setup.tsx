@@ -57,6 +57,7 @@ function OnboardingSetupPage() {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [continuing, setContinuing] = useState(false);
+  const completeOnboardingFn = useServerFn(completeOnboarding);
   const [waiverChecked, setWaiverChecked] = useState(false);
 
   const { data, isLoading } = useQuery({
