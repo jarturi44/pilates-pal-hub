@@ -34,7 +34,7 @@ function ClientsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-clients-v2"],
     queryFn: async () => {
-      const [users, subs, slots, cs, fulfill, attendance, completions] = await Promise.all([
+      const [users, subs, slots, cs, fulfill, attendance, completions, onbProg] = await Promise.all([
         supabase.from("users").select("id, email, name, needs_slot_assignment, onboarding_complete, created_at, intake_paid_at, intake_completed_at").eq("role", "client").order("created_at", { ascending: false }),
         supabase.from("subscriptions").select("user_id, status, plan:plans(id, display_name, type, sessions_per_week, includes_mornings)").order("created_at", { ascending: false }),
         supabase.from("slots").select("id, day_of_week, time, session_type"),
@@ -42,6 +42,7 @@ function ClientsPage() {
         supabase.from("equipment_fulfillment").select("user_id, status"),
         supabase.from("attendance").select("user_id, session_date").order("session_date", { ascending: false }),
         supabase.from("content_completions").select("user_id, completed_at").order("completed_at", { ascending: false }),
+        supabase.from("onboarding_progress").select("user_id, waiver_completed_at, shipping_completed_at"),
       ]);
       const subBy = new Map<string, any>();
       (subs.data ?? []).forEach((s: any) => { if (!subBy.has(s.user_id)) subBy.set(s.user_id, s); });
@@ -52,13 +53,15 @@ function ClientsPage() {
       });
       const fulBy = new Map<string, string>();
       (fulfill.data ?? []).forEach((f: any) => fulBy.set(f.user_id, f.status));
+      const onbBy = new Map<string, { waiver: boolean; shipping: boolean }>();
+      (onbProg.data ?? []).forEach((o: any) => onbBy.set(o.user_id, { waiver: !!o.waiver_completed_at, shipping: !!o.shipping_completed_at }));
       const lastActiveBy = new Map<string, string>();
       (attendance.data ?? []).forEach((a: any) => { if (!lastActiveBy.has(a.user_id)) lastActiveBy.set(a.user_id, a.session_date); });
       (completions.data ?? []).forEach((c: any) => {
         const cur = lastActiveBy.get(c.user_id);
         if (!cur || new Date(c.completed_at) > new Date(cur)) lastActiveBy.set(c.user_id, c.completed_at);
       });
-      return { users: users.data ?? [], subBy, csBy, fulBy, lastActiveBy };
+      return { users: users.data ?? [], subBy, csBy, fulBy, onbBy, lastActiveBy };
     },
   });
 
