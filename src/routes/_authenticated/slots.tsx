@@ -26,15 +26,23 @@ function SlotsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["slots-mgmt"],
     queryFn: async () => {
-      const [slots, cs, users] = await Promise.all([
+      const [slots, cs, users, waivers, fulfill] = await Promise.all([
         supabase.from("slots").select("*").order("day_of_week").order("time"),
         supabase.from("client_slots").select("*"),
         supabase.from("users").select("id, name, email").eq("role", "client"),
+        supabase.from("waivers").select("user_id"),
+        supabase.from("equipment_fulfillment").select("user_id, shipping_address"),
       ]);
+      const waiverSet = new Set((waivers.data ?? []).map((w: any) => w.user_id));
+      const shipSet = new Set((fulfill.data ?? []).filter((f: any) => !!f.shipping_address).map((f: any) => f.user_id));
+      const clients: ClientLite[] = ((users.data ?? []) as any[]).map((u) => ({
+        id: u.id, name: u.name, email: u.email,
+        hasWaiver: waiverSet.has(u.id), hasShipping: shipSet.has(u.id),
+      }));
       return {
         slots: (slots.data ?? []) as Slot[],
         assignments: (cs.data ?? []) as Assignment[],
-        clients: (users.data ?? []) as ClientLite[],
+        clients,
       };
     },
   });
