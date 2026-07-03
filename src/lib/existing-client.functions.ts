@@ -130,7 +130,8 @@ export const linkExistingStripeSubscription = createServerFn({ method: "POST" })
     }
     if (!planId) return { linked: false, reason: "no_matching_plan" as const };
 
-    const { error: insertErr } = await supabase.from("subscriptions").insert({
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: insertErr } = await supabaseAdmin.from("subscriptions").insert({
       user_id: userId,
       plan_id: planId,
       stripe_subscription_id: foundSub.id,
@@ -147,7 +148,7 @@ export const linkExistingStripeSubscription = createServerFn({ method: "POST" })
     if (insertErr) throw insertErr;
 
     // Mark waiver as the only remaining step — they've already "paid"
-    await supabase.from("users").update({
+    await supabaseAdmin.from("users").update({
       intake_paid_at: new Date().toISOString(),
       intake_completed_at: new Date().toISOString(),
     }).eq("id", userId);
