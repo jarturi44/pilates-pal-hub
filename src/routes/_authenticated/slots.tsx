@@ -268,15 +268,20 @@ function AssignClientDialog({ slot, assigned, clients, onClose }: { slot: Slot; 
       <div className="max-h-80 overflow-y-auto divide-y divide-border rounded-md border border-border">
         {filtered.length === 0 ? (
           <div className="p-4 text-sm text-muted-foreground">No clients found.</div>
-        ) : filtered.map((c) => (
-          <div key={c.id} className="flex items-center justify-between p-3">
-            <div className="min-w-0">
-              <div className="text-sm text-foreground truncate">{c.name || c.email}</div>
-              <div className="text-xs text-muted-foreground truncate">{c.email}</div>
+        ) : filtered.map((c) => {
+          const eligible = c.hasWaiver && c.hasShipping;
+          const missing = [!c.hasWaiver && "waiver", !c.hasShipping && "shipping"].filter(Boolean).join(", ");
+          return (
+            <div key={c.id} className="flex items-center justify-between p-3">
+              <div className="min-w-0">
+                <div className="text-sm text-foreground truncate">{c.name || c.email}</div>
+                <div className="text-xs text-muted-foreground truncate">{c.email}</div>
+                {!eligible && <div className="text-[10px] text-amber-600 mt-0.5">Missing {missing}</div>}
+              </div>
+              <button onClick={() => assign(c)} disabled={busy === c.id || !eligible} title={eligible ? undefined : `Client is missing ${missing}`} className="rounded-md bg-primary text-primary-foreground px-2.5 py-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed">Assign</button>
             </div>
-            <button onClick={() => assign(c)} disabled={busy === c.id} className="rounded-md bg-primary text-primary-foreground px-2.5 py-1 text-xs disabled:opacity-50">Assign</button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </Modal>
   );
