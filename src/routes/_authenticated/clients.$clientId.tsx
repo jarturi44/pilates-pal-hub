@@ -151,7 +151,7 @@ function ClientProfilePage() {
       <div className="flex flex-wrap gap-2 mb-6">
         <ActionBtn icon={<Send size={12} />} label="Send message" onClick={() => setShowMessage(true)} />
         <ActionBtn icon={<ClipboardCheck size={12} />} label="Mark attendance" onClick={() => navigate({ to: "/attendance" })} />
-        <ActionBtn icon={<CalendarPlus size={12} />} label="Assign slot" onClick={() => { if (!canAssignSlot) return toast.error(assignBlockedReason); setShowAssign(true); }} disabled={!canAssignSlot} title={canAssignSlot ? undefined : assignBlockedReason} />
+        <ActionBtn icon={<CalendarPlus size={12} />} label="Assign slot" onClick={() => { if (!canAssignSlot) { toast.error(assignBlockedReason); return; } setShowAssign(true); }} disabled={!canAssignSlot} title={canAssignSlot ? undefined : assignBlockedReason} />
         <ActionBtn icon={<RefreshCw size={12} />} label="Update plan" onClick={() => {
           const id = prompt("Enter new plan ID (see plan picker below)");
           if (id) changePlan(id);
