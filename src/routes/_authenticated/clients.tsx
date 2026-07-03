@@ -7,6 +7,8 @@ import { Search, AlertCircle, Mail, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sendTransactionalEmail } from "@/lib/email/send";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { adminSetIntakeCompleted } from "@/lib/user-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/clients")({
   component: ClientsRoute,
