@@ -16,7 +16,7 @@ const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 type Slot = { id: string; day_of_week: number; time: string; session_type: "one_on_one" | "small_group"; capacity: number; active: boolean };
 type Assignment = { id: string; slot_id: string; user_id: string };
-type ClientLite = { id: string; name: string | null; email: string };
+type ClientLite = { id: string; name: string | null; email: string; hasWaiver: boolean; hasShipping: boolean };
 
 function SlotsPage() {
   const qc = useQueryClient();
@@ -26,15 +26,23 @@ function SlotsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["slots-mgmt"],
     queryFn: async () => {
-      const [slots, cs, users] = await Promise.all([
+      const [slots, cs, users, waivers, fulfill] = await Promise.all([
         supabase.from("slots").select("*").order("day_of_week").order("time"),
         supabase.from("client_slots").select("*"),
         supabase.from("users").select("id, name, email").eq("role", "client"),
+        supabase.from("waivers").select("user_id"),
+        supabase.from("equipment_fulfillment").select("user_id, shipping_address"),
       ]);
+      const waiverSet = new Set((waivers.data ?? []).map((w: any) => w.user_id));
+      const shipSet = new Set((fulfill.data ?? []).filter((f: any) => !!f.shipping_address).map((f: any) => f.user_id));
+      const clients: ClientLite[] = ((users.data ?? []) as any[]).map((u) => ({
+        id: u.id, name: u.name, email: u.email,
+        hasWaiver: waiverSet.has(u.id), hasShipping: shipSet.has(u.id),
+      }));
       return {
         slots: (slots.data ?? []) as Slot[],
         assignments: (cs.data ?? []) as Assignment[],
-        clients: (users.data ?? []) as ClientLite[],
+        clients,
       };
     },
   });
@@ -221,6 +229,10 @@ function AssignClientDialog({ slot, assigned, clients, onClose }: { slot: Slot; 
     .slice(0, 30);
 
   async function assign(c: ClientLite) {
+    if (!c.hasWaiver || !c.hasShipping) {
+      const missing = [!c.hasWaiver && "waiver", !c.hasShipping && "shipping address"].filter(Boolean).join(" and ");
+      return toast.error(`Can't assign — client is missing ${missing}.`);
+    }
     setBusy(c.id);
     const { error } = await supabase.from("client_slots").insert({ slot_id: slot.id, user_id: c.id });
     if (error) { setBusy(null); return toast.error(error.message); }
@@ -256,15 +268,20 @@ function AssignClientDialog({ slot, assigned, clients, onClose }: { slot: Slot; 
       <div className="max-h-80 overflow-y-auto divide-y divide-border rounded-md border border-border">
         {filtered.length === 0 ? (
           <div className="p-4 text-sm text-muted-foreground">No clients found.</div>
-        ) : filtered.map((c) => (
-          <div key={c.id} className="flex items-center justify-between p-3">
-            <div className="min-w-0">
-              <div className="text-sm text-foreground truncate">{c.name || c.email}</div>
-              <div className="text-xs text-muted-foreground truncate">{c.email}</div>
+        ) : filtered.map((c) => {
+          const eligible = c.hasWaiver && c.hasShipping;
+          const missing = [!c.hasWaiver && "waiver", !c.hasShipping && "shipping"].filter(Boolean).join(", ");
+          return (
+            <div key={c.id} className="flex items-center justify-between p-3">
+              <div className="min-w-0">
+                <div className="text-sm text-foreground truncate">{c.name || c.email}</div>
+                <div className="text-xs text-muted-foreground truncate">{c.email}</div>
+                {!eligible && <div className="text-[10px] text-amber-600 mt-0.5">Missing {missing}</div>}
+              </div>
+              <button onClick={() => assign(c)} disabled={busy === c.id || !eligible} title={eligible ? undefined : `Client is missing ${missing}`} className="rounded-md bg-primary text-primary-foreground px-2.5 py-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed">Assign</button>
             </div>
-            <button onClick={() => assign(c)} disabled={busy === c.id} className="rounded-md bg-primary text-primary-foreground px-2.5 py-1 text-xs disabled:opacity-50">Assign</button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </Modal>
   );

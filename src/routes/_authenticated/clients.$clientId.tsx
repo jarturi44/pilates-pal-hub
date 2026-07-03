@@ -64,6 +64,14 @@ function ClientProfilePage() {
   const u = data.user;
   const slotById = new Map(data.allSlots.map((s: any) => [s.id, s]));
   const mySlotsExpanded = data.mySlots.map((cs: any) => ({ csId: cs.id, slot: slotById.get(cs.slot_id) })).filter((x: any) => x.slot);
+  const hasWaiver = !!data.waiver;
+  const hasShipping = !!data.fulfill?.shipping_address;
+  const canAssignSlot = hasWaiver && hasShipping;
+  const assignBlockedReason = !hasWaiver && !hasShipping
+    ? "Client must sign the waiver and enter a shipping address first"
+    : !hasWaiver ? "Client must sign the waiver first"
+    : !hasShipping ? "Client must enter a shipping address first"
+    : "";
 
   function exportWaiverPdf() {
     if (!data?.waiver || !u) return toast.error("No waiver on file");
@@ -143,7 +151,7 @@ function ClientProfilePage() {
       <div className="flex flex-wrap gap-2 mb-6">
         <ActionBtn icon={<Send size={12} />} label="Send message" onClick={() => setShowMessage(true)} />
         <ActionBtn icon={<ClipboardCheck size={12} />} label="Mark attendance" onClick={() => navigate({ to: "/attendance" })} />
-        <ActionBtn icon={<CalendarPlus size={12} />} label="Assign slot" onClick={() => setShowAssign(true)} />
+        <ActionBtn icon={<CalendarPlus size={12} />} label="Assign slot" onClick={() => { if (!canAssignSlot) { toast.error(assignBlockedReason); return; } setShowAssign(true); }} disabled={!canAssignSlot} title={canAssignSlot ? undefined : assignBlockedReason} />
         <ActionBtn icon={<RefreshCw size={12} />} label="Update plan" onClick={() => {
           const id = prompt("Enter new plan ID (see plan picker below)");
           if (id) changePlan(id);
@@ -204,9 +212,11 @@ function ClientProfilePage() {
               ))}
             </ul>
           )}
-          <button onClick={() => setShowAssign(true)} className="mt-3 rounded-md border border-border px-2.5 py-1 text-xs hover:bg-muted inline-flex items-center gap-1">
+          <button onClick={() => { if (!canAssignSlot) { toast.error(assignBlockedReason); return; } setShowAssign(true); }} disabled={!canAssignSlot} title={canAssignSlot ? undefined : assignBlockedReason}
+            className="mt-3 rounded-md border border-border px-2.5 py-1 text-xs hover:bg-muted inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
             <CalendarPlus size={12} /> Assign slot
           </button>
+          {!canAssignSlot && <p className="mt-2 text-xs text-amber-600">{assignBlockedReason}.</p>}
         </Section>
 
         <Section title="Fulfillment">
@@ -328,10 +338,10 @@ function ClientProfilePage() {
   );
 }
 
-function ActionBtn({ icon, label, onClick, destructive }: { icon: React.ReactNode; label: string; onClick: () => void; destructive?: boolean }) {
+function ActionBtn({ icon, label, onClick, destructive, disabled, title }: { icon: React.ReactNode; label: string; onClick: () => void; destructive?: boolean; disabled?: boolean; title?: string }) {
   return (
-    <button onClick={onClick}
-      className={cn("rounded-md border px-3 py-1.5 text-xs inline-flex items-center gap-1.5",
+    <button onClick={onClick} disabled={disabled} title={title}
+      className={cn("rounded-md border px-3 py-1.5 text-xs inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed",
         destructive ? "border-destructive/40 text-destructive hover:bg-destructive/5" : "border-border hover:bg-muted")}>
       {icon} {label}
     </button>
