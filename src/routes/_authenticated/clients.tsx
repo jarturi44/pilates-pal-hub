@@ -88,8 +88,10 @@ function ClientsPage() {
       if (planFilter !== "all" && sub?.plan?.display_name !== planFilter) return false;
       if (statusFilter !== "all" && (sub?.status ?? "none") !== statusFilter) return false;
       if (slotFilter !== "all" && !slots.some((s: any) => s?.id === slotFilter)) return false;
-      if (onbFilter === "complete" && !u.onboarding_complete) return false;
-      if (onbFilter === "incomplete" && u.onboarding_complete) return false;
+      const onb = data?.onbBy.get(u.id);
+      const fullyComplete = !!u.onboarding_complete && !!onb?.waiver && !!onb?.shipping;
+      if (onbFilter === "complete" && !fullyComplete) return false;
+      if (onbFilter === "incomplete" && fullyComplete) return false;
       if (fulFilter !== "all" && (ful ?? "n/a") !== fulFilter) return false;
       return true;
     });
