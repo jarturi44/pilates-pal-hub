@@ -167,7 +167,16 @@ function ClientsPage() {
                     <td className="px-4 py-3 text-xs text-muted-foreground">
                       {slots.length === 0 ? "—" : slots.map((s: any) => `${DAYS[s.day_of_week]} ${s.time.slice(0,5)}`).join(", ")}
                     </td>
-                    <td className="px-4 py-3 text-xs">{u.onboarding_complete ? <span className="text-primary">Complete</span> : <span className="text-amber-600">Incomplete</span>}</td>
+                    <td className="px-4 py-3 text-xs">{(() => {
+                      const onb = data!.onbBy.get(u.id);
+                      const done = !!u.onboarding_complete && !!onb?.waiver && !!onb?.shipping;
+                      if (done) return <span className="text-primary">Complete</span>;
+                      const missing: string[] = [];
+                      if (!onb?.waiver) missing.push("waiver");
+                      if (!onb?.shipping) missing.push("shipping");
+                      const title = missing.length ? `Missing: ${missing.join(", ")}` : "Incomplete";
+                      return <span className="text-amber-600" title={title}>Incomplete</span>;
+                    })()}</td>
                     <td className="px-4 py-3 text-xs capitalize">{ful ?? "n/a"}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">{last ? new Date(last).toLocaleDateString() : "—"}</td>
