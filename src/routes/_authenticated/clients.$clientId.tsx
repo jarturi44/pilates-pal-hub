@@ -64,6 +64,14 @@ function ClientProfilePage() {
   const u = data.user;
   const slotById = new Map(data.allSlots.map((s: any) => [s.id, s]));
   const mySlotsExpanded = data.mySlots.map((cs: any) => ({ csId: cs.id, slot: slotById.get(cs.slot_id) })).filter((x: any) => x.slot);
+  const hasWaiver = !!data.waiver;
+  const hasShipping = !!data.fulfill?.shipping_address;
+  const canAssignSlot = hasWaiver && hasShipping;
+  const assignBlockedReason = !hasWaiver && !hasShipping
+    ? "Client must sign the waiver and enter a shipping address first"
+    : !hasWaiver ? "Client must sign the waiver first"
+    : !hasShipping ? "Client must enter a shipping address first"
+    : "";
 
   function exportWaiverPdf() {
     if (!data?.waiver || !u) return toast.error("No waiver on file");
