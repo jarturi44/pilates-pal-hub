@@ -16,7 +16,7 @@ const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 type Slot = { id: string; day_of_week: number; time: string; session_type: "one_on_one" | "small_group"; capacity: number; active: boolean };
 type Assignment = { id: string; slot_id: string; user_id: string };
-type ClientLite = { id: string; name: string | null; email: string };
+type ClientLite = { id: string; name: string | null; email: string; hasWaiver: boolean; hasShipping: boolean };
 
 function SlotsPage() {
   const qc = useQueryClient();
