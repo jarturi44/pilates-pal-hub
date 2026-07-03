@@ -336,10 +336,10 @@ function ClientProfilePage() {
   );
 }
 
-function ActionBtn({ icon, label, onClick, destructive }: { icon: React.ReactNode; label: string; onClick: () => void; destructive?: boolean }) {
+function ActionBtn({ icon, label, onClick, destructive, disabled, title }: { icon: React.ReactNode; label: string; onClick: () => void; destructive?: boolean; disabled?: boolean; title?: string }) {
   return (
-    <button onClick={onClick}
-      className={cn("rounded-md border px-3 py-1.5 text-xs inline-flex items-center gap-1.5",
+    <button onClick={onClick} disabled={disabled} title={title}
+      className={cn("rounded-md border px-3 py-1.5 text-xs inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed",
         destructive ? "border-destructive/40 text-destructive hover:bg-destructive/5" : "border-border hover:bg-muted")}>
       {icon} {label}
     </button>
