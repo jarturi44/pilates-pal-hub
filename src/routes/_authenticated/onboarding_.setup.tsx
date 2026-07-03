@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { completeOnboarding } from "@/lib/user-admin.functions";
 import { useAuth } from "@/lib/auth-context";
 import { Check, ExternalLink, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -55,6 +57,7 @@ function OnboardingSetupPage() {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [continuing, setContinuing] = useState(false);
+  const completeOnboardingFn = useServerFn(completeOnboarding);
   const [waiverChecked, setWaiverChecked] = useState(false);
 
   const { data, isLoading } = useQuery({
@@ -159,12 +162,10 @@ function OnboardingSetupPage() {
   async function handleContinue() {
     if (!user || !waiverChecked) return;
     setContinuing(true);
-    const { error } = await supabase
-      .from("users")
-      .update({ onboarding_complete: true })
-      .eq("id", user.id);
-    if (error) {
-      toast.error(error.message);
+    try {
+      await completeOnboardingFn();
+    } catch (err) {
+      toast.error((err as Error).message);
       setContinuing(false);
       return;
     }

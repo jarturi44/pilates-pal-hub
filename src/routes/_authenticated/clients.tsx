@@ -7,6 +7,8 @@ import { Search, AlertCircle, Mail, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sendTransactionalEmail } from "@/lib/email/send";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { adminSetIntakeCompleted } from "@/lib/user-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/clients")({
   component: ClientsRoute,
@@ -335,14 +337,16 @@ function PendingIntakesSection() {
 function MarkIntakeCompleteButton({ userId, email, name }: { userId: string; email: string; name: string | null }) {
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
+  const setCompleted = useServerFn(adminSetIntakeCompleted);
   async function markComplete(e: React.MouseEvent) {
     e.stopPropagation();
     setBusy(true);
-    const { error } = await supabase
-      .from("users")
-      .update({ intake_completed_at: new Date().toISOString() })
-      .eq("id", userId);
-    if (error) { setBusy(false); return toast.error(error.message); }
+    try {
+      await setCompleted({ data: { userId, completed: true } });
+    } catch (err) {
+      setBusy(false);
+      return toast.error((err as Error).message);
+    }
     try {
       await sendTransactionalEmail({
         templateName: "intake-complete",
