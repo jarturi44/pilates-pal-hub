@@ -162,12 +162,10 @@ function OnboardingSetupPage() {
   async function handleContinue() {
     if (!user || !waiverChecked) return;
     setContinuing(true);
-    const { error } = await supabase
-      .from("users")
-      .update({ onboarding_complete: true })
-      .eq("id", user.id);
-    if (error) {
-      toast.error(error.message);
+    try {
+      await completeOnboardingFn();
+    } catch (err) {
+      toast.error((err as Error).message);
       setContinuing(false);
       return;
     }
