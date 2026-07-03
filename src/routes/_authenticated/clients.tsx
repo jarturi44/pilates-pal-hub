@@ -337,14 +337,16 @@ function PendingIntakesSection() {
 function MarkIntakeCompleteButton({ userId, email, name }: { userId: string; email: string; name: string | null }) {
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
+  const setCompleted = useServerFn(adminSetIntakeCompleted);
   async function markComplete(e: React.MouseEvent) {
     e.stopPropagation();
     setBusy(true);
-    const { error } = await supabase
-      .from("users")
-      .update({ intake_completed_at: new Date().toISOString() })
-      .eq("id", userId);
-    if (error) { setBusy(false); return toast.error(error.message); }
+    try {
+      await setCompleted({ data: { userId, completed: true } });
+    } catch (err) {
+      setBusy(false);
+      return toast.error((err as Error).message);
+    }
     try {
       await sendTransactionalEmail({
         templateName: "intake-complete",
