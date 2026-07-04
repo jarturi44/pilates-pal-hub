@@ -14,12 +14,25 @@ export const markIntakeSkipped = createServerFn({ method: "POST" })
     const now = new Date().toISOString();
     const { supabase, userId } = context;
 
-    // Only admins may bypass the intake payment for existing clients.
+    // Allow either an admin, or a brand-new welcome-back signup (no sub yet).
+    // The welcome-back invite is issued manually by Jon, so a freshly created
+    // account with no subscription is the only path where a non-admin can
+    // self-skip the paid intake.
     const { data: isAdmin } = await supabase.rpc("has_role", {
       _user_id: userId,
       _role: "admin",
     });
-    if (!isAdmin) throw new Error("Forbidden: admin only");
+    if (!isAdmin) {
+      const { data: existingSubs } = await supabase
+        .from("subscriptions")
+        .select("id")
+        .eq("user_id", userId)
+        .limit(1);
+      if (existingSubs && existingSubs.length > 0) {
+        throw new Error("Forbidden: intake already established");
+      }
+    }
+
 
 
     // Only set the columns that aren't already set
