@@ -91,23 +91,45 @@ function AuthLayout() {
     },
   });
 
+  const navigate = useNavigate();
+
+  // Compute the target redirect (if any) imperatively via useEffect so we
+  // don't render <Navigate> with a fresh `search` object every render — that
+  // pattern causes TanStack Router to re-fire navigation on every render,
+  // producing React error #185 (Maximum update depth exceeded) and Safari's
+  // "page is unresponsive" prompt.
+  const redirectStr = useMemo(
+    () => `${location.pathname}${location.searchStr || ""}`,
+    [location.pathname, location.searchStr],
+  );
+
+  const authTarget: { to: string; search?: Record<string, string> } | null =
+    loading || (session && !role) || (role === "client" && !isOnOnboarding && gateLoading)
+      ? null
+      : !session
+        ? { to: "/login", search: { redirect: redirectStr } }
+        : role === "client" && gate && !isOnOnboarding
+          ? (!gate.intakePaid || !gate.intakeCompleted || !gate.activeSub || !gate.shippingDone)
+            ? { to: "/onboarding" }
+            : (!gate.waiverDone || !gate.onboardingComplete)
+              ? { to: "/onboarding/setup" }
+              : null
+          : null;
+
+  useEffect(() => {
+    if (!authTarget) return;
+    navigate({ to: authTarget.to, search: authTarget.search, replace: true });
+  }, [authTarget?.to, authTarget?.search?.redirect, navigate]);
+
   if (loading || (session && !role) || (role === "client" && !isOnOnboarding && gateLoading)) {
     return <LoadingScreen />;
   }
-  if (!session) {
-    const redirect = `${location.pathname}${location.searchStr || ""}`;
-    return <Navigate to="/login" search={{ redirect }} />;
+  if (!session || authTarget) {
+    return <LoadingScreen />;
   }
 
   if (role === "client" && gate && !isOnOnboarding) {
-    // Must complete: intake payment → intake session → plan → shipping → waiver
-    if (!gate.intakePaid || !gate.intakeCompleted || !gate.activeSub || !gate.shippingDone) {
-      return <Navigate to="/onboarding" />;
-    }
-    if (!gate.waiverDone || !gate.onboardingComplete) {
-      return <Navigate to="/onboarding/setup" />;
-    }
-    if (gate.activeSub.access_suspended && !pathname.startsWith("/settings") && !pathname.startsWith("/notifications")) {
+    if (gate.activeSub?.access_suspended && !pathname.startsWith("/settings") && !pathname.startsWith("/notifications")) {
       return <SuspendedScreen />;
     }
   }
