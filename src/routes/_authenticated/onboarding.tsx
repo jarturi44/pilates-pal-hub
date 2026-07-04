@@ -51,6 +51,10 @@ type UserState = {
   onboarding_complete: boolean;
 };
 
+function needsEquipment(planType: string | null | undefined) {
+  return planType === "small_group" || planType === "one_on_one" || planType === "combo";
+}
+
 function OnboardingPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -95,16 +99,19 @@ function OnboardingPage() {
     },
   });
 
-  const { data: shippingDone, refetch: refetchShipping } = useQuery({
+  const { data: setupProgress, refetch: refetchSetupProgress } = useQuery({
     queryKey: ["onboarding-shipping", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
       const { data } = await supabase
         .from("onboarding_progress")
-        .select("shipping_completed_at")
+        .select("shipping_completed_at, waiver_completed_at")
         .eq("user_id", user!.id)
         .maybeSingle();
-      return !!data?.shipping_completed_at;
+      return {
+        shippingDone: !!data?.shipping_completed_at,
+        waiverDone: !!data?.waiver_completed_at,
+      };
     },
   });
 
@@ -156,18 +163,8 @@ function OnboardingPage() {
   // waiver both done. Guards against stale onboarding_complete flags that
   // predate the shipping/waiver requirement (which would otherwise trap the
   // user in a redirect loop away from the steps they still need to finish).
-  const { data: waiverDone } = useQuery({
-    queryKey: ["onboarding-waiver-done", user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("onboarding_progress")
-        .select("waiver_completed_at")
-        .eq("user_id", user!.id)
-        .maybeSingle();
-      return !!data?.waiver_completed_at;
-    },
-  });
+  const shippingDone = !!setupProgress?.shippingDone;
+  const waiverDone = !!setupProgress?.waiverDone;
   useEffect(() => {
     if (userState?.onboarding_complete && shippingDone && waiverDone) {
       navigate({ to: "/portal", replace: true });
@@ -184,7 +181,7 @@ function OnboardingPage() {
 
   // Determine current step
   const planType = activeSub?.plan?.type ?? null;
-  const planNeedsEquipment = planType === "small_group" || planType === "one_on_one" || planType === "combo";
+  const planNeedsEquipment = needsEquipment(planType);
 
   const isWelcomeBack = search.welcomeBack === "1";
 
@@ -194,7 +191,8 @@ function OnboardingPage() {
   const awaitingIntakeSession = !isWelcomeBack && !!userState.intake_paid_at && !userState.intake_completed_at;
   const needsPlan = (isWelcomeBack || !!userState.intake_completed_at) && !activeSub;
   const needsShipping = !!activeSub && planNeedsEquipment && !shippingDone;
-  const needsWaiver = !!activeSub && !needsShipping && !userState.onboarding_complete;
+  const needsWaiver = !!activeSub && !needsShipping && !waiverDone;
+  const readyForPortal = !!activeSub && !needsShipping && waiverDone;
 
   const steps = isWelcomeBack
     ? ["Choose plan", "Shipping info", "Sign waiver"]
@@ -263,7 +261,7 @@ function OnboardingPage() {
           userId={user!.id}
           stepLabel={isWelcomeBack ? "Step 2 of 3" : "Step 4 of 5"}
           onSaved={async () => {
-            await refetchShipping();
+            await refetchSetupProgress();
           }}
         />
       )}
@@ -272,6 +270,15 @@ function OnboardingPage() {
         <ProceedToWaiverStep
           stepLabel={isWelcomeBack ? "Step 3 of 3" : "Step 5 of 5"}
           onContinue={() => navigate({ to: "/onboarding/setup" })}
+        />
+      )}
+
+      {readyForPortal && (
+        <FinishOnboardingStep
+          onContinue={async () => {
+            await qc.invalidateQueries({ queryKey: ["onboarding-gate"] });
+            navigate({ to: "/portal" });
+          }}
         />
       )}
     </div>
@@ -635,6 +642,39 @@ function ProceedToWaiverStep({ onContinue, stepLabel = "Step 5 of 5" }: { onCont
         className="rounded-md bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:opacity-90 inline-flex items-center gap-2"
       >
         Continue to waiver <ArrowRight size={14} />
+      </button>
+    </div>
+  );
+}
+
+function FinishOnboardingStep({ onContinue }: { onContinue: () => Promise<void> }) {
+  const completeOnboardingFn = useServerFn(syncCompletedOnboarding);
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent font-medium">Ready</p>
+        <h1 className="font-display text-4xl text-foreground mt-2">You're all set.</h1>
+        <p className="mt-2 text-muted-foreground">Your shipping info and waiver are on file.</p>
+      </header>
+      <button
+        onClick={async () => {
+          setBusy(true);
+          try {
+            await completeOnboardingFn();
+            await onContinue();
+          } catch (err) {
+            toast.error((err as Error).message || "Couldn't finish setup");
+          } finally {
+            setBusy(false);
+          }
+        }}
+        disabled={busy}
+        className="rounded-md bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-2"
+      >
+        {busy && <Loader2 size={14} className="animate-spin" />}
+        Open my home page <ArrowRight size={14} />
       </button>
     </div>
   );
