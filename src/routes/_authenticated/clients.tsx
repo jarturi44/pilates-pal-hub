@@ -15,6 +15,17 @@ export const Route = createFileRoute("/_authenticated/clients")({
 });
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const ACTIVE_SUB_STATUSES = new Set(["active", "trialing", "past_due"]);
+
+function planNeedsEquipment(planType?: string | null) {
+  return planType === "small_group" || planType === "one_on_one" || planType === "combo";
+}
+
+function isOnboardingComplete(u: any, sub: any, onb?: { waiver: boolean; shipping: boolean }) {
+  const hasActiveSub = !!sub && ACTIVE_SUB_STATUSES.has(sub.status);
+  const shippingDone = !planNeedsEquipment(sub?.plan?.type) || !!onb?.shipping;
+  return hasActiveSub && !!onb?.waiver && shippingDone;
+}
 
 function ClientsRoute() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -91,7 +102,7 @@ function ClientsPage() {
       if (statusFilter !== "all" && (sub?.status ?? "none") !== statusFilter) return false;
       if (slotFilter !== "all" && !slots.some((s: any) => s?.id === slotFilter)) return false;
       const onb = data?.onbBy.get(u.id);
-      const fullyComplete = !!u.onboarding_complete && !!onb?.waiver && !!onb?.shipping;
+      const fullyComplete = isOnboardingComplete(u, sub, onb);
       if (onbFilter === "complete" && !fullyComplete) return false;
       if (onbFilter === "incomplete" && fullyComplete) return false;
       if (fulFilter !== "all" && (ful ?? "n/a") !== fulFilter) return false;
@@ -171,11 +182,12 @@ function ClientsPage() {
                     </td>
                     <td className="px-4 py-3 text-xs">{(() => {
                       const onb = data!.onbBy.get(u.id);
-                      const done = !!u.onboarding_complete && !!onb?.waiver && !!onb?.shipping;
+                      const done = isOnboardingComplete(u, sub, onb);
                       if (done) return <span className="text-primary">Complete</span>;
                       const missing: string[] = [];
+                      if (!sub || !ACTIVE_SUB_STATUSES.has(sub.status)) missing.push("plan");
                       if (!onb?.waiver) missing.push("waiver");
-                      if (!onb?.shipping) missing.push("shipping");
+                      if (planNeedsEquipment(sub?.plan?.type) && !onb?.shipping) missing.push("shipping");
                       const title = missing.length ? `Missing: ${missing.join(", ")}` : "Incomplete";
                       return <span className="text-amber-600" title={title}>Incomplete</span>;
                     })()}</td>
