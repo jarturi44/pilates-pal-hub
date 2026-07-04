@@ -10,10 +10,6 @@ function getSafeRedirect(redirect: string | undefined) {
   return redirect;
 }
 
-function postLoginPath(role: string | null) {
-  return role === "admin" ? "/dashboard" : "/onboarding";
-}
-
 export const Route = createFileRoute("/login")({
   validateSearch: (s: Record<string, unknown>): { redirect?: string } => ({
     redirect: getSafeRedirect(typeof s.redirect === "string" ? s.redirect : undefined) ?? undefined,
@@ -45,7 +41,7 @@ function LoginPage() {
       window.location.replace(safeRedirect);
       return;
     }
-    navigate({ to: postLoginPath(role), replace: true });
+    navigate({ to: role === "admin" ? "/dashboard" : "/onboarding", replace: true });
   }, [authLoading, navigate, role, safeRedirect, session]);
 
   if (authLoading || session) {
