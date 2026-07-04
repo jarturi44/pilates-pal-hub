@@ -98,11 +98,11 @@ function AuthLayout() {
   }
 
   if (role === "client" && gate && !isOnOnboarding) {
-    // Must complete: intake payment → intake session → plan → waiver
-    if (!gate.intakePaid || !gate.intakeCompleted || !gate.activeSub) {
+    // Must complete: intake payment → intake session → plan → shipping → waiver
+    if (!gate.intakePaid || !gate.intakeCompleted || !gate.activeSub || !gate.shippingDone) {
       return <Navigate to="/onboarding" />;
     }
-    if (!gate.onboardingComplete) {
+    if (!gate.waiverDone || !gate.onboardingComplete) {
       return <Navigate to="/onboarding/setup" />;
     }
     if (gate.activeSub.access_suspended && !pathname.startsWith("/settings") && !pathname.startsWith("/notifications")) {
