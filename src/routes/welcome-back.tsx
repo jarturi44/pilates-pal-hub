@@ -86,7 +86,7 @@ function WelcomeBackPage() {
 
       if (linkedExisting) {
         toast.success("Welcome back! We found your existing subscription.");
-        navigate({ to: "/waiver", replace: true });
+        navigate({ to: "/onboarding", search: { welcomeBack: "1" }, replace: true });
       } else {
         toast.success("Account created! Let's pick your plan.");
         navigate({ to: "/onboarding", search: { welcomeBack: "1" }, replace: true });

@@ -81,8 +81,7 @@ function AuthLayout() {
 
       return {
         activeSub,
-        onboardingComplete:
-          !!userRes.data?.onboarding_complete && shippingDone && waiverDone,
+        onboardingComplete: shippingDone && waiverDone,
         intakePaid: !!userRes.data?.intake_paid_at,
         intakeCompleted: !!userRes.data?.intake_completed_at,
         shippingDone,

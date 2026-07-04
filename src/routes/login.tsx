@@ -21,7 +21,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/login" });
   const rawSearch = useRouterState({ select: (s) => s.location.searchStr });
-  const { loading: authLoading, session } = useAuth();
+  const { loading: authLoading, session, role } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,12 +36,13 @@ function LoginPage() {
 
   useEffect(() => {
     if (authLoading || !session) return;
+    if (!role) return;
     if (safeRedirect) {
       window.location.replace(safeRedirect);
       return;
     }
-    navigate({ to: "/", replace: true });
-  }, [authLoading, navigate, safeRedirect, session]);
+    navigate({ to: role === "admin" ? "/dashboard" : "/onboarding", replace: true });
+  }, [authLoading, navigate, role, safeRedirect, session]);
 
   if (authLoading || session) {
     return <LoadingScreen />;
@@ -61,7 +62,7 @@ function LoginPage() {
       window.location.href = safeRedirect;
       return;
     }
-    navigate({ to: "/" });
+    navigate({ to: "/onboarding" });
   }
 
   return (
