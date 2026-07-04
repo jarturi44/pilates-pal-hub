@@ -11,6 +11,7 @@ import {
   syncCheckoutSession,
   subscribeWithSavedCard,
 } from "@/lib/checkout.functions";
+import { completeOnboarding } from "@/lib/user-admin.functions";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2, Sparkles, Minus, Plus, ArrowRight, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -648,7 +649,7 @@ function ProceedToWaiverStep({ onContinue, stepLabel = "Step 5 of 5" }: { onCont
 }
 
 function FinishOnboardingStep({ onContinue }: { onContinue: () => Promise<void> }) {
-  const completeOnboardingFn = useServerFn(syncCompletedOnboarding);
+  const completeOnboardingFn = useServerFn(completeOnboarding);
   const [busy, setBusy] = useState(false);
 
   return (
