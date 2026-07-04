@@ -223,49 +223,27 @@ function OnboardingSetupPage() {
         </div>
 
         <div className="pt-2 border-t border-border space-y-3">
-          {waiverSubmitted ? (
+          {waiverSubmitted && (
             <div className="rounded-md bg-primary/5 border border-primary/20 px-3 py-2 text-sm text-foreground flex items-center gap-2">
               <Check size={14} className="text-primary" />
               We received your waiver submission for <span className="font-medium">{data.email}</span>.
             </div>
-          ) : (
-            <div className="rounded-md bg-muted border border-border px-3 py-3 text-sm text-foreground space-y-2">
-              <p>
-                Please complete your waiver first. If you don't see the form above, check your
-                email for the link — it takes about 2 minutes.
-              </p>
-              <div className="flex items-center gap-3 flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => waiverCheckQuery.refetch()}
-                  disabled={waiverCheckQuery.isFetching}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium rounded-md border border-border bg-background px-3 py-1.5 hover:bg-accent/10 disabled:opacity-50"
-                >
-                  <RefreshCw size={12} className={waiverCheckQuery.isFetching ? "animate-spin" : ""} />
-                  I just completed it
-                </button>
-                <a
-                  href={waiverUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Open waiver in new tab <ExternalLink size={12} />
-                </a>
-              </div>
-            </div>
           )}
-          <label
-            className={cn(
-              "flex items-start gap-3",
-              waiverSubmitted ? "cursor-pointer" : "cursor-not-allowed opacity-60",
-            )}
-          >
+          <div className="rounded-md bg-muted border border-border px-3 py-3 text-sm text-foreground space-y-2">
+            <p>
+              Complete and submit the waiver above (or{" "}
+              <a href={waiverUrl} target="_blank" rel="noopener noreferrer" className="underline inline-flex items-center gap-1">
+                open in a new tab <ExternalLink size={12} />
+              </a>
+              ), then check the box below to continue.
+            </p>
+          </div>
+          <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
               checked={waiverChecked}
               onChange={(e) => toggleWaiver(e.target.checked)}
-              disabled={saving || !waiverSubmitted}
+              disabled={saving}
               className="mt-1 h-4 w-4 rounded border-input"
             />
             <span className="text-sm text-foreground">
@@ -274,6 +252,7 @@ function OnboardingSetupPage() {
           </label>
         </div>
       </section>
+
 
       <div className="flex justify-center pt-2">
         <button
