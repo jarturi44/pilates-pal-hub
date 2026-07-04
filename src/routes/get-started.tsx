@@ -26,10 +26,10 @@ function GetStartedPage() {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
 
-  // If somehow already logged in, send them to their app
+  // If somehow already logged in, send them to the onboarding gate first.
   useEffect(() => {
     if (session) {
-      navigate({ to: role === "admin" ? "/dashboard" : "/portal", replace: true });
+      navigate({ to: role === "admin" ? "/dashboard" : "/onboarding", replace: true });
     }
   }, [session, role, navigate]);
 
