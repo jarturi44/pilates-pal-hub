@@ -27,7 +27,7 @@ function AuthLayout() {
       const [subRes, userRes] = await Promise.all([
         supabase
           .from("subscriptions")
-          .select("id, status, access_suspended, past_due_since")
+          .select("id, status, access_suspended, past_due_since, plan:plans(type)")
           .eq("user_id", user!.id)
           .in("status", ["active", "trialing", "past_due"])
           .order("created_at", { ascending: false })
@@ -40,7 +40,9 @@ function AuthLayout() {
           .maybeSingle(),
       ]);
 
-      let activeSub = subRes.data;
+      let activeSub = subRes.data as
+        | (NonNullable<typeof subRes.data> & { plan?: { type: string } | null })
+        | null;
       // Recovery: if no local sub row but Stripe has one for this user, import it.
       if (!activeSub) {
         const { data: sessionData } = await supabase.auth.getSession();
@@ -53,7 +55,8 @@ function AuthLayout() {
                 status: result.subscription.status,
                 access_suspended: result.subscription.access_suspended,
                 past_due_since: result.subscription.past_due_since,
-              };
+                plan: (result.subscription as { plan?: { type: string } | null }).plan ?? null,
+              } as typeof activeSub;
             }
           } catch (err) {
             console.warn("Subscription recovery failed", err);
@@ -61,9 +64,25 @@ function AuthLayout() {
         }
       }
 
+      // Verify shipping + waiver were actually completed. Guards against stale
+      // onboarding_complete=true flags (from earlier flows) that would otherwise
+      // let clients into /portal without finishing shipping or signing the waiver.
+      const { data: progress } = await supabase
+        .from("onboarding_progress")
+        .select("shipping_completed_at, waiver_completed_at")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+
+      const planType = activeSub?.plan?.type ?? null;
+      const planNeedsEquipment =
+        planType === "small_group" || planType === "one_on_one" || planType === "combo";
+      const shippingDone = !planNeedsEquipment || !!progress?.shipping_completed_at;
+      const waiverDone = !!progress?.waiver_completed_at;
+
       return {
         activeSub,
-        onboardingComplete: !!userRes.data?.onboarding_complete,
+        onboardingComplete:
+          !!userRes.data?.onboarding_complete && shippingDone && waiverDone,
         intakePaid: !!userRes.data?.intake_paid_at,
         intakeCompleted: !!userRes.data?.intake_completed_at,
       };
