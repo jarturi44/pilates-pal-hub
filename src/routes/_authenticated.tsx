@@ -56,7 +56,7 @@ function AuthLayout() {
                 access_suspended: result.subscription.access_suspended,
                 past_due_since: result.subscription.past_due_since,
                 plan: (result.subscription as { plan?: { type: string } | null }).plan ?? null,
-              } as typeof activeSub;
+              } as unknown as typeof activeSub;
             }
           } catch (err) {
             console.warn("Subscription recovery failed", err);
