@@ -36,7 +36,7 @@ function Landing() {
   const { loading, session, role } = useAuth();
   if (loading) return <LoadingScreen />;
 
-  const primaryHref = session ? (role === "admin" ? "/dashboard" : "/portal") : "/get-started";
+  const primaryHref = session ? (role === "admin" ? "/dashboard" : "/onboarding") : "/get-started";
   const primaryLabel = session ? "Go to your home" : "Book your intake";
 
   return (
@@ -68,7 +68,7 @@ function Nav({ session, role }: { session: boolean; role: string | null }) {
         <div className="flex items-center gap-3">
           {session ? (
             <Link
-              to={role === "admin" ? "/dashboard" : "/portal"}
+              to={role === "admin" ? "/dashboard" : "/onboarding"}
               className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
             >
               Open app
