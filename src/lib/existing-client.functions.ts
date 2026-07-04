@@ -125,7 +125,46 @@ export const linkExistingStripeSubscription = createServerFn({ method: "POST" })
       ) ?? null;
       if (foundSub) break;
     }
-    if (!foundSub) return { linked: false, reason: "no_active_subscription" as const };
+    // Legacy fallback: no Stripe Subscription object, but a recent successful
+    // $80 charge means this is a manually-billed 10 Minute Mornings client
+    // (pre-portal setup). Link them to the mornings plan without a
+    // stripe_subscription_id so the portal unlocks; billing continues manually.
+    if (!foundSub) {
+      const ninetyDaysAgo = Math.floor(Date.now() / 1000) - 90 * 24 * 60 * 60;
+      let legacyCustomerId: string | null = null;
+      for (const cust of customers.data) {
+        const charges = await stripeGet<StripeListResp<{ amount: number; status: string; created: number }>>(
+          stripeKey,
+          `/charges?customer=${cust.id}&limit=10`,
+        );
+        const recent80 = charges.data.find(
+          (c) => c.amount === 8000 && c.status === "succeeded" && c.created >= ninetyDaysAgo,
+        );
+        if (recent80) { legacyCustomerId = cust.id; break; }
+      }
+      if (!legacyCustomerId) return { linked: false, reason: "no_active_subscription" as const };
+
+      const { data: morningsPlan } = await supabase
+        .from("plans").select("id").eq("type", "mornings").maybeSingle();
+      if (!morningsPlan?.id) return { linked: false, reason: "no_matching_plan" as const };
+
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error: legacyErr } = await supabaseAdmin.from("subscriptions").insert({
+        user_id: userId,
+        plan_id: morningsPlan.id,
+        stripe_customer_id: legacyCustomerId,
+        status: "active",
+        start_date: new Date().toISOString(),
+      });
+      if (legacyErr) throw legacyErr;
+
+      await supabaseAdmin.from("users").update({
+        intake_paid_at: new Date().toISOString(),
+        intake_completed_at: new Date().toISOString(),
+      }).eq("id", userId);
+
+      return { linked: true, plan_id: morningsPlan.id, subscription_id: null, legacy: true };
+    }
 
     const priceId = foundSub.items?.data?.[0]?.price?.id ?? null;
 
