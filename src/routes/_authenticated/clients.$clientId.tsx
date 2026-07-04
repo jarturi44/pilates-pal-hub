@@ -230,18 +230,6 @@ function ClientProfilePage() {
           )}
         </Section>
 
-        <Section title="Onboarding — intake form">
-          {!data.intake ? <p className="text-sm text-muted-foreground">Not submitted.</p> : (
-            <>
-              <Row k="Fitness level" v={data.intake.fitness_level} />
-              <Row k="Primary goal" v={data.intake.primary_goal} />
-              <Row k="Days/week" v={data.intake.days_per_week?.toString()} />
-              <Row k="Injuries" v={data.intake.injuries} multiline />
-              <Row k="Referral source" v={data.intake.referral_source} />
-              <Row k="Submitted" v={new Date(data.intake.submitted_at).toLocaleString()} />
-            </>
-          )}
-        </Section>
 
         <Section title="Signed waiver" right={data.waiver && (
           <button onClick={exportWaiverPdf} className="rounded-md border border-border px-2.5 py-1 text-xs hover:bg-muted inline-flex items-center gap-1">
