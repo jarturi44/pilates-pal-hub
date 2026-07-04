@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet, Navigate, useRouterState, Link } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useRouterState, Link } from "@tanstack/react-router";
+import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
