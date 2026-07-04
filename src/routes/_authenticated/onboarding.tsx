@@ -152,12 +152,27 @@ function OnboardingPage() {
   }, [search.step, search.session_id, planSync, navigate, refetchSub, qc]);
 
 
-  // Once onboarding_complete is true, push them to /home
+  // Only redirect to /portal when onboarding is truly complete — shipping AND
+  // waiver both done. Guards against stale onboarding_complete flags that
+  // predate the shipping/waiver requirement (which would otherwise trap the
+  // user in a redirect loop away from the steps they still need to finish).
+  const { data: waiverDone } = useQuery({
+    queryKey: ["onboarding-waiver-done", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("onboarding_progress")
+        .select("waiver_completed_at")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return !!data?.waiver_completed_at;
+    },
+  });
   useEffect(() => {
-    if (userState?.onboarding_complete) {
+    if (userState?.onboarding_complete && shippingDone && waiverDone) {
       navigate({ to: "/portal", replace: true });
     }
-  }, [userState?.onboarding_complete, navigate]);
+  }, [userState?.onboarding_complete, shippingDone, waiverDone, navigate]);
 
   if (!userState) {
     return (
