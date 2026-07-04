@@ -8,6 +8,10 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
+function planNeedsEquipment(planType?: string | null) {
+  return planType === "small_group" || planType === "one_on_one" || planType === "combo";
+}
+
 function DashboardPage() {
   const { data: stats } = useQuery({
     queryKey: ["admin-dashboard-stats-v2"],
@@ -15,16 +19,15 @@ function DashboardPage() {
       const monthStart = new Date();
       monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
 
-      const [activeSubs, byPlan, newThisMonth, pastDue, pendingShip, needsSlot, intakes, waivers, allClients] = await Promise.all([
+      const [activeSubs, byPlan, newThisMonth, pastDue, pendingShip, needsSlot, progress, allClients] = await Promise.all([
         supabase.from("subscriptions").select("id", { count: "exact", head: true }).in("status", ["active", "trialing"]),
         supabase.from("subscriptions").select("plan_id, plan:plans(display_name, price_per_month)").in("status", ["active", "trialing"]),
         supabase.from("users").select("id", { count: "exact", head: true }).eq("role", "client").gte("created_at", monthStart.toISOString()),
         supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "past_due"),
         supabase.from("equipment_fulfillment").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("users").select("id", { count: "exact", head: true }).eq("needs_slot_assignment", true),
-        supabase.from("intake_forms").select("user_id"),
-        supabase.from("waivers").select("user_id"),
-        supabase.from("users").select("id, onboarding_complete").eq("role", "client"),
+        supabase.from("onboarding_progress").select("user_id, waiver_completed_at, shipping_completed_at"),
+        supabase.from("users").select("id, subscriptions(status, plan:plans(type))").eq("role", "client"),
       ]);
 
       const planCounts = new Map<string, { name: string; count: number; price: number }>();
@@ -38,11 +41,14 @@ function DashboardPage() {
         planCounts.set(name, cur);
       });
 
-      const intakeIds = new Set((intakes.data ?? []).map((r: any) => r.user_id));
-      const waiverIds = new Set((waivers.data ?? []).map((r: any) => r.user_id));
-      const onboardingIncomplete = (allClients.data ?? []).filter((u: any) =>
-        !u.onboarding_complete || !intakeIds.has(u.id) || !waiverIds.has(u.id)
-      ).length;
+      const progressBy = new Map<string, any>();
+      (progress.data ?? []).forEach((p: any) => progressBy.set(p.user_id, p));
+      const onboardingIncomplete = (allClients.data ?? []).filter((u: any) => {
+        const sub = (u.subscriptions ?? []).find((s: any) => ["active", "trialing", "past_due"].includes(s.status));
+        const prog = progressBy.get(u.id);
+        const shippingDone = !planNeedsEquipment(sub?.plan?.type) || !!prog?.shipping_completed_at;
+        return !sub || !prog?.waiver_completed_at || !shippingDone;
+      }).length;
 
       return {
         activeSubs: activeSubs.count ?? 0,
