@@ -325,10 +325,11 @@ function PendingIntakesSection() {
               <button
                 onClick={() => markIntakeComplete(p)}
                 disabled={busyId === p.id}
+                title="Marks this paid intake done BEFORE the client has an account — it carries over when they create one. For a client who already has an account, use the 'Mark intake complete' button on their row / profile instead."
                 className="text-xs rounded-md border border-border bg-background px-3 py-1.5 hover:bg-secondary disabled:opacity-50 inline-flex items-center gap-1.5"
               >
                 {busyId === p.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
-                Mark intake complete
+                Mark done (pre‑signup)
               </button>
             )}
             <button

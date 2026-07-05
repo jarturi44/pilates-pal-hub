@@ -238,7 +238,7 @@ function ClientProfilePage() {
             <Download size={12} /> Export PDF
           </button>
         )}>
-          {!data.waiver ? <p className="text-sm text-muted-foreground">Not signed.</p> : (
+          {data.waiver ? (
             <>
               <div className="text-xs text-muted-foreground mb-2">
                 Signed {new Date(data.waiver.signed_at).toLocaleString()}{data.waiver.ip_address && ` · IP ${data.waiver.ip_address}`}
@@ -247,6 +247,21 @@ function ClientProfilePage() {
                 {data.waiver.content_snapshot}
               </div>
             </>
+          ) : data.onb?.waiver_completed_at ? (
+            /* Current pipeline records completion in onboarding_progress; the full
+               signed PDF lives in the Google Drive "Signed Waivers" folder, not the
+               (legacy, now-unused) waivers table. */
+            <div className="text-sm text-foreground">
+              <span className="inline-flex items-center gap-1.5 text-primary font-medium">
+                <Check size={14} /> Signed
+              </span>
+              <span className="text-muted-foreground"> · recorded {new Date(data.onb.waiver_completed_at).toLocaleString()}</span>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Signed PDF is saved in the “Signed Waivers” Google Drive folder.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Not signed.</p>
           )}
         </Section>
 
