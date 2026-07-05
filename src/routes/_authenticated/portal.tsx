@@ -40,12 +40,6 @@ function startOfWeek(d = new Date()) {
   x.setDate(x.getDate() - diff);
   return x;
 }
-function endOfWeek(d = new Date()) {
-  const s = startOfWeek(d);
-  const e = new Date(s); e.setDate(s.getDate() + 7);
-  return e;
-}
-
 function getYouTubeId(url: string | null | undefined): string | null {
   if (!url) return null;
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
@@ -87,16 +81,32 @@ function HomePage() {
     enabled: !!userId,
     queryKey: ["program-live-sessions", userId],
     queryFn: async () => {
-      const s = startOfWeek().toISOString();
-      const e = endOfWeek().toISOString();
-      const { data } = await supabase
-        .from("live_sessions")
-        .select("*")
-        .eq("user_id", userId!)
-        .gte("scheduled_at", s)
-        .lt("scheduled_at", e)
-        .order("scheduled_at", { ascending: true });
-      return (data ?? []) as LiveSession[];
+      // Sessions are scheduled as recurring weekly slots (slots + client_slots),
+      // NOT individual `live_sessions` rows (that table is never populated).
+      // Derive this week's dated occurrences from the client's assigned slots.
+      const { data: cs } = await supabase
+        .from("client_slots")
+        .select("id, slot:slots(id, day_of_week, time, session_type)")
+        .eq("user_id", userId!);
+      const weekStart = startOfWeek(); // Monday 00:00 local
+      return (cs ?? [])
+        .map((row: any): LiveSession | null => {
+          const slot = row.slot;
+          if (!slot) return null;
+          const d = new Date(weekStart);
+          d.setDate(weekStart.getDate() + ((slot.day_of_week + 6) % 7)); // Mon..Sun
+          const [hh, mm] = String(slot.time ?? "0:0").split(":");
+          d.setHours(parseInt(hh, 10) || 0, parseInt(mm, 10) || 0, 0, 0);
+          return {
+            id: row.id,
+            title: slot.session_type === "one_on_one" ? "One-on-One Session" : "Small Group Session",
+            scheduled_at: d.toISOString(),
+            duration_minutes: 30,
+            meeting_url: null,
+          };
+        })
+        .filter((x: LiveSession | null): x is LiveSession => x !== null)
+        .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
     },
   });
 
@@ -167,7 +177,11 @@ function HomePage() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const upcoming = (sessions ?? []).filter((s) => new Date(s.scheduled_at) >= new Date());
+  // Keep a session visible while it's upcoming AND for ~90 min after it starts,
+  // so a client joining a few minutes late still sees it.
+  const upcoming = (sessions ?? []).filter(
+    (s) => new Date(s.scheduled_at).getTime() + 90 * 60_000 >= Date.now(),
+  );
 
   async function joinSession(s: LiveSession) {
     const url = s.meeting_url || defaultMeetingUrl || null;
