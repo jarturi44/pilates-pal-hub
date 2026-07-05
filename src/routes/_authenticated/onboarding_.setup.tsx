@@ -105,16 +105,20 @@ function OnboardingSetupPage() {
 
   const waiverUrl = useMemo(() => {
     if (!data) return WAIVER_FORM_BASE;
+    // Pre-fill entry IDs must match the LIVE waiver form
+    // (docs.google.com/forms/d/e/1FAIpQLScjEUm-...). The form was rebuilt at some
+    // point, which changed every entry ID; the old IDs silently pre-filled
+    // nothing. IDs below were read from the live form's FB_PUBLIC_LOAD_DATA_.
     const p = new URLSearchParams({
       usp: "pp_url",
-      "entry.195795383": data.firstName,
-      "entry.454302861": data.lastName,
-      "entry.1101694510": data.phone,
-      "entry.1724090497": data.address,
-      "entry.1782718973": data.city,
-      "entry.104239794": data.state,
-      "entry.1259359843": data.zip,
-      "entry.2127601330": data.email,
+      "entry.1918456924": data.firstName,
+      "entry.1607294814": data.lastName,
+      "entry.1430114323": data.phone,
+      "entry.1873751175": data.address,
+      "entry.1984171968": data.city,
+      "entry.1584918641": data.state,
+      "entry.777565140": data.zip,
+      "entry.1098094088": data.email,
     });
     return `${WAIVER_FORM_BASE}&${p.toString()}`;
   }, [data]);
