@@ -40,27 +40,30 @@ function SettingsPage() {
 
 function GeneralTab() {
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["studio-settings"],
     queryFn: async () => {
       const base = await supabase
         .from("studio_settings")
-        .select("id, studio_name, admin_email, grace_period_days, commitment_months, current_waiver_version_id, updated_at, shop_url, default_meeting_url")
+        // NB: admin_email is intentionally NOT selectable by the admin role
+        // (column-level SELECT was revoked for security). Including it here made
+        // the whole query error out and the page hang on "Loading…" forever.
+        .select("id, studio_name, grace_period_days, commitment_months, current_waiver_version_id, updated_at, shop_url, default_meeting_url")
         .eq("id", 1)
         .maybeSingle();
-      if (!base.data) return null;
-      return { ...base.data, admin_email: base.data.admin_email ?? "" };
+      if (base.error) throw base.error;
+      return base.data ?? null;
     },
   });
   const [form, setForm] = useState<any>(null);
   useEffect(() => { if (data) setForm(data); }, [data]);
 
+  if (error) return <p className="text-sm text-destructive">Couldn't load settings: {(error as Error).message}</p>;
   if (isLoading || !form) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
   async function save() {
     const { error } = await supabase.from("studio_settings").update({
       studio_name: form.studio_name,
-      admin_email: form.admin_email ?? null,
       grace_period_days: form.grace_period_days,
       commitment_months: form.commitment_months,
       default_meeting_url: form.default_meeting_url?.trim() || null,
@@ -76,10 +79,6 @@ function GeneralTab() {
     <div className="max-w-lg space-y-4">
       <Field label="Studio name">
         <input value={form.studio_name ?? ""} onChange={(e) => setForm({ ...form, studio_name: e.target.value })}
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
-      </Field>
-      <Field label="Admin email">
-        <input type="email" value={form.admin_email ?? ""} onChange={(e) => setForm({ ...form, admin_email: e.target.value })}
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
       </Field>
       <Field label="Payment grace period (days, 1–7)">
