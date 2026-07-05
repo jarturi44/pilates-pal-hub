@@ -252,6 +252,7 @@ export async function createIntakeCheckoutOnServer(args: {
     success_url: `${origin}/onboarding?intake=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/onboarding`,
     customer_creation: "always",
+    allow_promotion_codes: "true",
     "payment_intent_data[setup_future_usage]": "off_session",
     "metadata[user_id]": args.userId,
     "metadata[purpose]": "intake_session",
@@ -295,7 +296,9 @@ export async function syncIntakeCheckoutOnServer(args: {
   if (session.metadata?.purpose !== "intake_session") {
     return { paid: false };
   }
-  if (session.payment_status !== "paid") {
+  // "no_payment_required" covers 100%-off promo codes (e.g. COMP), which
+  // Stripe marks as a $0 session rather than "paid".
+  if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
     return { paid: false };
   }
   const customerId = asId(session.customer);

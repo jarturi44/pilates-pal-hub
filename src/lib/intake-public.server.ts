@@ -84,7 +84,9 @@ export async function getIntakeSessionInfoOnServer(args: {
   if (session.metadata?.flow !== "intake") {
     throw new Error("This checkout session is not an intake session.");
   }
-  if (session.payment_status !== "paid") {
+  // "no_payment_required" covers 100%-off promo codes, which Stripe marks as a
+  // $0 session rather than "paid".
+  if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
     throw new Error("Payment hasn't completed yet — please refresh in a moment.");
   }
   const email = (session.customer_details?.email || session.customer_email || session.metadata?.email || "").toLowerCase();
@@ -201,7 +203,8 @@ export async function claimIntakeForUserOnServer(args: {
       args.stripeSecretKey,
       `/checkout/sessions/${encodeURIComponent(args.sessionId)}`,
     );
-    if (session.payment_status !== "paid") throw new Error("Payment not complete.");
+    if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required")
+      throw new Error("Payment not complete.");
     const sessionCustomer = typeof session.customer === "string" ? session.customer : session.customer?.id ?? null;
     if (sessionCustomer) stripeCustomerId = sessionCustomer;
   }

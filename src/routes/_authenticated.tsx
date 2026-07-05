@@ -21,7 +21,7 @@ function AuthLayout() {
 
   const recover = useServerFn(recoverSubscription);
 
-  const { data: gate, isLoading: gateLoading } = useQuery({
+  const { data: gate, isLoading: gateLoading, isError: gateError } = useQuery({
     queryKey: ["onboarding-gate", user?.id],
     enabled: !!user?.id && role === "client" && !isOnOnboarding,
     queryFn: async () => {
@@ -108,11 +108,17 @@ function AuthLayout() {
       ? null
       : !session
         ? { to: "/login", search: { redirect: redirectStr } }
-        : role === "client" && gate && !isOnOnboarding
-          ? (!gate.intakePaid || !gate.intakeCompleted || !gate.activeSub || !gate.shippingDone)
-            ? { to: "/onboarding" }
-            : (!gate.waiverDone || !gate.onboardingComplete)
-              ? { to: "/onboarding/setup" }
+        : role === "client" && !isOnOnboarding
+          ? gate
+            ? (!gate.intakePaid || !gate.intakeCompleted || !gate.activeSub || !gate.shippingDone)
+              ? { to: "/onboarding" }
+              : (!gate.waiverDone || !gate.onboardingComplete)
+                ? { to: "/onboarding/setup" }
+                : null
+            : gateError
+              ? // Fail closed: if we can't confirm onboarding status, funnel the
+                // client back through onboarding rather than into the portal.
+                { to: "/onboarding" }
               : null
           : null;
 
@@ -121,7 +127,17 @@ function AuthLayout() {
     navigate({ to: authTarget.to, search: authTarget.search, replace: true });
   }, [authTarget?.to, authTarget?.search?.redirect, navigate]);
 
-  if (loading || (session && !role) || (role === "client" && !isOnOnboarding && gateLoading)) {
+  // Fail closed: for a client off the onboarding routes, never render protected
+  // children until the gate query has actually resolved. Guards against the
+  // React Query v5 window where `enabled` has just flipped true so `gateLoading`
+  // is still false while `gate` is undefined — which previously fell through to
+  // <Outlet/> and flashed the portal to users mid-onboarding. (gateError is
+  // handled above via authTarget, which redirects to /onboarding.)
+  if (
+    loading ||
+    (session && !role) ||
+    (role === "client" && !isOnOnboarding && !gateError && (gateLoading || !gate))
+  ) {
     return <LoadingScreen />;
   }
   if (!session || authTarget) {
