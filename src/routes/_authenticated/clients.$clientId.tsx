@@ -32,7 +32,7 @@ function ClientProfilePage() {
   const { data, isLoading } = useQuery({
     queryKey: ["client-profile", clientId],
     queryFn: async () => {
-      const [user, intake, waiver, sub, plans, completions, attendance, allSlots, mySlots, fulfill, notifs, warmups] = await Promise.all([
+      const [user, intake, waiver, sub, plans, completions, attendance, allSlots, mySlots, fulfill, notifs, warmups, onbProg] = await Promise.all([
         supabase.from("users").select("*").eq("id", clientId).maybeSingle(),
         supabase.from("intake_forms").select("*").eq("user_id", clientId).order("submitted_at", { ascending: false }).limit(1).maybeSingle(),
         supabase.from("waivers").select("*").eq("user_id", clientId).order("signed_at", { ascending: false }).limit(1).maybeSingle(),
@@ -45,9 +45,11 @@ function ClientProfilePage() {
         supabase.from("equipment_fulfillment").select("*").eq("user_id", clientId).maybeSingle(),
         supabase.from("notifications").select("id, type, title, message, created_at, read").eq("user_id", clientId).order("created_at", { ascending: false }).limit(50),
         supabase.from("warmup_completions").select("completed_at").eq("user_id", clientId).order("completed_at", { ascending: false }),
+        supabase.from("onboarding_progress").select("waiver_completed_at, shipping_completed_at").eq("user_id", clientId).maybeSingle(),
       ]);
       return {
         user: user.data, intake: intake.data, waiver: waiver.data, sub: sub.data,
+        onb: onbProg.data,
         plans: plans.data ?? [],
         completions: completions.data ?? [],
         attendance: attendance.data ?? [],
@@ -65,7 +67,7 @@ function ClientProfilePage() {
   const u = data.user;
   const slotById = new Map(data.allSlots.map((s: any) => [s.id, s]));
   const mySlotsExpanded = data.mySlots.map((cs: any) => ({ csId: cs.id, slot: slotById.get(cs.slot_id) })).filter((x: any) => x.slot);
-  const hasWaiver = !!data.waiver;
+  const hasWaiver = !!data.waiver || !!data.onb?.waiver_completed_at;
   const hasShipping = !!data.fulfill?.shipping_address;
   const canAssignSlot = hasWaiver && hasShipping;
   const assignBlockedReason = !hasWaiver && !hasShipping

@@ -26,14 +26,22 @@ function SlotsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["slots-mgmt"],
     queryFn: async () => {
-      const [slots, cs, users, waivers, fulfill] = await Promise.all([
+      const [slots, cs, users, waivers, onbProg, fulfill] = await Promise.all([
         supabase.from("slots").select("*").order("day_of_week").order("time"),
         supabase.from("client_slots").select("*"),
         supabase.from("users").select("id, name, email").eq("role", "client"),
         supabase.from("waivers").select("user_id"),
+        supabase.from("onboarding_progress").select("user_id, waiver_completed_at"),
         supabase.from("equipment_fulfillment").select("user_id, shipping_address"),
       ]);
-      const waiverSet = new Set((waivers.data ?? []).map((w: any) => w.user_id));
+      // Waiver completion has two possible sources: the legacy `waivers` table
+      // and `onboarding_progress.waiver_completed_at` (the current onboarding
+      // flow, gated by the waiver_completions email record). Recognize either so
+      // clients who finished the real flow aren't blocked from scheduling.
+      const waiverSet = new Set<string>([
+        ...(waivers.data ?? []).map((w: any) => w.user_id),
+        ...(onbProg.data ?? []).filter((o: any) => o.waiver_completed_at).map((o: any) => o.user_id),
+      ]);
       const shipSet = new Set((fulfill.data ?? []).filter((f: any) => !!f.shipping_address).map((f: any) => f.user_id));
       const clients: ClientLite[] = ((users.data ?? []) as any[]).map((u) => ({
         id: u.id, name: u.name, email: u.email,
