@@ -1303,6 +1303,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      record_waiver_completion: {
+        Args: { p_email: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "client"
