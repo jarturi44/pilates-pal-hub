@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/onboarding_/setup")({
 });
 
 const WAIVER_FORM_BASE =
-  "https://docs.google.com/forms/d/e/1FAIpQLScjEUm-QpanbVqUNJJQYWnEHfW9MNzRYNxk6URTeAxT1fP0wg/viewform?embedded=true";
+  "https://docs.google.com/forms/d/1BKeSWAT54eh_nJ-zfaufO3WfQnYbkykUmphJyRchMnY/viewform?embedded=true";
 
 type SetupData = {
   firstName: string;
@@ -107,14 +107,14 @@ function OnboardingSetupPage() {
     if (!data) return WAIVER_FORM_BASE;
     const p = new URLSearchParams({
       usp: "pp_url",
-      "entry.1918456924": data.firstName,
-      "entry.1607294814": data.lastName,
-      "entry.1430114323": data.phone,
-      "entry.1873751175": data.address,
-      "entry.1984171968": data.city,
-      "entry.1584918641": data.state,
-      "entry.777565140": data.zip,
-      "entry.1098094088": data.email,
+      "entry.195795383": data.firstName,
+      "entry.454302861": data.lastName,
+      "entry.1101694510": data.phone,
+      "entry.1724090497": data.address,
+      "entry.1782718973": data.city,
+      "entry.104239794": data.state,
+      "entry.1259359843": data.zip,
+      "entry.2127601330": data.email,
     });
     return `${WAIVER_FORM_BASE}&${p.toString()}`;
   }, [data]);
@@ -238,15 +238,26 @@ function OnboardingSetupPage() {
               ), then check the box below to continue.
             </p>
           </div>
+          {!waiverSubmitted && (
+            <p className="text-sm text-muted-foreground">
+              Please complete your waiver first. Check your email for the link — it takes about 2 minutes.{" "}
+              <button
+                onClick={() => waiverCheckQuery.refetch()}
+                className="underline inline-flex items-center gap-1"
+              >
+                <RefreshCw size={12} /> I just completed it
+              </button>
+            </p>
+          )}
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
               checked={waiverChecked}
               onChange={(e) => toggleWaiver(e.target.checked)}
-              disabled={saving}
+              disabled={saving || !waiverSubmitted}
               className="mt-1 h-4 w-4 rounded border-input"
             />
-            <span className="text-sm text-foreground">
+            <span className={cn("text-sm", waiverSubmitted ? "text-foreground" : "text-muted-foreground")}>
               I've submitted the waiver above.
             </span>
           </label>
