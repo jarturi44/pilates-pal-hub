@@ -1,0 +1,1 @@
+GRANT UPDATE (default_meeting_url) ON public.studio_settings TO authenticated;
