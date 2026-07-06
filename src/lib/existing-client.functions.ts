@@ -96,12 +96,16 @@ async function stripeGet<T>(key: string, path: string): Promise<T> {
  * null if they aren't on the list.
  */
 async function grantMorningsIfAllowlisted(
-  supabase: any,
   userId: string,
   email: string,
   stripeCustomerId: string | null,
 ) {
-  const { data: listed } = await supabase
+  // Read via service role: `mornings_recipients` is admin-only under RLS, and
+  // the caller here is a brand-new (non-admin) client — the user client can't
+  // see the list, which is why the match came back empty.
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  const { data: listed } = await supabaseAdmin
     .from("mornings_recipients")
     .select("email")
     .ilike("email", email)
@@ -110,11 +114,10 @@ async function grantMorningsIfAllowlisted(
     .maybeSingle();
   if (!listed) return null;
 
-  const { data: morningsPlan } = await supabase
+  const { data: morningsPlan } = await supabaseAdmin
     .from("plans").select("id").eq("type", "mornings").maybeSingle();
   if (!morningsPlan?.id) return null;
 
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { error } = await supabaseAdmin.from("subscriptions").insert({
     user_id: userId,
     plan_id: morningsPlan.id,
@@ -158,7 +161,7 @@ export const linkExistingStripeSubscription = createServerFn({ method: "POST" })
       `/customers?email=${encodeURIComponent(email.toLowerCase())}&limit=10`,
     );
     if (!customers.data.length) {
-      const granted = await grantMorningsIfAllowlisted(supabase, userId, email, null);
+      const granted = await grantMorningsIfAllowlisted(userId, email, null);
       return granted ?? { linked: false, reason: "no_stripe_customer" as const };
     }
 
@@ -193,7 +196,7 @@ export const linkExistingStripeSubscription = createServerFn({ method: "POST" })
       }
       if (!legacyCustomerId) {
         const granted = await grantMorningsIfAllowlisted(
-          supabase, userId, email, customers.data[0]?.id ?? null,
+          userId, email, customers.data[0]?.id ?? null,
         );
         return granted ?? { linked: false, reason: "no_active_subscription" as const };
       }
