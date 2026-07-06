@@ -84,6 +84,52 @@ async function stripeGet<T>(key: string, path: string): Promise<T> {
  * Used for migrating existing clients (e.g. 10 Minute Mornings) whose
  * Stripe subscription predates this site. Idempotent — safe to re-run.
  */
+
+/**
+ * Safety net for existing 10 Minute Mornings clients whose external billing
+ * can't be auto-detected in Stripe (charge older than 90 days, not exactly $80,
+ * different email on the Stripe customer, etc.). If their email is on the
+ * admin-managed `mornings_recipients` allowlist, grant them a mornings
+ * subscription with NO charge — so welcome-back sends them straight to the
+ * waiver instead of a chargeable plan picker (which would double-bill them while
+ * their old external subscription is still active). Returns the link result, or
+ * null if they aren't on the list.
+ */
+async function grantMorningsIfAllowlisted(
+  supabase: any,
+  userId: string,
+  email: string,
+  stripeCustomerId: string | null,
+) {
+  const { data: listed } = await supabase
+    .from("mornings_recipients")
+    .select("email")
+    .ilike("email", email)
+    .eq("active", true)
+    .limit(1)
+    .maybeSingle();
+  if (!listed) return null;
+
+  const { data: morningsPlan } = await supabase
+    .from("plans").select("id").eq("type", "mornings").maybeSingle();
+  if (!morningsPlan?.id) return null;
+
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { error } = await supabaseAdmin.from("subscriptions").insert({
+    user_id: userId,
+    plan_id: morningsPlan.id,
+    ...(stripeCustomerId ? { stripe_customer_id: stripeCustomerId } : {}),
+    status: "active",
+    start_date: new Date().toISOString(),
+  });
+  if (error) throw error;
+  await supabaseAdmin.from("users").update({
+    intake_paid_at: new Date().toISOString(),
+    intake_completed_at: new Date().toISOString(),
+  }).eq("id", userId);
+  return { linked: true, plan_id: morningsPlan.id, subscription_id: null, allowlisted: true as const };
+}
+
 export const linkExistingStripeSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -111,7 +157,10 @@ export const linkExistingStripeSubscription = createServerFn({ method: "POST" })
       stripeKey,
       `/customers?email=${encodeURIComponent(email.toLowerCase())}&limit=10`,
     );
-    if (!customers.data.length) return { linked: false, reason: "no_stripe_customer" as const };
+    if (!customers.data.length) {
+      const granted = await grantMorningsIfAllowlisted(supabase, userId, email, null);
+      return granted ?? { linked: false, reason: "no_stripe_customer" as const };
+    }
 
     // Search each customer for an active or trialing subscription
     let foundSub: StripeSubscription | null = null;
@@ -142,7 +191,12 @@ export const linkExistingStripeSubscription = createServerFn({ method: "POST" })
         );
         if (recent80) { legacyCustomerId = cust.id; break; }
       }
-      if (!legacyCustomerId) return { linked: false, reason: "no_active_subscription" as const };
+      if (!legacyCustomerId) {
+        const granted = await grantMorningsIfAllowlisted(
+          supabase, userId, email, customers.data[0]?.id ?? null,
+        );
+        return granted ?? { linked: false, reason: "no_active_subscription" as const };
+      }
 
       const { data: morningsPlan } = await supabase
         .from("plans").select("id").eq("type", "mornings").maybeSingle();
