@@ -42,6 +42,7 @@ import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lova
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicHooksStripeWebhookRouteImport } from './routes/api/public/hooks/stripe-webhook'
+import { Route as ApiPublicHooksSendSessionStartingSoonRouteImport } from './routes/api/public/hooks/send-session-starting-soon'
 import { Route as ApiPublicHooksSendSessionRemindersRouteImport } from './routes/api/public/hooks/send-session-reminders'
 import { Route as ApiPublicHooksSendPortalLaunchRouteImport } from './routes/api/public/hooks/send-portal-launch'
 import { Route as ApiPublicHooksSendOnboardingRemindersRouteImport } from './routes/api/public/hooks/send-onboarding-reminders'
@@ -220,6 +221,12 @@ const ApiPublicHooksStripeWebhookRoute =
     path: '/api/public/hooks/stripe-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSendSessionStartingSoonRoute =
+  ApiPublicHooksSendSessionStartingSoonRouteImport.update({
+    id: '/api/public/hooks/send-session-starting-soon',
+    path: '/api/public/hooks/send-session-starting-soon',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksSendSessionRemindersRoute =
   ApiPublicHooksSendSessionRemindersRouteImport.update({
     id: '/api/public/hooks/send-session-reminders',
@@ -285,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/send-onboarding-reminders': typeof ApiPublicHooksSendOnboardingRemindersRoute
   '/api/public/hooks/send-portal-launch': typeof ApiPublicHooksSendPortalLaunchRoute
   '/api/public/hooks/send-session-reminders': typeof ApiPublicHooksSendSessionRemindersRoute
+  '/api/public/hooks/send-session-starting-soon': typeof ApiPublicHooksSendSessionStartingSoonRoute
   '/api/public/hooks/stripe-webhook': typeof ApiPublicHooksStripeWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -324,6 +332,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/send-onboarding-reminders': typeof ApiPublicHooksSendOnboardingRemindersRoute
   '/api/public/hooks/send-portal-launch': typeof ApiPublicHooksSendPortalLaunchRoute
   '/api/public/hooks/send-session-reminders': typeof ApiPublicHooksSendSessionRemindersRoute
+  '/api/public/hooks/send-session-starting-soon': typeof ApiPublicHooksSendSessionStartingSoonRoute
   '/api/public/hooks/stripe-webhook': typeof ApiPublicHooksStripeWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -365,6 +374,7 @@ export interface FileRoutesById {
   '/api/public/hooks/send-onboarding-reminders': typeof ApiPublicHooksSendOnboardingRemindersRoute
   '/api/public/hooks/send-portal-launch': typeof ApiPublicHooksSendPortalLaunchRoute
   '/api/public/hooks/send-session-reminders': typeof ApiPublicHooksSendSessionRemindersRoute
+  '/api/public/hooks/send-session-starting-soon': typeof ApiPublicHooksSendSessionStartingSoonRoute
   '/api/public/hooks/stripe-webhook': typeof ApiPublicHooksStripeWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -406,6 +416,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/send-onboarding-reminders'
     | '/api/public/hooks/send-portal-launch'
     | '/api/public/hooks/send-session-reminders'
+    | '/api/public/hooks/send-session-starting-soon'
     | '/api/public/hooks/stripe-webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -445,6 +456,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/send-onboarding-reminders'
     | '/api/public/hooks/send-portal-launch'
     | '/api/public/hooks/send-session-reminders'
+    | '/api/public/hooks/send-session-starting-soon'
     | '/api/public/hooks/stripe-webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -485,6 +497,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/send-onboarding-reminders'
     | '/api/public/hooks/send-portal-launch'
     | '/api/public/hooks/send-session-reminders'
+    | '/api/public/hooks/send-session-starting-soon'
     | '/api/public/hooks/stripe-webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -510,6 +523,7 @@ export interface RootRouteChildren {
   ApiPublicHooksSendOnboardingRemindersRoute: typeof ApiPublicHooksSendOnboardingRemindersRoute
   ApiPublicHooksSendPortalLaunchRoute: typeof ApiPublicHooksSendPortalLaunchRoute
   ApiPublicHooksSendSessionRemindersRoute: typeof ApiPublicHooksSendSessionRemindersRoute
+  ApiPublicHooksSendSessionStartingSoonRoute: typeof ApiPublicHooksSendSessionStartingSoonRoute
   ApiPublicHooksStripeWebhookRoute: typeof ApiPublicHooksStripeWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -749,6 +763,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/send-session-starting-soon': {
+      id: '/api/public/hooks/send-session-starting-soon'
+      path: '/api/public/hooks/send-session-starting-soon'
+      fullPath: '/api/public/hooks/send-session-starting-soon'
+      preLoaderRoute: typeof ApiPublicHooksSendSessionStartingSoonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/send-session-reminders': {
       id: '/api/public/hooks/send-session-reminders'
       path: '/api/public/hooks/send-session-reminders'
@@ -860,6 +881,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksSendPortalLaunchRoute: ApiPublicHooksSendPortalLaunchRoute,
   ApiPublicHooksSendSessionRemindersRoute:
     ApiPublicHooksSendSessionRemindersRoute,
+  ApiPublicHooksSendSessionStartingSoonRoute:
+    ApiPublicHooksSendSessionStartingSoonRoute,
   ApiPublicHooksStripeWebhookRoute: ApiPublicHooksStripeWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
