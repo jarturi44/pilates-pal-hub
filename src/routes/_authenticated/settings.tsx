@@ -1,11 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PagePrimitives";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
+import { adminReminderEmailLog, type ReminderEmailRow } from "@/lib/admin-email.functions";
+
+const TEMPLATE_LABELS: Record<string, string> = {
+  "mornings-reminder": "10 Minute Mornings",
+  "session-reminder": "Session (day before)",
+  "session-starting-soon": "Session (1 hour before)",
+  "onboarding-reminder": "Onboarding reminder",
+};
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
@@ -208,6 +217,67 @@ function RemindersTab() {
         ))}
       </div>
       <button onClick={save} className="rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs">Save</button>
+
+      <SentRemindersLog />
+    </div>
+  );
+}
+
+function SentRemindersLog() {
+  const fetchLog = useServerFn(adminReminderEmailLog);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["reminder-email-log"],
+    queryFn: () => fetchLog(),
+  });
+
+  // Group rows by calendar day (local), then by template.
+  const grouped = useMemo(() => {
+    const byDay = new Map<string, ReminderEmailRow[]>();
+    for (const r of (data ?? []) as ReminderEmailRow[]) {
+      const day = new Date(r.created_at).toLocaleDateString(undefined, {
+        weekday: "short", year: "numeric", month: "short", day: "numeric",
+      });
+      if (!byDay.has(day)) byDay.set(day, []);
+      byDay.get(day)!.push(r);
+    }
+    return Array.from(byDay.entries());
+  }, [data]);
+
+  return (
+    <div className="mt-8 border-t border-border pt-6">
+      <h3 className="text-sm font-semibold text-foreground">Recently sent reminder emails</h3>
+      <p className="text-xs text-muted-foreground mt-0.5 mb-3">Last 14 days · who received each reminder and its delivery status.</p>
+      {error ? (
+        <p className="text-sm text-destructive">Couldn't load: {(error as Error).message}</p>
+      ) : isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : grouped.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No reminder emails sent in the last 14 days.</p>
+      ) : (
+        <div className="space-y-5">
+          {grouped.map(([day, rows]) => (
+            <div key={day}>
+              <div className="text-xs font-medium text-foreground mb-1.5">{day} <span className="text-muted-foreground font-normal">· {rows.length} sent</span></div>
+              <div className="rounded-md border border-border divide-y divide-border">
+                {rows.map((r, i) => (
+                  <div key={i} className="flex items-center justify-between gap-3 px-3 py-1.5 text-xs">
+                    <span className="text-foreground truncate">{r.recipient_email}</span>
+                    <span className="flex items-center gap-2 shrink-0">
+                      <span className="text-muted-foreground">{TEMPLATE_LABELS[r.template_name] ?? r.template_name}</span>
+                      <span className={cn(
+                        "rounded px-1.5 py-0.5 text-[10px] font-medium",
+                        r.status === "sent" ? "bg-primary/10 text-primary"
+                          : r.status === "pending" ? "bg-amber-500/10 text-amber-600"
+                            : "bg-destructive/10 text-destructive",
+                      )}>{r.status}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
