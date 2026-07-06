@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/PagePrimitives";
 import { ProgressDashboard } from "@/components/ProgressDashboard";
 import { ClientProgramsSection } from "@/components/admin/ClientProgramsSection";
 import { toast } from "sonner";
-import { ArrowLeft, Download, FileText, Check, Loader2, X, Send, ClipboardCheck, CalendarPlus, RefreshCw, XCircle, Trash2 } from "lucide-react";
+import { ArrowLeft, Download, FileText, Check, Loader2, X, Send, ClipboardCheck, CalendarPlus, XCircle, Trash2 } from "lucide-react";
 import jsPDF from "jspdf";
 import { cn } from "@/lib/utils";
 import { sendTransactionalEmail } from "@/lib/email/send";
@@ -109,15 +109,6 @@ function ClientProfilePage() {
     qc.invalidateQueries({ queryKey: ["client-profile", clientId] });
   }
 
-  async function changePlan(newPlanId: string) {
-    if (!data?.sub) return;
-    const { error } = await supabase.from("subscriptions").update({ plan_id: newPlanId }).eq("id", data.sub.id);
-    if (error) return toast.error(error.message);
-    await supabase.from("activity_log").insert({ type: "plan_change", message: `Plan updated for ${u?.name || u?.email}`, user_id: u?.id });
-    toast.success("Plan updated");
-    qc.invalidateQueries({ queryKey: ["client-profile", clientId] });
-  }
-
   async function cancelSubscription() {
     if (!data?.sub) return;
     if (!confirm("Cancel this subscription at period end?")) return;
@@ -155,10 +146,6 @@ function ClientProfilePage() {
         <ActionBtn icon={<Send size={12} />} label="Send message" onClick={() => setShowMessage(true)} />
         <ActionBtn icon={<ClipboardCheck size={12} />} label="Mark attendance" onClick={() => navigate({ to: "/attendance" })} />
         <ActionBtn icon={<CalendarPlus size={12} />} label="Assign slot" onClick={() => { if (!canAssignSlot) { toast.error(assignBlockedReason); return; } setShowAssign(true); }} disabled={!canAssignSlot} title={canAssignSlot ? undefined : assignBlockedReason} />
-        <ActionBtn icon={<RefreshCw size={12} />} label="Update plan" onClick={() => {
-          const id = prompt("Enter new plan ID (see plan picker below)");
-          if (id) changePlan(id);
-        }} />
         <ActionBtn icon={<XCircle size={12} />} label="Cancel subscription" onClick={cancelSubscription} destructive />
         <ActionBtn icon={deleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />} label={deleting ? "Deleting…" : "Delete client"} onClick={handleDelete} destructive />
       </div>
@@ -177,7 +164,9 @@ function ClientProfilePage() {
 
 
         <Section title="Plan">
-          {!data.sub ? <p className="text-sm text-muted-foreground">No subscription.</p> : (
+          {!data.sub ? (
+            <p className="text-sm text-muted-foreground mb-1">No subscription.</p>
+          ) : (
             <>
               <Row k="Plan" v={(data.sub.plan as any)?.display_name} />
               <Row k="Type" v={(data.sub.plan as any)?.type} />
@@ -187,19 +176,15 @@ function ClientProfilePage() {
               <Row k="Stripe sub ID" v={data.sub.stripe_subscription_id} />
               <Row k="Commitment ends" v={data.sub.commitment_end_date ? new Date(data.sub.commitment_end_date).toLocaleDateString() : "—"} />
               <Row k="Cancel at period end" v={data.sub.cancel_at_period_end ? "Yes" : "No"} />
-              <details className="mt-3 text-xs">
-                <summary className="cursor-pointer text-muted-foreground">Change plan</summary>
-                <div className="mt-2 space-y-1">
-                  {data.plans.map((p: any) => (
-                    <button key={p.id} onClick={() => changePlan(p.id)}
-                      className="block w-full text-left rounded-md border border-border px-2 py-1.5 hover:bg-muted">
-                      {p.display_name} — ${p.price_per_month}/mo
-                    </button>
-                  ))}
-                </div>
-              </details>
             </>
           )}
+          <SubscriptionEditor
+            clientId={clientId}
+            plans={data.plans}
+            sub={data.sub}
+            userLabel={u?.name || u?.email || "client"}
+            onSaved={() => qc.invalidateQueries({ queryKey: ["client-profile", clientId] })}
+          />
         </Section>
 
         <Section title="Slot assignments">
@@ -351,6 +336,97 @@ function ActionBtn({ icon, label, onClick, destructive, disabled, title }: { ico
         destructive ? "border-destructive/40 text-destructive hover:bg-destructive/5" : "border-border hover:bg-muted")}>
       {icon} {label}
     </button>
+  );
+}
+
+function SubscriptionEditor({ clientId, plans, sub, userLabel, onSaved }: {
+  clientId: string;
+  plans: any[];
+  sub: any | null;
+  userLabel: string;
+  onSaved: () => void;
+}) {
+  const [planId, setPlanId] = useState<string>(sub?.plan_id ?? (plans[0]?.id ?? ""));
+  const [status, setStatus] = useState<string>(sub?.status ?? "active");
+  const [stripeSubId, setStripeSubId] = useState<string>(sub?.stripe_subscription_id ?? "");
+  const [stripeCustId, setStripeCustId] = useState<string>(sub?.stripe_customer_id ?? "");
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    if (!planId) { toast.error("Pick a plan."); return; }
+    setBusy(true);
+    const patch: Record<string, any> = {
+      plan_id: planId,
+      status,
+      stripe_subscription_id: stripeSubId.trim() || null,
+      stripe_customer_id: stripeCustId.trim() || null,
+      cancel_at_period_end: false,
+    };
+    let error;
+    if (sub?.id) {
+      ({ error } = await supabase.from("subscriptions").update(patch).eq("id", sub.id));
+    } else {
+      ({ error } = await supabase.from("subscriptions").insert({
+        user_id: clientId,
+        start_date: new Date().toISOString(),
+        ...patch,
+      }));
+    }
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    await supabase.from("activity_log").insert({
+      type: "subscription_set",
+      message: `Subscription ${sub?.id ? "updated" : "created"} for ${userLabel}`,
+      user_id: clientId,
+    });
+    toast.success(sub?.id ? "Subscription updated" : "Subscription created");
+    onSaved();
+  }
+
+  return (
+    <details className="mt-3 text-xs">
+      <summary className="cursor-pointer text-primary font-medium">
+        {sub ? "Set up / change subscription" : "Create subscription"}
+      </summary>
+      <div className="mt-2 space-y-2 rounded-md border border-border p-3">
+        <label className="block">
+          <span className="block text-muted-foreground mb-0.5">Plan</span>
+          <select value={planId} onChange={(e) => setPlanId(e.target.value)}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5">
+            {plans.map((p: any) => (
+              <option key={p.id} value={p.id}>{p.display_name} — ${Number(p.price_per_month)}/mo</option>
+            ))}
+          </select>
+        </label>
+        <label className="block">
+          <span className="block text-muted-foreground mb-0.5">Status</span>
+          <select value={status} onChange={(e) => setStatus(e.target.value)}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5">
+            {["active", "trialing", "past_due", "canceled"].map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </label>
+        <label className="block">
+          <span className="block text-muted-foreground mb-0.5">Stripe subscription ID</span>
+          <input value={stripeSubId} onChange={(e) => setStripeSubId(e.target.value)}
+            placeholder="sub_… (from Stripe after you create the subscription)"
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5" />
+        </label>
+        <label className="block">
+          <span className="block text-muted-foreground mb-0.5">Stripe customer ID</span>
+          <input value={stripeCustId} onChange={(e) => setStripeCustId(e.target.value)}
+            placeholder="cus_…"
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5" />
+        </label>
+        <p className="text-[11px] text-muted-foreground">
+          Create the subscription in Stripe first, then paste its IDs here so billing and the app stay linked.
+          This updates the app’s record only — it does not charge the card.
+        </p>
+        <button onClick={save} disabled={busy}
+          className="rounded-md bg-primary text-primary-foreground px-3 py-1.5 disabled:opacity-50">
+          {busy ? "Saving…" : (sub ? "Save subscription" : "Create subscription")}
+        </button>
+      </div>
+    </details>
   );
 }
 
