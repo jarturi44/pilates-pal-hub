@@ -12,16 +12,6 @@ const APP_BASE_URL = 'https://pilateswithjon.com';
 
 const ACTIVE_SUB_STATUSES = ['active', 'trialing'];
 
-// Extra recipients that should receive the mornings reminder even if they
-// don't have an account/subscription in the DB yet (e.g. migrated clients
-// who haven't claimed their welcome-back invite).
-const EXTRA_RECIPIENTS: Array<{ email: string; name?: string }> = [
-  { email: 'tomshimandle12@gmail.com' },
-  { email: 'marybwynn@gmail.com' },
-  { email: 'gregvanhorn@sbcglobal.net' },
-  { email: 'dianaperez1630@gmail.com' },
-];
-
 function generateToken(): string {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
@@ -40,6 +30,14 @@ export const Route = createFileRoute('/api/public/hooks/send-mornings-reminders'
           return Response.json({ error: 'Server config error' }, { status: 500 });
         }
         const supabase: any = createClient(supabaseUrl, serviceKey);
+
+        // Managed recipient list — clients who should get the mornings reminder
+        // even without an active subscription row (migrated / manually-billed
+        // 10MM clients). Editable from Settings → Reminders.
+        const { data: mrRows } = await supabase
+          .from('mornings_recipients').select('email, name').eq('active', true);
+        const EXTRA_RECIPIENTS: Array<{ email: string; name?: string }> =
+          (mrRows ?? []).map((r: any) => ({ email: r.email, name: r.name ?? undefined }));
 
         // 1. Check today is a configured reminder day
         const { data: settings } = await supabase
@@ -68,6 +66,7 @@ export const Route = createFileRoute('/api/public/hooks/send-mornings-reminders'
         let skipped = 0;
 
         for (const u of users ?? []) {
+          try {
           if (!u.email) continue;
           const recipient = u.email.toLowerCase();
 
@@ -145,10 +144,16 @@ export const Route = createFileRoute('/api/public/hooks/send-mornings-reminders'
 
           await supabase.from('reminder_send_log').insert({ user_id: u.id, send_date: sendDate });
           sent++;
+          } catch (err) {
+            // One bad recipient must not abort the entire run (this was
+            // silently killing the send after the first recipient).
+            skipped++;
+          }
         }
 
-        // Extra recipients (no account yet) — dedupe by message_id
+        // Extra recipients (managed list) — dedupe by message_id
         for (const extra of EXTRA_RECIPIENTS) {
+          try {
           const recipient = extra.email.toLowerCase();
           const extraMessageId = `mornings-extra-${recipient}-${sendDate}`;
           const { data: alreadyExtra } = await supabase
@@ -211,6 +216,9 @@ export const Route = createFileRoute('/api/public/hooks/send-mornings-reminders'
 
           if (extraErr) continue;
           sent++;
+          } catch (err) {
+            skipped++;
+          }
         }
 
         // Send an admin copy to Jon for monitoring (once per send date)

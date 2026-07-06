@@ -218,7 +218,91 @@ function RemindersTab() {
       </div>
       <button onClick={save} className="rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs">Save</button>
 
+      <MorningsRecipients />
       <SentRemindersLog />
+    </div>
+  );
+}
+
+function MorningsRecipients() {
+  const qc = useQueryClient();
+  const [bulk, setBulk] = useState("");
+  const [busy, setBusy] = useState(false);
+  const { data: rows } = useQuery({
+    queryKey: ["mornings-recipients"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("mornings_recipients")
+        .select("id, email, name, active")
+        .order("email");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  async function addBulk() {
+    const emails = Array.from(new Set(
+      bulk.split(/[\n,;]+/).map((e) => e.trim().toLowerCase()).filter((e) => /.+@.+\..+/.test(e)),
+    ));
+    if (emails.length === 0) return toast.error("Enter one or more valid emails.");
+    setBusy(true);
+    const { error } = await supabase
+      .from("mornings_recipients")
+      .upsert(emails.map((email) => ({ email })), { onConflict: "email", ignoreDuplicates: true });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success(`Added ${emails.length} recipient${emails.length === 1 ? "" : "s"}.`);
+    setBulk("");
+    qc.invalidateQueries({ queryKey: ["mornings-recipients"] });
+  }
+
+  async function toggle(id: string, active: boolean) {
+    const { error } = await supabase.from("mornings_recipients").update({ active: !active }).eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["mornings-recipients"] });
+  }
+
+  async function remove(id: string) {
+    const { error } = await supabase.from("mornings_recipients").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["mornings-recipients"] });
+  }
+
+  return (
+    <div className="mt-8 border-t border-border pt-6">
+      <h3 className="text-sm font-semibold text-foreground">10 Minute Mornings recipients</h3>
+      <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+        Everyone here gets the mornings reminder on send days — regardless of subscription. Add your 10MM clients below.
+      </p>
+      <textarea
+        value={bulk}
+        onChange={(e) => setBulk(e.target.value)}
+        placeholder="Paste client emails — one per line or comma-separated"
+        rows={3}
+        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+      />
+      <button onClick={addBulk} disabled={busy}
+        className="mt-2 rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs disabled:opacity-50">
+        {busy ? "Adding…" : "Add recipients"}
+      </button>
+
+      <div className="mt-4 rounded-md border border-border divide-y divide-border">
+        {(rows ?? []).length === 0 ? (
+          <div className="px-3 py-2 text-xs text-muted-foreground">No recipients yet.</div>
+        ) : (rows ?? []).map((r: any) => (
+          <div key={r.id} className="flex items-center justify-between gap-3 px-3 py-1.5 text-xs">
+            <span className={cn("truncate", r.active ? "text-foreground" : "text-muted-foreground line-through")}>
+              {r.email}{r.name ? ` · ${r.name}` : ""}
+            </span>
+            <span className="flex items-center gap-2 shrink-0">
+              <button onClick={() => toggle(r.id, r.active)} className="text-muted-foreground hover:text-foreground">
+                {r.active ? "Pause" : "Resume"}
+              </button>
+              <button onClick={() => remove(r.id)} className="text-destructive hover:opacity-80">Remove</button>
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
