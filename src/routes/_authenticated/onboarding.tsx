@@ -159,6 +159,24 @@ function OnboardingPage() {
     })();
   }, [search.step, search.session_id, planSync, navigate, refetchSub, qc]);
 
+  // Welcome-back arrivals: the just-granted subscription (created server-side a
+  // moment earlier) can land after this page's first query runs while the auth
+  // session is still settling — leaving `activeSub` cached as null and wrongly
+  // showing the plan picker to an existing member. Refetch a few times as the
+  // session settles so the subscription gets picked up. Harmless for genuinely
+  // new clients (there's nothing to find, so they still see the plan picker).
+  useEffect(() => {
+    if (search.welcomeBack !== "1") return;
+    const timers = [600, 1600, 3200].map((ms) =>
+      window.setTimeout(() => {
+        refetchSub();
+        refetchUser();
+        refetchSetupProgress();
+      }, ms),
+    );
+    return () => timers.forEach((t) => window.clearTimeout(t));
+  }, [search.welcomeBack, refetchSub, refetchUser, refetchSetupProgress]);
+
 
   // Only redirect to /portal when onboarding is truly complete — shipping AND
   // waiver both done. Guards against stale onboarding_complete flags that
