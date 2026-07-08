@@ -2,6 +2,9 @@
 // Verifies Stripe's signature, then keeps the `subscriptions` table in sync
 // with the source of truth at Stripe (covers cases where the success-redirect
 // is missed, renewals, payment failures, cancellations, etc.).
+//
+// 2026-07-06: no-op touch to force a redeploy so the rotated
+// STRIPE_WEBHOOK_SECRET is picked up by the running deployment.
 import { createClient } from '@supabase/supabase-js';
 import { createFileRoute } from '@tanstack/react-router';
 import { enqueueTemplateEmail, notifyUser } from '@/lib/email/enqueue.server';
