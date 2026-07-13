@@ -355,7 +355,7 @@ function SubscriptionEditor({ clientId, plans, sub, userLabel, onSaved }: {
   async function save() {
     if (!planId) { toast.error("Pick a plan."); return; }
     setBusy(true);
-    const patch: Record<string, any> = {
+    const patch = {
       plan_id: planId,
       status,
       stripe_subscription_id: stripeSubId.trim() || null,

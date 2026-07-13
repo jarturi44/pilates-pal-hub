@@ -14,6 +14,7 @@ import { Route as WaiverRouteImport } from './routes/waiver'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PlansRouteImport } from './routes/plans'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
@@ -72,6 +73,11 @@ const SignupRoute = SignupRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlansRoute = PlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -262,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/get-started': typeof GetStartedRoute
   '/login': typeof LoginRoute
+  '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -302,6 +309,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/get-started': typeof GetStartedRoute
   '/login': typeof LoginRoute
+  '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -344,6 +352,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/get-started': typeof GetStartedRoute
   '/login': typeof LoginRoute
+  '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -386,6 +395,7 @@ export interface FileRouteTypes {
     | '/'
     | '/get-started'
     | '/login'
+    | '/plans'
     | '/reset-password'
     | '/signup'
     | '/unsubscribe'
@@ -426,6 +436,7 @@ export interface FileRouteTypes {
     | '/'
     | '/get-started'
     | '/login'
+    | '/plans'
     | '/reset-password'
     | '/signup'
     | '/unsubscribe'
@@ -467,6 +478,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/get-started'
     | '/login'
+    | '/plans'
     | '/reset-password'
     | '/signup'
     | '/unsubscribe'
@@ -509,6 +521,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   GetStartedRoute: typeof GetStartedRoute
   LoginRoute: typeof LoginRoute
+  PlansRoute: typeof PlansRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
@@ -565,6 +578,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plans': {
+      id: '/plans'
+      path: '/plans'
+      fullPath: '/plans'
+      preLoaderRoute: typeof PlansRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -864,6 +884,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   GetStartedRoute: GetStartedRoute,
   LoginRoute: LoginRoute,
+  PlansRoute: PlansRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   UnsubscribeRoute: UnsubscribeRoute,
@@ -891,13 +912,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
