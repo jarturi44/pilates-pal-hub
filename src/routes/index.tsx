@@ -61,6 +61,7 @@ function Nav({ session, role }: { session: boolean; role: string | null }) {
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
           <a href="#about" className="hover:text-foreground">About</a>
           <a href="#programs" className="hover:text-foreground">Programs</a>
+          <Link to="/plans" className="hover:text-foreground">Plans &amp; pricing</Link>
           <a href="#demo" className="hover:text-foreground">See it</a>
           <a href="#testimonials" className="hover:text-foreground">Testimonials</a>
           <a href="#contact" className="hover:text-foreground">Contact</a>
@@ -117,12 +118,12 @@ function Hero({ primaryHref, primaryLabel }: { primaryHref: string; primaryLabel
             >
               {primaryLabel} <ArrowRight className="h-4 w-4" />
             </Link>
-            <a
-              href="#programs"
+            <Link
+              to="/plans"
               className="text-sm font-medium text-foreground hover:text-primary underline-offset-4 hover:underline"
             >
-              See how it works
-            </a>
+              See plans &amp; pricing
+            </Link>
           </div>
         </div>
         <div className="relative">
@@ -381,6 +382,7 @@ function Footer() {
           <span>© {new Date().getFullYear()} Pilates with Jon</span>
         </div>
         <div className="flex items-center gap-6">
+          <Link to="/plans" className="hover:text-foreground">Plans &amp; pricing</Link>
           <Link to="/login" className="hover:text-foreground">Sign in</Link>
           <Link to="/get-started" className="hover:text-foreground">Get started</Link>
         </div>
