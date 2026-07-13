@@ -27,10 +27,11 @@ type VideoRow = {
   id: string;
   title: string;
   description: string | null;
-  category: "warmup" | "10_min_morning" | "cool_down";
+  category: "warmup" | "10_min_morning" | "10_min_morning_extra" | "cool_down";
   thumbnail_url: string | null;
   video_url: string | null;
   duration_minutes: number | null;
+  created_at?: string;
 };
 
 function startOfWeek(d = new Date()) {
@@ -158,6 +159,9 @@ function HomePage() {
   const morningsRegular = morningsAll.filter((v) => !TUTORIAL_SET.has(v.title.toLowerCase()));
   const morningsTutorials = sortByOrder(morningsAll.filter((v) => TUTORIAL_SET.has(v.title.toLowerCase())), TUTORIAL_ORDER);
   const cooldowns = sortByOrder((videos ?? []).filter((v) => v.category === "cool_down"), COOLDOWN_ORDER);
+  const extras = (videos ?? [])
+    .filter((v) => v.category === "10_min_morning_extra")
+    .sort((a, b) => (a.created_at ?? "").localeCompare(b.created_at ?? ""));
 
   const morningIds = useMemo(() => new Set(morningsRegular.map((m) => m.id)), [morningsRegular]);
   const morningsThisWeek = useMemo(() => {
@@ -428,6 +432,16 @@ function HomePage() {
 
 
 
+
+      {extras.length > 0 && (
+        <VideoSection
+          heading="Extras"
+          intro="Short bonus videos to mix into your week whenever you'd like."
+          videos={extras}
+          completedIds={completedVideoIds}
+          onOpen={setOpenVideo}
+        />
+      )}
 
       {openVideo && (
         <VideoModal

@@ -10,12 +10,13 @@ import { cn } from "@/lib/utils";
 import { ExerciseLibraryAdmin } from "@/components/admin/ExerciseLibraryAdmin";
 import { ProgramsAdmin } from "@/components/admin/ProgramsAdmin";
 import { WarmupLibraryAdmin } from "@/components/admin/WarmupLibraryAdmin";
+import { ExtrasAdmin } from "@/components/admin/ExtrasAdmin";
 
 export const Route = createFileRoute("/_authenticated/content")({
   component: AdminContentPage,
 });
 
-type Tab = "mornings" | "exercises" | "warmups" | "programs";
+type Tab = "mornings" | "extras" | "exercises" | "warmups" | "programs";
 
 function AdminContentPage() {
   const [tab, setTab] = useState<Tab>("mornings");
@@ -25,6 +26,7 @@ function AdminContentPage() {
       <div className="flex gap-2 mb-6 border-b border-border">
         {([
           { id: "mornings", label: "10 Minute Mornings" },
+          { id: "extras", label: "10MM Extras" },
           { id: "exercises", label: "Exercise Library" },
           { id: "warmups", label: "Warm-Up Videos" },
           { id: "programs", label: "Programs" },
@@ -36,6 +38,7 @@ function AdminContentPage() {
         ))}
       </div>
       {tab === "mornings" && <MorningsContentTab />}
+      {tab === "extras" && <ExtrasAdmin />}
       {tab === "exercises" && <ExerciseLibraryAdmin />}
       {tab === "warmups" && <WarmupLibraryAdmin />}
       {tab === "programs" && <ProgramsAdmin />}
