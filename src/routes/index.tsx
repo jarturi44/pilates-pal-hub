@@ -244,6 +244,15 @@ function Programs() {
             </Link>
           </article>
         </div>
+
+        <div className="mt-12 text-center">
+          <Link
+            to="/plans"
+            className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground hover:border-primary hover:text-primary"
+          >
+            See all plans &amp; pricing <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     </section>
   );
