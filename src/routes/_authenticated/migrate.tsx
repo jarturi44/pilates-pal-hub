@@ -26,6 +26,9 @@ function MigratePage() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [inviteType, setInviteType] = useState<"welcome-back-invite" | "welcome-new-client">(
+    "welcome-back-invite",
+  );
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState<Array<{ name: string; email: string; at: string }>>([]);
 
@@ -45,9 +48,9 @@ function MigratePage() {
     setSending(true);
     try {
       await sendTransactionalEmail({
-        templateName: "welcome-back-invite",
+        templateName: inviteType,
         recipientEmail: email.trim().toLowerCase(),
-        idempotencyKey: `welcome-back-${email.trim().toLowerCase()}-${Date.now()}`,
+        idempotencyKey: `${inviteType}-${email.trim().toLowerCase()}-${Date.now()}`,
         templateData: { name: name.trim() || undefined, inviteUrl },
       });
       toast.success(`Invite sent to ${email.trim()}`);
@@ -74,6 +77,41 @@ function MigratePage() {
           Enter the client's name and email. They'll receive an email with a link
           that pre-fills both fields and skips the $60 intake fee.
         </p>
+
+        <div className="space-y-2">
+          <label className="flex items-start gap-3 cursor-pointer rounded-md border border-input p-3 hover:bg-accent/40">
+            <input
+              type="radio"
+              name="inviteType"
+              checked={inviteType === "welcome-back-invite"}
+              onChange={() => setInviteType("welcome-back-invite")}
+              className="mt-1 h-4 w-4 accent-primary"
+            />
+            <span className="text-sm">
+              <span className="font-medium text-foreground">Existing member</span>
+              <span className="block text-muted-foreground">
+                Keeps their current plan &amp; pricing (e.g. 10 Minute Mornings). Add them to your
+                Mornings recipients list first so they aren't asked to pick a plan.
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-3 cursor-pointer rounded-md border border-input p-3 hover:bg-accent/40">
+            <input
+              type="radio"
+              name="inviteType"
+              checked={inviteType === "welcome-new-client"}
+              onChange={() => setInviteType("welcome-new-client")}
+              className="mt-1 h-4 w-4 accent-primary"
+            />
+            <span className="text-sm">
+              <span className="font-medium text-foreground">New client (no membership)</span>
+              <span className="block text-muted-foreground">
+                Skips the intake, then sends them to the plan picker to choose &amp; pay for a plan.
+                Do <strong>not</strong> add them to the Mornings list.
+              </span>
+            </span>
+          </label>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <input

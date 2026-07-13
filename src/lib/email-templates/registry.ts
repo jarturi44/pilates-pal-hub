@@ -23,6 +23,7 @@ import { template as commitmentEnding } from './commitment-ending'
 import { template as adminBroadcast } from './admin-broadcast'
 import { template as intakeFinishSignup } from './intake-finish-signup'
 import { template as welcomeBackInvite } from './welcome-back-invite'
+import { template as welcomeNewClient } from './welcome-new-client'
 import { template as portalLaunch } from './portal-launch'
 import { template as adminIntakeRequest } from './admin-intake-request'
 import { template as intakeReceived } from './intake-received'
@@ -46,6 +47,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'admin-broadcast': adminBroadcast,
   'intake-finish-signup': intakeFinishSignup,
   'welcome-back-invite': welcomeBackInvite,
+  'welcome-new-client': welcomeNewClient,
   'portal-launch': portalLaunch,
   'admin-intake-request': adminIntakeRequest,
   'intake-received': intakeReceived,
