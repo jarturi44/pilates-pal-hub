@@ -380,6 +380,16 @@ function HomePage() {
         )}
       </section>
 
+      {extras.length > 0 && (
+        <VideoSection
+          heading="Extras"
+          intro="Short bonus videos to mix into your week whenever you'd like."
+          videos={extras}
+          completedIds={completedVideoIds}
+          onOpen={setOpenVideo}
+        />
+      )}
+
       <section className="mb-12">
         <h3 className="font-display text-2xl text-foreground">Tutorials</h3>
         <p className="mt-1 text-sm text-muted-foreground mb-5 max-w-3xl">
@@ -429,19 +439,6 @@ function HomePage() {
           </div>
         )}
       </section>
-
-
-
-
-      {extras.length > 0 && (
-        <VideoSection
-          heading="Extras"
-          intro="Short bonus videos to mix into your week whenever you'd like."
-          videos={extras}
-          completedIds={completedVideoIds}
-          onOpen={setOpenVideo}
-        />
-      )}
 
       {openVideo && (
         <VideoModal
