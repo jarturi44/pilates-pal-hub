@@ -440,10 +440,6 @@ function HomePage() {
         )}
       </section>
 
-
-
-
-
       {openVideo && (
         <VideoModal
           video={openVideo}
