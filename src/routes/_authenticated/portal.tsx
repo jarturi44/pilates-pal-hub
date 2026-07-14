@@ -433,15 +433,6 @@ function HomePage() {
 
 
 
-      {extras.length > 0 && (
-        <VideoSection
-          heading="Extras"
-          intro="Short bonus videos to mix into your week whenever you'd like."
-          videos={extras}
-          completedIds={completedVideoIds}
-          onOpen={setOpenVideo}
-        />
-      )}
 
       {openVideo && (
         <VideoModal
