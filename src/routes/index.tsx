@@ -300,21 +300,21 @@ function Testimonials() {
   const quotes = [
     {
       quote:
-        "I came in with chronic back pain. Six weeks later I'm sleeping through the night and walking taller.",
-      name: "Sarah M.",
-      detail: "One‑on‑one client",
+        "The classes were great! You were really accommodating in between the beginner and intermediate classes in terms of patience and understanding of the my levels of learning, strength, conditioning, and skill.",
+      name: "Joe L.",
+      detail: "",
     },
     {
       quote:
-        "10 Minute Mornings is the only fitness habit I've ever actually kept. It's that good.",
-      name: "Daniel R.",
-      detail: "Mornings member",
+        "Jon as a Pilates instructor is very intentional with every session. He doesn't just lead a workout — he pays attention to how each client's body moves and makes adjustments that help you feel stronger and more balanced. I noticed improvements not only in my strength and flexibility, but also in the way I carry myself day to day. Jon's encouragement, knowledge, and ability to meet people where they are make every class feel worthwhile. I always leave feeling better than when I arrived, and I'm grateful for the care and attention he put into helping his clients feel their best.",
+      name: "Mel W.",
+      detail: "",
     },
     {
       quote:
-        "Jon programs like he knows my body better than I do. The small group format is magic.",
-      name: "Priya K.",
-      detail: "Small group client",
+        "Jon's knowledge and interest in Pilates and continuing to learn himself has made being in his classes always fresh and new! His ability to adapt to the personal needs of each client's individual needs is impressive. He brings a level of creativity and flow and calm to the classes which has brought me back in. Pilates with Jon has been a restorative, strengthening and positive practice for me — I swear I've grown an inch since joining!",
+      name: "Christine S.",
+      detail: "",
     },
   ];
   return (
@@ -340,7 +340,8 @@ function Testimonials() {
                 <span className="text-primary">”</span>
               </blockquote>
               <figcaption className="mt-6 text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">{q.name}</span> · {q.detail}
+                <span className="text-foreground font-medium">{q.name}</span>
+                {q.detail && <> · {q.detail}</>}
               </figcaption>
             </figure>
           ))}
