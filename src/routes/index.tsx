@@ -340,7 +340,8 @@ function Testimonials() {
                 <span className="text-primary">”</span>
               </blockquote>
               <figcaption className="mt-6 text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">{q.name}</span> · {q.detail}
+                <span className="text-foreground font-medium">{q.name}</span>
+                {q.detail && <> · {q.detail}</>}
               </figcaption>
             </figure>
           ))}
