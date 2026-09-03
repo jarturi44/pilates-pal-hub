@@ -168,7 +168,15 @@ export const Route = createFileRoute('/api/public/hooks/send-mornings-reminders'
 
             // Safety net: the provider rejects transactional sends without a
             // token, so never let a lookup race leave this empty.
-            if (!unsubscribeToken) unsubscribeToken = generateToken();
+            if (!unsubscribeToken) {
+              unsubscribeToken = generateToken();
+              await supabase.from('email_unsubscribe_tokens')
+                .upsert({ token: unsubscribeToken, email: r.email }, { onConflict: 'email', ignoreDuplicates: true });
+              const { data: retry } = await supabase
+                .from('email_unsubscribe_tokens').select('token').eq('email', r.email).maybeSingle();
+              unsubscribeToken = retry?.token ?? unsubscribeToken;
+            }
+
 
             const { html, text } = await renderFor(r.name);
 
