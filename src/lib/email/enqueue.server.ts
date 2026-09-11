@@ -127,7 +127,8 @@ export async function enqueueTemplateEmail(
             text,
             purpose: 'transactional',
             label: `${args.templateName}-admin-copy`,
-            idempotency_key: `${args.idempotencyKey}-admin-copy`,
+            idempotency_key: `${args.idempotencyKey}-admin-copy-${Date.now()}`,
+            unsubscribe_token: token,
             queued_at: new Date().toISOString(),
           },
         });
