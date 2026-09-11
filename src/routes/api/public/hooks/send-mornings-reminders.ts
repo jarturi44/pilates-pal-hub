@@ -200,6 +200,8 @@ export const Route = createFileRoute('/api/public/hooks/send-mornings-reminders'
               },
             });
 
+            if (r.email === ADMIN_EMAIL && !enqErr) {
+
             // Log after enqueue so a crash can't leave a phantom "pending" row.
             await supabase.from('email_send_log').insert({
               message_id: messageId,
