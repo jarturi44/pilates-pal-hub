@@ -101,13 +101,14 @@ export const Route = createFileRoute('/api/public/hooks/send-mornings-reminders'
         }
 
         // Admin monitoring copy — queued FIRST below so it never gets lost.
+        const adminRunId = `${sendDate}-${Date.now()}`;
         const adminRecipient: Recipient = {
           email: ADMIN_EMAIL,
           name: 'Jon',
-          messageId: `mornings-admin-copy-${sendDate}`,
+          messageId: `mornings-admin-copy-${adminRunId}`,
           subjectPrefix: '[Copy] ',
           label: 'mornings-reminder-admin-copy',
-          idempotencyKey: `mornings-admin-copy-${sendDate}`,
+          idempotencyKey: `mornings-admin-copy-${adminRunId}`,
         };
         const adminAlreadyQueued = seen.has(ADMIN_EMAIL);
         const queue = adminAlreadyQueued ? recipients : [adminRecipient, ...recipients];
@@ -199,8 +200,6 @@ export const Route = createFileRoute('/api/public/hooks/send-mornings-reminders'
                 queued_at: new Date().toISOString(),
               },
             });
-
-            if (r.email === ADMIN_EMAIL && !enqErr) {
 
             // Log after enqueue so a crash can't leave a phantom "pending" row.
             await supabase.from('email_send_log').insert({
