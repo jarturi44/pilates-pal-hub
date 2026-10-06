@@ -48,6 +48,7 @@ import { Route as ApiPublicHooksSendSessionRemindersRouteImport } from './routes
 import { Route as ApiPublicHooksSendPortalLaunchRouteImport } from './routes/api/public/hooks/send-portal-launch'
 import { Route as ApiPublicHooksSendOnboardingRemindersRouteImport } from './routes/api/public/hooks/send-onboarding-reminders'
 import { Route as ApiPublicHooksSendMorningsRemindersRouteImport } from './routes/api/public/hooks/send-mornings-reminders'
+import { Route as ApiPublicHooksSendLateVideoNoticeRouteImport } from './routes/api/public/hooks/send-late-video-notice'
 import { Route as ApiPublicHooksBillingJobsRouteImport } from './routes/api/public/hooks/billing-jobs'
 
 const WelcomeBackRoute = WelcomeBackRouteImport.update({
@@ -257,6 +258,12 @@ const ApiPublicHooksSendMorningsRemindersRoute =
     path: '/api/public/hooks/send-mornings-reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSendLateVideoNoticeRoute =
+  ApiPublicHooksSendLateVideoNoticeRouteImport.update({
+    id: '/api/public/hooks/send-late-video-notice',
+    path: '/api/public/hooks/send-late-video-notice',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksBillingJobsRoute =
   ApiPublicHooksBillingJobsRouteImport.update({
     id: '/api/public/hooks/billing-jobs',
@@ -295,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/api/public/keep-alive': typeof ApiPublicKeepAliveRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/billing-jobs': typeof ApiPublicHooksBillingJobsRoute
+  '/api/public/hooks/send-late-video-notice': typeof ApiPublicHooksSendLateVideoNoticeRoute
   '/api/public/hooks/send-mornings-reminders': typeof ApiPublicHooksSendMorningsRemindersRoute
   '/api/public/hooks/send-onboarding-reminders': typeof ApiPublicHooksSendOnboardingRemindersRoute
   '/api/public/hooks/send-portal-launch': typeof ApiPublicHooksSendPortalLaunchRoute
@@ -336,6 +344,7 @@ export interface FileRoutesByTo {
   '/api/public/keep-alive': typeof ApiPublicKeepAliveRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/billing-jobs': typeof ApiPublicHooksBillingJobsRoute
+  '/api/public/hooks/send-late-video-notice': typeof ApiPublicHooksSendLateVideoNoticeRoute
   '/api/public/hooks/send-mornings-reminders': typeof ApiPublicHooksSendMorningsRemindersRoute
   '/api/public/hooks/send-onboarding-reminders': typeof ApiPublicHooksSendOnboardingRemindersRoute
   '/api/public/hooks/send-portal-launch': typeof ApiPublicHooksSendPortalLaunchRoute
@@ -379,6 +388,7 @@ export interface FileRoutesById {
   '/api/public/keep-alive': typeof ApiPublicKeepAliveRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/billing-jobs': typeof ApiPublicHooksBillingJobsRoute
+  '/api/public/hooks/send-late-video-notice': typeof ApiPublicHooksSendLateVideoNoticeRoute
   '/api/public/hooks/send-mornings-reminders': typeof ApiPublicHooksSendMorningsRemindersRoute
   '/api/public/hooks/send-onboarding-reminders': typeof ApiPublicHooksSendOnboardingRemindersRoute
   '/api/public/hooks/send-portal-launch': typeof ApiPublicHooksSendPortalLaunchRoute
@@ -422,6 +432,7 @@ export interface FileRouteTypes {
     | '/api/public/keep-alive'
     | '/lovable/email/suppression'
     | '/api/public/hooks/billing-jobs'
+    | '/api/public/hooks/send-late-video-notice'
     | '/api/public/hooks/send-mornings-reminders'
     | '/api/public/hooks/send-onboarding-reminders'
     | '/api/public/hooks/send-portal-launch'
@@ -463,6 +474,7 @@ export interface FileRouteTypes {
     | '/api/public/keep-alive'
     | '/lovable/email/suppression'
     | '/api/public/hooks/billing-jobs'
+    | '/api/public/hooks/send-late-video-notice'
     | '/api/public/hooks/send-mornings-reminders'
     | '/api/public/hooks/send-onboarding-reminders'
     | '/api/public/hooks/send-portal-launch'
@@ -505,6 +517,7 @@ export interface FileRouteTypes {
     | '/api/public/keep-alive'
     | '/lovable/email/suppression'
     | '/api/public/hooks/billing-jobs'
+    | '/api/public/hooks/send-late-video-notice'
     | '/api/public/hooks/send-mornings-reminders'
     | '/api/public/hooks/send-onboarding-reminders'
     | '/api/public/hooks/send-portal-launch'
@@ -532,6 +545,7 @@ export interface RootRouteChildren {
   ApiPublicKeepAliveRoute: typeof ApiPublicKeepAliveRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksBillingJobsRoute: typeof ApiPublicHooksBillingJobsRoute
+  ApiPublicHooksSendLateVideoNoticeRoute: typeof ApiPublicHooksSendLateVideoNoticeRoute
   ApiPublicHooksSendMorningsRemindersRoute: typeof ApiPublicHooksSendMorningsRemindersRoute
   ApiPublicHooksSendOnboardingRemindersRoute: typeof ApiPublicHooksSendOnboardingRemindersRoute
   ApiPublicHooksSendPortalLaunchRoute: typeof ApiPublicHooksSendPortalLaunchRoute
@@ -818,6 +832,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksSendMorningsRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/send-late-video-notice': {
+      id: '/api/public/hooks/send-late-video-notice'
+      path: '/api/public/hooks/send-late-video-notice'
+      fullPath: '/api/public/hooks/send-late-video-notice'
+      preLoaderRoute: typeof ApiPublicHooksSendLateVideoNoticeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/billing-jobs': {
       id: '/api/public/hooks/billing-jobs'
       path: '/api/public/hooks/billing-jobs'
@@ -895,6 +916,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicKeepAliveRoute: ApiPublicKeepAliveRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksBillingJobsRoute: ApiPublicHooksBillingJobsRoute,
+  ApiPublicHooksSendLateVideoNoticeRoute:
+    ApiPublicHooksSendLateVideoNoticeRoute,
   ApiPublicHooksSendMorningsRemindersRoute:
     ApiPublicHooksSendMorningsRemindersRoute,
   ApiPublicHooksSendOnboardingRemindersRoute:
