@@ -14,6 +14,7 @@ const ADMIN_COPY_SKIP = new Set<string>([
   'admin-broadcast',
   'mornings-reminder',
   'portal-launch',
+  'late-video-notice',
 ]);
 
 function generateToken(): string {
