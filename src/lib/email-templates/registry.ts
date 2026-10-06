@@ -28,6 +28,8 @@ import { template as portalLaunch } from './portal-launch'
 import { template as adminIntakeRequest } from './admin-intake-request'
 import { template as intakeReceived } from './intake-received'
 import { template as intakeComplete } from './intake-complete'
+import { template as lateVideoNotice } from './late-video-notice'
+
 
 
 
@@ -51,6 +53,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'portal-launch': portalLaunch,
   'admin-intake-request': adminIntakeRequest,
   'intake-received': intakeReceived,
-  'intake-complete': intakeComplete,
+'intake-complete': intakeComplete,
+  'late-video-notice': lateVideoNotice,
 }
 
