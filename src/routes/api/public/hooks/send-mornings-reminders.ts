@@ -47,13 +47,25 @@ export const Route = createFileRoute('/api/public/hooks/send-mornings-reminders'
         const { data: settings } = await supabase
           .from('reminder_settings').select('reminder_days').eq('id', 1).maybeSingle();
         const days: number[] = settings?.reminder_days ?? [2, 4];
+        // Reminders go out at 6 AM Chicago time. Cron fires at 11 and 12 UTC
+        // (covers daylight saving); only the run landing on 6 AM local proceeds.
         const today = new Date();
-        const dow = today.getUTCDay();
+        const parts = Object.fromEntries(
+          new Intl.DateTimeFormat('en-US', {
+            timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', hourCycle: 'h23', weekday: 'short',
+          }).formatToParts(today).map((p) => [p.type, p.value]),
+        );
+        const dow = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(parts.weekday);
+        const localHour = Number(parts.hour);
         const force = new URL(request.url).searchParams.get('force') === '1';
+        if (!force && localHour !== 6) {
+          return Response.json({ skipped: true, reason: 'not_6am_chicago', localHour });
+        }
         if (!days.includes(dow) && !force) {
           return Response.json({ skipped: true, reason: 'not_a_reminder_day', dow });
         }
-        const sendDate = today.toISOString().slice(0, 10);
+        const sendDate = `${parts.year}-${parts.month}-${parts.day}`;
 
         const template = TEMPLATES['mornings-reminder'];
 
