@@ -31,6 +31,7 @@ type VideoRow = {
   thumbnail_url: string | null;
   video_url: string | null;
   duration_minutes: number | null;
+  duration_label?: string | null;
   created_at?: string;
 };
 
@@ -45,6 +46,10 @@ function getYouTubeId(url: string | null | undefined): string | null {
   if (!url) return null;
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
   return m ? m[1] : null;
+}
+function durationText(v: { duration_label?: string | null; duration_minutes?: number | null }): string {
+  if (v.duration_label) return v.duration_label;
+  return v.duration_minutes ? `${v.duration_minutes} min` : "";
 }
 function isExternalEmbed(url: string | null | undefined): boolean {
   if (!url) return false;
@@ -364,7 +369,7 @@ function HomePage() {
                     <div className="font-medium text-foreground">{v.title}</div>
                     {v.description && <div className="mt-1 text-sm text-muted-foreground line-clamp-2">{v.description}</div>}
                     <div className="mt-2 text-xs text-muted-foreground">
-                      {v.duration_minutes ? `${v.duration_minutes} min` : ""}
+                      {durationText(v)}
                     </div>
                     <button
                       onClick={() => setOpenVideo(v)}
@@ -424,7 +429,7 @@ function HomePage() {
                     <div className="font-medium text-foreground">{v.title}</div>
                     {v.description && <div className="mt-1 text-sm text-muted-foreground line-clamp-2">{v.description}</div>}
                     <div className="mt-2 text-xs text-muted-foreground">
-                      {v.duration_minutes ? `${v.duration_minutes} min` : ""}
+                      {durationText(v)}
                     </div>
                     <button
                       onClick={() => setOpenVideo(v)}
@@ -495,7 +500,7 @@ function VideoSection({
                   <div className="font-medium text-foreground">{v.title}</div>
                   {v.description && <div className="mt-1 text-sm text-muted-foreground line-clamp-2">{v.description}</div>}
                   <div className="mt-2 text-xs text-muted-foreground">
-                    {v.duration_minutes ? `${v.duration_minutes} min` : ""}
+                    {durationText(v)}
                   </div>
                   <button
                     onClick={() => onOpen(v)}
