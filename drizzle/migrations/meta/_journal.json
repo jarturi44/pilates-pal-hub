@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794312148793,
+      "tag": "0000_add_video_duration_label",
+      "breakpoints": true
+    }
+  ]
+}

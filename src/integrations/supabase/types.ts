@@ -1117,6 +1117,7 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          duration_label: string | null
           duration_minutes: number | null
           id: string
           thumbnail_url: string | null
@@ -1127,6 +1128,7 @@ export type Database = {
           category: string
           created_at?: string
           description?: string | null
+          duration_label?: string | null
           duration_minutes?: number | null
           id?: string
           thumbnail_url?: string | null
@@ -1137,6 +1139,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          duration_label?: string | null
           duration_minutes?: number | null
           id?: string
           thumbnail_url?: string | null
