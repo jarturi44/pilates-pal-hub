@@ -1322,6 +1322,7 @@ export type Database = {
         }
         Returns: number
       }
+      queue_thanksgiving_notices: { Args: never; Returns: Json }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
